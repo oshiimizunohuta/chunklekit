@@ -112,7 +112,7 @@ WordPrint.prototype ={
 		//ひらがな
 		match = this.moji_hira.indexOf(w);
 		if(match > -1){return match;}
-		//カタカナア
+		//カタカナ
 		match = this.moji_kata.indexOf(w);
 		if(match > -1){return match + 90;}
 		//アルファベット
@@ -128,7 +128,7 @@ WordPrint.prototype ={
 	indexOf: function(i){
 		//ひらがな
 		if(i < 90){return this.moji_hira.substr(i, 1);}
-		//カタカナア
+		//カタカナ
 		if(i < 180){return this.moji_kata.substr(i - 90, 1);}
 		//アルファベット
 		if(i < 240){return this.moji_alph.substr(i - 180, 1);}
@@ -191,8 +191,10 @@ WordPrint.prototype ={
 			, baseWords = []//行の文字
 			, subWords = []//上段行の文字
 			, isHorizon =  this.isHorizon(), isVertical = this.isVertical(), isSoundmark
+			, len , w, ncnt
 			;
 
+		//まずは1行に（改行コードそのまま）
 		for(i = 0; i < MS.length; i++){
 			TheWord = MS.substr(i, 1);
 			baseword = this.searchNum(TheWord);
@@ -210,26 +212,42 @@ WordPrint.prototype ={
 				baseword = 179;
 				subword = this.SPACE_CODE;
 			}else if(baseword == this.ESCAPE_CODE){//特殊
-				baseWords = this.escCommand(MS, i, baseWords);
+				baseWords.push(MS[i + 1]);
 				i += 1;
 				continue;
 			}
 			
 			baseWords.push(baseword);
 			if(isSoundmark){
-				this.soundmarkPos.push({line:this.wordIds.length, left:baseWords.length - 1, word: subword});
+				if(isHorizon){
+					baseWords.push(subword);
+				}
+				this.soundmarkPos.push({pos: baseWords.length - 1, line:this.wordIds.length, left:baseWords.length - 1, word: subword});
 			}
 			
+		}
+		// 改行を与える
+		len = baseWords.length;
+		ncnt = 0;
+		for(i = 0; i < len; i++){
+			// if(this.wordIds.length >= this.rows){break;}
+			w = baseWords[ncnt];
 			//改行ポイント
-			if((baseWords.length % this.cols) == 0 && (this.cols > 0)){
-				this.newLine(baseWords);
-				baseWords = [];
+			if(!Number.isInteger(w)){//特殊
+				baseWords = this.exeCommand(w, baseWords, ncnt);
+				ncnt = 0;
+				continue;
 			}
+			if((ncnt >= this.cols) && (this.cols > 0)){
+				baseWords.splice(this.cols, 0, this.newLineWord);
+				baseWords = this.newLine(baseWords, this.cols);
+				ncnt = 0;
+			}
+			ncnt++;
 		}
 		
 		if(baseWords.length > 0){
-			// if(!isHorizon){this.newLine(subWords);}
-			this.newLine(baseWords);
+			baseWords = this.newLine(baseWords);
 		}
 
 		return baseWords;
@@ -240,12 +258,8 @@ WordPrint.prototype ={
 		var subLine = [], smp = []
 		;
 		if(this.isHorizon()){
-			this.soundmarkPos.forEach(function(mark, i){
-				this.wordIds[mark.line].splice(mark.left + i + 1, 0, mark.word);
-				smp.push({line: mark.line, left: mark.left + i + 1});
-			}, this);
+			smp = this.soundmarkPos;
 		}else if(this.isVertical()){
-		// console.log(this.soundmarkPos)
 			this.wordIds.forEach(function(wordLine, j){
 				var sub = [], p = 0;
 				wordLine.forEach(function(words, i){
@@ -299,28 +313,52 @@ WordPrint.prototype ={
 		this.str = str;
 		this.parse(str);
 	},
+	
+	spriteWordIds: function(words)
+	{
+		var len = words.length, sprites = [], i, spr;
+		for(i = 0; i < len; i++){
+			if(i >= this.rows){break;}
+			spr = imageResource.makeSpriteArray(this.imageName, words[i]);
+			sprites.push(spr);
+		}
+		this.spriteArray = sprites;
+		return sprites;
+	},
+	
+	spriteMarkRot: function(sArray, marks)
+	{
+		var len = sArray.length, i, sumlen = 0, alen;
+		
+		for(i = 0; i < len; i++){
+			if(i >= this.rows){break;}
+			alen = sArray[i].length;
+			// if(marks.pos <= sumlen + alen - i){
+			if(marks.pos <= sumlen + alen){
+				sArray[i][marks.pos - sumlen].rot(2);
+				return sArray;
+			}
+			sumlen += alen;
+		}
+		return sArray;
+	},
 
 	parse: function(MS)// char length, message
 	{
-		var ar, spr, i, j, isHorizon = this.isHorizon(), subLine;
+		var ar, spr, i, j, isHorizon = this.isHorizon(), subLine, baseWords;
 		this.wordIds = []//行
 		this.soundmarkPos = [];
 		
-		this.makeStrId(MS + "");
+		baseWords = this.makeStrId(MS + "");
 		this.patchSoundmarks();
-		this.singleArray = [];
 
 		this.spriteArray =[];
 		
-		for(i = 0; i < this.wordIds.length; i++){
-			spr = imageResource.makeSpriteArray(this.imageName, this.wordIds[i]);
-			this.spriteArray.push(spr);
-			// this.singleArray = this.singleArray.concat(spr);
-		}
-		
+		this.spriteWordIds(this.wordIds);
+			
 		if(isHorizon){
 			this.soundmarkPos.forEach(function(mark, i){
-				this.spriteArray[mark.line][mark.left].rot(2);
+				this.spriteArray = this.spriteMarkRot(this.spriteArray, mark);
 			}, this);
 		}
 	},
@@ -337,11 +375,25 @@ WordPrint.prototype ={
 		}
 		return result;
 	},
+	
+	exeCommand: function(word, lineWords, left){
+		// console.log(word, lineWords, left, this.wordIds);
+		switch(word){
+			case this.newLineWord: result = this.newLine(lineWords, left);break;
+			default: result = lineWords; break;
+		}
+		return result;
+	},
 
-	newLine: function(lineWords)
+	newLine: function(lineWords, left)
 	{
-		this.wordIds.push(lineWords);
-		return [];
+		if(left == null){
+			this.wordIds.push(lineWords);
+			return '';
+		}else{
+			this.wordIds.push(lineWords.slice(0, left));
+			return lineWords.slice(left + 1);
+		}
 	},
 
 	setPos: function(x, y)
@@ -373,6 +425,7 @@ WordPrint.prototype ={
 		, isHorizon = this.isHorizon()
 		, isVertical = this.isVertical()
 		, ofy = isVertical ? -this.vChipSize : 0
+		, cols = this.cols > 0 ? this.cols : 256
 		;
 		
 		if(!this.disp){
@@ -386,8 +439,9 @@ WordPrint.prototype ={
 		}
 		this.swapColor();
 		for(i = 0; i < this.spriteArray.length; i++){
+			if(i >= this.rows){break;}
 			lineSpace = isVertical ? (((i / 2) | 0) * this.rowSpace) + (i * this.vChipSize) : i * (this.rowSpace + this.vChipSize);
-			scr.drawSpriteArray(this.spriteArray[i], this.position_x, this.position_y + lineSpace + ofy, this.cols);
+			scr.drawSpriteArray(this.spriteArray[i], this.position_x, this.position_y + lineSpace + ofy, cols);
 		}
 		// dulog(this.cols);
 	},
@@ -396,6 +450,11 @@ WordPrint.prototype ={
 	setLineCols: function(num)
 	{
 		this.cols = num;
+	},
+	
+	setMaxRows: function(num)
+	{
+		this.rows = num;
 	},
 
 	setColor: function(color, bgColor)

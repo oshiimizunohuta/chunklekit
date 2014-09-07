@@ -215,7 +215,7 @@ function CanvasScroll(name, mainFlag, width, height)
 			? DISPLAY_HEIGHT + (sprite.h * (0 | (i / cellsWidth))) + y
 			: (sprite.h * (0 | (i / cellsWidth))) + y;
 			if((y < 0) ){
-				dulog(((0 | (i / cellsWidth)) - (0 | (alen / cellsWidth))))
+				dulog(((0 | (i / cellsWidth)) - (0 | (slen / cellsWidth))))
 			}
 			this.drawSprite(sprite, posX, posY);
 		}
