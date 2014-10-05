@@ -41,8 +41,8 @@ WordPrint.prototype ={
 	//	this.newLineWord = "\n";
 		this.newLineWord = "n";
 		this.escapeWord = "$";
-		this.cols = 24; //自動改行までの文字数
-		this.rows = 3; //文字表示行数
+		this.cols = 0; //自動改行までの文字数
+		this.rows = 0; //文字表示行数
 		this.rowSpace = 2; //文字表示行数
 		
 		this.NOTFOUND_CODE = 83; //'？'
@@ -318,7 +318,7 @@ WordPrint.prototype ={
 	{
 		var len = words.length, sprites = [], i, spr;
 		for(i = 0; i < len; i++){
-			if(i >= this.rows){break;}
+			if(this.rows > 0 && i >= this.rows){break;}
 			spr = imageResource.makeSpriteArray(this.imageName, words[i]);
 			sprites.push(spr);
 		}
@@ -331,7 +331,7 @@ WordPrint.prototype ={
 		var len = sArray.length, i, sumlen = 0, alen;
 		
 		for(i = 0; i < len; i++){
-			if(i >= this.rows){break;}
+			if(this.rows > 0 && i >= this.rows){break;}
 			alen = sArray[i].length;
 			// if(marks.pos <= sumlen + alen - i){
 			if(marks.pos <= sumlen + alen){
@@ -439,7 +439,7 @@ WordPrint.prototype ={
 		}
 		this.swapColor();
 		for(i = 0; i < this.spriteArray.length; i++){
-			if(i >= this.rows){break;}
+			if(this.rows > 0 && i >= this.rows){break;}
 			lineSpace = isVertical ? (((i / 2) | 0) * this.rowSpace) + (i * this.vChipSize) : i * (this.rowSpace + this.vChipSize);
 			scr.drawSpriteArray(this.spriteArray[i], this.position_x, this.position_y + lineSpace + ofy, cols);
 		}
