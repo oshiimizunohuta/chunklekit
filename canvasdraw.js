@@ -215,27 +215,29 @@ function CanvasScroll(name, mainFlag, width, height)
 			? DISPLAY_HEIGHT + (sprite.h * (0 | (i / cellsWidth))) + y
 			: (sprite.h * (0 | (i / cellsWidth))) + y;
 			if((y < 0) ){
-				dulog(((0 | (i / cellsWidth)) - (0 | (slen / cellsWidth))))
+				dulog(((0 | (i / cellsWidth)) - (0 | (slen / cellsWidth))));
 			}
 			this.drawSprite(sprite, posX, posY);
 		}
 	};
 	CanvasScroll.prototype.drawSpriteArray = drawSpriteArray;
-
+// TODO 旧バージョンの-値使用状況を調べる
 	function drawSprite2dArray(sprite2dArray, x, y)
 	{
 		var j , i, posX, posY, s2len = sprite2dArray.length, slen;
 		for(j= 0; j < s2len; j++){
 			spriteArray = sprite2dArray[j];
-			slen = spriteArray.length
+			slen = spriteArray.length;
 			for(i = 0; i < slen; i++){
 				sprite = spriteArray[i];
-				posX = (x < 0) 
-				? DISPLAY_WIDTH + (sprite.w * i) + x
-				: (sprite.w * i) + x;
-				posY = (y < 0)
-				? DISPLAY_HEIGHT + (sprite.h * j) + y
-				: (sprite.h * j) + y;
+				// posX = (x < 0) 
+				// ? DISPLAY_WIDTH + (sprite.w * i) + x
+				// : (sprite.w * i) + x;
+				// posY = (y < 0)
+				// ? DISPLAY_HEIGHT + (sprite.h * j) + y
+				// : (sprite.h * j) + y;
+				posX = (sprite.w * i) + x;
+				posY = (sprite.h * j) + y;
 				this.drawSprite(sprite, posX, posY);
 			}
 		}
@@ -649,7 +651,7 @@ imageResource.makeSpriteArray = function(name, indexes)
 
 	return spriteArray;
 };
-
+//TODO あんまり使わないので削除するかも
 imageResource.makeSprite2dArray = function(name, indexes)
 {
 	var img = this.data[name]
@@ -839,6 +841,116 @@ function makeSpriteChunk(name, sprect)
 	}
 }
 
+function makeSpriteImage(name)
+{
+	var img = imageResource, d = img.data[name]
+		, cw = d.width / img.separateWidth[name] | 0
+		, ch = d.height / img.separateWidth[name] | 0
+		;
+	return makeSpriteChunk(name, makeRect(0, 0, cw, ch));
+		
+};
+
+//スプライト生成クエリ
+var SPQ_DELIMITER = ' ';
+var SPQ_NEWLINE = ';';
+var SPQ_RECT_X = 'x';
+var SPQ_RECT_Y = 'y';
+var SPQ_RECT_SEP = ':';
+var SPQ_CONNECT = '|';
+var SPQ_VFLIP = 'fv';
+var SPQ_HFLIP = 'fh';
+var SPQ_ROT = 'r';
+var SPQ_ALL = 'a';
+var SPQREG_ID = new RegExp('^[0-9]+');
+var SPQREG_ROT = new RegExp('\\|r[0-4]');
+var SPQREG_VFLIP = new RegExp('\\|fv');
+var SPQREG_HFLIP = new RegExp('\\|fh');
+var SPQREG_RECTC = new RegExp('^[0-9]+\\+[0-9]+:[0-9]+\\+[0-9]+');
+var SPQREG_RECTR = new RegExp('^[0-9]+\\-[0-9]+:[0-9]+\\-[0-9]+');
+var SPQREG_MAKE = new RegExp(
+	'(^[0-9]+$)'
+	+ '|(^[0-9]+\\+[0-9]+:[0-9]+\\+[0-9]+$)'
+	+ '|(^[0-9]+\\-[0-9]+:[0-9]+\\-[0-9]+$)'
+	);
+var SPQREG_FLIP = new RegExp('\\|(fh)|(fv)');
+var SPQREG_ROT = new RegExp('\\|r([0-3])');
+
+function makeSpriteQuery(name, spq)
+{
+	var sprite = [], spstr, i, j, x = 0, y = 0, s, sst, ilen, jlen, mk, mt, prerect;
+	if(spq == SPQ_ALL){
+		return makeSpriteImage(name);
+	}
+	try{
+		spstr = spq.split(SPQ_NEWLINE);
+	
+		ilen = spstr.length;
+		for(i = 0; i < ilen; i++){
+			sst = spstr[i];
+			s = sst.split(SPQ_DELIMITER);
+			jlen = s.length;
+			y = sprite.length;
+			sprite[y] = [];
+			for(j = 0; j < jlen; j++){
+									console.log("j" + j, s[j]);
+				mt = s[j].match(SPQREG_MAKE);
+				if(mt == null){
+					sprite.pop();
+					continue;
+				}else if(mt[2] != null){
+					//.e.g "xx+ww:yy+hh"
+					prerect = mt[2].replace(':','+').split('+');
+					mk = makeSpriteChunk(name, makeRect(prerect[0], prerect[2], prerect[1], prerect[3]));
+				}else if(mt[3] != null){
+					//.e.g "xx-ccx:yy-ccy"
+					prerect = mt[3].replace(':', '-').split('-');
+					mk = makeSpriteChunk(name, makeRect(prerect[0], prerect[2], prerect[1] - prerect[0] + 1, prerect[3] - prerect[2] + 1));
+					// console.log(mk);
+				}else if(mt[1] != null){
+					//.e.g "id"
+					mk = makeSprite(name, mt[1]);
+				}
+				mt = s[j].match(SPQREG_FLIP);
+				if(mt != null){
+					// console.log(mt);
+					mk = flipSprite(mk, mt[1] != null, mt[2] != null);
+				}
+				
+				mt = s[j].match(SPQREG_ROT);
+				if(mt != null){
+					console.log(mt);
+					mk = rotSprite(mk, mt[1]);
+				}
+				if(mk.length != null){
+					// chunk
+					if(sprite[y].length == 0){
+						sprite.pop();
+					}
+					sprite = sprite.concat(mk);
+					y += mk.length - 1;
+					x += sprite[y].length;
+					// console.log(y, x, mk.length);
+				}else{
+					// id
+					sprite[y][x] = mk;
+					console.log(y, x);
+					x++;
+				}
+			}
+			x = 0;
+			y++;
+		}
+	}catch(e){
+		console.error('Sprite query syntax error :' + spq);
+				console.log(mk, sprite);
+		return null;
+	}
+	return sprite;
+}
+
+
+
 function spreadSpriteChunk(name, indexes, w, h)
 {
 	try{
@@ -855,6 +967,44 @@ function spreadSpriteChunk(name, indexes, w, h)
 		dulog(indexes);
 	}
 }
+
+
+function rotSprite(sprite, r)
+{
+	if(sprite.length != null){
+		sprite = sprite.map(function(s, i){
+			return rotSprite(s, r);
+		});
+		return sprite;
+	}
+	if(r > 0){sprite.rot(r);}
+	return sprite;
+}
+
+function flipSprite(sprite, h, v)
+{
+	if(sprite.length != null){
+		sprite = sprite.map(function(s, i){
+			return flipSprite(s, h, v);
+		});
+		return sprite;
+	}
+	if(v){sprite.vflip(v);}
+	if(h){sprite.hflip(h);}
+	return sprite;
+}
+// 
+// function flipSprite(sprite, h, v)
+// {
+	// if(sprite.length != null){
+		// sprite = sprite.map(function(s, i){
+			// return flipSprite(s, v, h);
+		// });
+	// }
+	// if(v){sprite.vflip(v);}
+	// if(h){sprite.hflip(h);}
+	// return sprite;
+// }
 
 function imageCellWidth(name)
 {
