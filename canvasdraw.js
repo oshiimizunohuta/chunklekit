@@ -873,7 +873,7 @@ var SPQREG_MAKE = new RegExp(
 	+ '|(^[0-9]+\\+[0-9]+:[0-9]+\\+[0-9]+$)'
 	+ '|(^[0-9]+\\-[0-9]+:[0-9]+\\-[0-9]+$)'
 	);
-var SPQREG_FLIP = new RegExp('\\|(fh)|(fv)');
+var SPQREG_FLIP = new RegExp('\\|[fhv]{2,}');
 var SPQREG_ROT = new RegExp('\\|r([0-3])');
 
 function makeSpriteQuery(name, spq)
@@ -913,8 +913,8 @@ function makeSpriteQuery(name, spq)
 				}
 				mt = s[j].match(SPQREG_FLIP);
 				if(mt != null){
-					// console.log(mt);
-					mk = flipSprite(mk, mt[1] != null, mt[2] != null);
+					console.log("flip", mt);
+					mk = flipSprite(mk, mt[0].indexOf('h') > 0, mt[0].indexOf('v') > 0);
 				}
 				
 				mt = s[j].match(SPQREG_ROT);
