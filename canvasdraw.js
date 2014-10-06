@@ -893,8 +893,8 @@ function makeSpriteQuery(name, spq)
 			y = sprite.length;
 			sprite[y] = [];
 			for(j = 0; j < jlen; j++){
-									console.log("j" + j, s[j]);
-				mt = s[j].match(SPQREG_MAKE);
+				console.log("j" + j, s[j]);
+				mt = s[j].split(SPQ_CONNECT)[0].match(SPQREG_MAKE);
 				if(mt == null){
 					sprite.pop();
 					continue;
@@ -919,7 +919,7 @@ function makeSpriteQuery(name, spq)
 				
 				mt = s[j].match(SPQREG_ROT);
 				if(mt != null){
-					console.log(mt);
+					console.log("rot", mt);
 					mk = rotSprite(mk, mt[1]);
 				}
 				if(mk.length != null){
