@@ -144,7 +144,7 @@ function CanvasScroll(name, mainFlag, width, height)
 	function drawSprite(sprite, x, y)
 	{//echo(x + " " + y +  "   ");
 		var image
-			, vf = 1, hf = 1, r, rox = 0, roy = 0
+			, vf = 1, hf = 1, r, rox = 0, roy = 0, w = sprite.w, h = sprite.h
 		;
 
 		if(sprite.swaps !== null){
@@ -152,7 +152,7 @@ function CanvasScroll(name, mainFlag, width, height)
 			// image = new Image();
 			// image.src = this.canvas.toDataURL("image/png");
 			// sprite.swapStart().data;
-			image = sprite.swapStart(this.ctx.getImageData(x, y, sprite.w, sprite.h));
+			image = sprite.swapStart(this.ctx.getImageData(x, y, w, h));
 		}else{
 			//通常
 			image = sprite.image;
@@ -163,16 +163,21 @@ function CanvasScroll(name, mainFlag, width, height)
 			hf = (-sprite.hFlipFlag + !sprite.hFlipFlag) | 0;
 			vf = (-sprite.vFlipFlag + !sprite.vFlipFlag) | 0;
 			this.ctx.scale(hf, vf);
+			x = (x * hf) - (sprite.hFlipFlag * w);
+			y = (y * vf) - (sprite.vFlipFlag * h);
+			
+			// sprite.flip();
 		}
 		//回転
 		if(sprite.rotFlag > 0){
 			r = sprite.rotFlag;
 
 			r = (((1 == r) * 90) + ((2 == r) * 180) + ((3 == r) * 270)) * Math.PI / 180;
+			// rox = (x * hf) - (sprite.hFlipFlag * sprite.w);
 			rox = x;
 			roy = y;
-			x = (((Math.cos(r) + Math.sin(r)) * sprite.w) - sprite.w) * 0.5;
-			y = (((Math.cos(r + (Math.PI * 0.5)) + Math.sin(r + (Math.PI * 0.5))) * sprite.w) - sprite.w) * 0.5;
+			x = (((Math.cos(r) + Math.sin(r)) * w) - w) * 0.5;
+			y = (((Math.cos(r + (Math.PI * 0.5)) + Math.sin(r + (Math.PI * 0.5))) * w) - w) * 0.5;
 			this.ctx.translate(rox , roy);
 			this.ctx.rotate(r);
 		}
@@ -180,11 +185,12 @@ function CanvasScroll(name, mainFlag, width, height)
 		if(sprite.swaps != null){
 			//色変更描画
 			sprite.workSpace.ctx.putImageData(image, 0, 0);
-			this.ctx.drawImage(sprite.workSpace.canvas, 0, 0, 0 | sprite.w, 0 | sprite.h, 0 | (hf * x) - (sprite.w * sprite.hFlipFlag), 0 | (vf * y) - (sprite.h * sprite.vFlipFlag) , 0 | (sprite.w), 0 | (sprite.h));
+			// this.ctx.drawImage(sprite.workSpace.canvas, 0, 0, 0 | sprite.w, 0 | sprite.h, 0 | (hf * x) - (sprite.w * sprite.hFlipFlag), 0 | (vf * y) - (sprite.h * sprite.vFlipFlag) , 0 | (sprite.w), 0 | (sprite.h));
+			this.ctx.drawImage(sprite.workSpace.canvas, 0, 0, 0 | w, 0 | h, 0 | x, 0 | y, 0 | w, 0 | h);
 		}else{
 			//通常描画
-			// this.ctx.drawImage(image, 0 | sprite.x, 0 | sprite.y, 0 | sprite.w, 0 | sprite.h, 0 | (hf * x), 0 | (vf * y), 0 | (hf * sprite.w), 0 | (vf * sprite.h));
-			this.ctx.drawImage(image, 0 | sprite.x, 0 | sprite.y, 0 | sprite.w, 0 | sprite.h, 0 | (hf * x) - (sprite.w * sprite.hFlipFlag), 0 | (vf * y) - (sprite.h * sprite.vFlipFlag) , 0 | (sprite.w), 0 | (sprite.h));
+			// this.ctx.drawImage(image, 0 | sprite.x, 0 | sprite.y, 0 | sprite.w, 0 | sprite.h, 0 | (hf * x) - (sprite.w * sprite.hFlipFlag), 0 | (vf * y) - (sprite.h * sprite.vFlipFlag) , 0 | (sprite.w), 0 | (sprite.h));
+			this.ctx.drawImage(image, 0 | sprite.x, 0 | sprite.y, 0 | w, 0 | h, 0 | x, 0 | y, 0 | w, 0 | h);
 			
 		}
 		
@@ -195,6 +201,7 @@ function CanvasScroll(name, mainFlag, width, height)
 		}
 		if(sprite.vFlipFlag || sprite.hFlipFlag){
 			this.ctx.scale(hf, vf);
+			// sprite.flip();
 		}
 		
 	};
@@ -1080,7 +1087,6 @@ CanvasSprite.prototype = {
 	vflip: function(toggle)
 	{
 		this.vFlipFlag = toggle == null ? !this.vFlipFlag : toggle;
-		
 		return this.vFlipFlag;
 	},
 	
@@ -1090,6 +1096,20 @@ CanvasSprite.prototype = {
 		
 		return this.hFlipFlag;
 	},
+	
+	flip: function()
+	{
+		var h = (-sprite.hFlipFlag + !sprite.hFlipFlag) | 0, v = (-sprite.hFlipFlag + !sprite.hFlipFlag) | 0;
+		this.ctx.translate(this.x, 0);
+		this.ctx.scale(-1, 1);
+		// this.x = this.image.width - this.x - this.w;
+		this.ctx.drawImage(this.image, this.x, 0);
+		// this.ctx.translate(this.image.width, this.image.height);
+		// this.x = this.x * -sprite.hFlipFlag;
+		// this.y = this.y * -sprite.vFlipFlag;
+		// this.x = this.image.width - this.x ;
+	},
+	
 	//回転非対応
 	rot: function(trbl)
 	{
