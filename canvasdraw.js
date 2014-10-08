@@ -900,33 +900,34 @@ function makeSpriteQuery(name, spq)
 			y = sprite.length;
 			sprite[y] = [];
 			for(j = 0; j < jlen; j++){
-				console.log("j" + j, s[j]);
+				// console.log("j" + j, s[j]);
 				mt = s[j].split(SPQ_CONNECT)[0].match(SPQREG_MAKE);
 				if(mt == null){
 					sprite.pop();
 					continue;
 				}else if(mt[2] != null){
 					//.e.g "xx+ww:yy+hh"
-					prerect = mt[2].replace(':','+').split('+');
+					prerect = mt[2].replace(':','+').split('+').map(function(r){return r | 0;});
 					mk = makeSpriteChunk(name, makeRect(prerect[0], prerect[2], prerect[1], prerect[3]));
 				}else if(mt[3] != null){
 					//.e.g "xx-ccx:yy-ccy"
-					prerect = mt[3].replace(':', '-').split('-');
+					prerect = mt[3].replace(':', '-').split('-').map(function(r){return r | 0;});
 					mk = makeSpriteChunk(name, makeRect(prerect[0], prerect[2], prerect[1] - prerect[0] + 1, prerect[3] - prerect[2] + 1));
-					// console.log(mk);
+					// console.log(mk, prerect);
 				}else if(mt[1] != null){
 					//.e.g "id"
 					mk = makeSprite(name, mt[1]);
+					// console.log(mk);
 				}
 				mt = s[j].match(SPQREG_FLIP);
 				if(mt != null){
-					console.log("flip", mt);
+					// console.log("flip", mt);
 					mk = flipSprite(mk, mt[0].indexOf('h') > 0, mt[0].indexOf('v') > 0);
 				}
 				
 				mt = s[j].match(SPQREG_ROT);
 				if(mt != null){
-					console.log("rot", mt);
+					// console.log("rot", mt);
 					mk = rotSprite(mk, mt[1]);
 				}
 				if(mk.length != null){
@@ -937,11 +938,11 @@ function makeSpriteQuery(name, spq)
 					sprite = sprite.concat(mk);
 					y += mk.length - 1;
 					x += sprite[y].length;
-					// console.log(y, x, mk.length);
+					// console.log(y, x, mk);
 				}else{
 					// id
 					sprite[y][x] = mk;
-					console.log(y, x);
+					// console.log(y, x);
 					x++;
 				}
 			}
