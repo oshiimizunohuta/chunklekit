@@ -885,7 +885,7 @@ var SPQREG_ROT = new RegExp('\\|r([0-3])');
 
 function makeSpriteQuery(name, spq)
 {
-	var sprite = [], spstr, i, j, x = 0, y = 0, s, sst, ilen, jlen, mk, mt, prerect;
+	var sprite = [], spstr, i, j, s, sst, ilen, jlen, mk, mt, prerect;
 	if(spq == SPQ_ALL){
 		return makeSpriteImage(name);
 	}
@@ -897,13 +897,10 @@ function makeSpriteQuery(name, spq)
 			sst = spstr[i];
 			s = sst.split(SPQ_DELIMITER);
 			jlen = s.length;
-			y = sprite.length;
-			sprite[y] = [];
 			for(j = 0; j < jlen; j++){
 				// console.log("j" + j, s[j]);
 				mt = s[j].split(SPQ_CONNECT)[0].match(SPQREG_MAKE);
 				if(mt == null){
-					sprite.pop();
 					continue;
 				}else if(mt[2] != null){
 					//.e.g "xx+ww:yy+hh"
@@ -932,22 +929,16 @@ function makeSpriteQuery(name, spq)
 				}
 				if(mk.length != null){
 					// chunk
-					if(sprite[y].length == 0){
-						sprite.pop();
-					}
-					sprite = sprite.concat(mk);
-					y += mk.length - 1;
-					x += sprite[y].length;
-					// console.log(y, x, mk);
+					mk.map(function(s, l){
+						sprite[i + l] = sprite[i + l] == null ? s : sprite[i + l].concat(s);
+						// console.log(sprite, s);
+					});
 				}else{
 					// id
-					sprite[y][x] = mk;
-					// console.log(y, x);
-					x++;
+					// console.log(i, sprite[i]);
+					sprite[i] == null ? sprite[i] = [mk] : sprite[i].push(mk);
 				}
 			}
-			x = 0;
-			y++;
 		}
 	}catch(e){
 		console.error('Sprite query syntax error :' + spq);
