@@ -882,6 +882,9 @@ var SPQREG_MAKE = new RegExp(
 	);
 var SPQREG_FLIP = new RegExp('\\|[fhv]{2,}');
 var SPQREG_ROT = new RegExp('\\|r([0-3])');
+var SPQREG_REPEAT = new RegExp('\\|[wh][0-9]+([wh][0-9]+)?');
+var SPQREG_REPW = new RegExp('w[0-9]+');
+var SPQREG_REPH = new RegExp('h[0-9]+');
 
 function makeSpriteQuery(name, spq)
 {
@@ -919,13 +922,27 @@ function makeSpriteQuery(name, spq)
 				mt = s[j].match(SPQREG_FLIP);
 				if(mt != null){
 					// console.log("flip", mt);
-					mk = flipSprite(mk, mt[0].indexOf('h') > 0, mt[0].indexOf('v') > 0);
+					mk = flipSprite(mk, mt[0].indexOf('h') >= 0, mt[0].indexOf('v') >= 0);
 				}
 				
 				mt = s[j].match(SPQREG_ROT);
 				if(mt != null){
 					// console.log("rot", mt);
 					mk = rotSprite(mk, mt[1]);
+				}
+				
+				mt = s[j].match(SPQREG_REPEAT);
+				if(mt != null){
+					mt[1] = mt[0].match(SPREG_REPW);
+					mt[2] = mt[0].match(SPREG_REPH);
+					if(mt[1] != null){
+						mk.map(function(sa, l){
+							s.map(function(s, ll){
+								mk[l].push(s);
+							});
+							
+						});
+					}
 				}
 				if(mk.length != null){
 					// chunk
