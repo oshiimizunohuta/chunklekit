@@ -187,7 +187,7 @@ WordPrint.prototype ={
 	
 	makeStrId: function(MS)
 	{
-		var i, theWord, baseword = 0, subword = this.SPACE_CODE
+		var i, j, theWord, baseword = 0, subword = this.SPACE_CODE
 			, baseWords = []//行の文字
 			, subWords = []//上段行の文字
 			, isHorizon =  this.isHorizon(), isVertical = this.isVertical(), isSoundmark
@@ -195,7 +195,6 @@ WordPrint.prototype ={
 			, spritStr = MS.split(this.escapeWord + this.newLineWord), str
 			, linelen = spritStr.length
 			;
-			
 		for(j = 0; j < linelen; j++){
 			str = spritStr[j];
 			len = str.length;
@@ -240,58 +239,6 @@ WordPrint.prototype ={
 			// baseWords = [];
 		}
 
-		//まずは1行に（改行コードそのまま）
-		for(i = 0; i < MS.length; i++){
-			// TheWord = MS.substr(i, 1);
-			// baseword = this.searchNum(TheWord);
-// 			
-			// isSoundmark = baseword in this.soundmarks;//濁点半濁点
-			// if(isSoundmark && (isHorizon || isVertical)){
-				// subword = baseword;
-				// baseword = this.soundmarks[baseword];
-			// }else{
-				// subword = this.SPACE_CODE;
-				// isSoundmark = false;
-			// }
-// 			
-			// if(baseword == -1){
-				// baseword = 179;
-				// subword = this.SPACE_CODE;
-			// }else if(baseword == this.ESCAPE_CODE){//特殊
-				// baseWords.push(MS[i + 1]);
-				// i += 1;
-				// continue;
-			// }
-// 			
-			// baseWords.push(baseword);
-			// if(isSoundmark){
-				// if(isHorizon){
-					// baseWords.push(subword);
-				// }
-				// this.soundmarkPos.push({pos: baseWords.length - 1, line:this.wordIds.length, left:baseWords.length - 1, word: subword});
-			// }
-// 			
-		}
-		// 改行を与える
-		// len = baseWords.length;
-		// ccnt = 0;
-		// for(i = 0; i < len; i++){
-			// // if(this.wordIds.length >= this.rows){break;}
-			// w = baseWords[ccnt];
-			// //改行ポイント
-			// if(!Number.isInteger(w)){//特殊
-				// baseWords = this.exeCommand(w, baseWords, ccnt);
-				// ccnt = 0;
-				// continue;
-			// }
-			// if((ccnt >= this.cols) && (this.cols > 0)){
-				// baseWords.splice(this.cols, 0, this.newLineWord);
-				// baseWords = this.newLine(baseWords, this.cols);
-				// ccnt = 0;
-			// }
-			// ccnt++;
-		// }
-		
 		if(baseWords.length > 0){
 			baseWords = this.newLine(baseWords);
 		}
@@ -391,7 +338,7 @@ WordPrint.prototype ={
 
 	parse: function(MS)// char length, message
 	{
-		var ar, spr, i, j, isHorizon = this.isHorizon(), subLine, baseWords;
+		var ar, spr, isHorizon = this.isHorizon(), subLine, baseWords;
 		this.wordIds = [];//行
 		this.soundmarkPos = [];
 		
@@ -479,7 +426,7 @@ WordPrint.prototype ={
 	
 	draw: function(scr)
 	{
-		var i, spr, ofs = 0
+		var i, spr, ofs = 0, line
 		, isHorizon = this.isHorizon()
 		, isVertical = this.isVertical()
 		, ofy = isVertical ? -this.vChipSize : 0
@@ -497,8 +444,9 @@ WordPrint.prototype ={
 		}
 		this.swapColor();
 		for(i = 0; i < this.spriteArray.length; i++){
+			line = isVertical ? (i * 0.5) | 0 : i;
 			if(this.rows > 0 && i >= this.rows){break;}
-			lineSpace = isVertical ? (((i / 2) | 0) * this.rowSpace) + (i * this.vChipSize) : i * (this.rowSpace + this.vChipSize);
+			lineSpace = isVertical ? (0 * this.rowSpace) + (i * this.vChipSize) : i * (this.rowSpace + this.vChipSize);
 			scr.drawSpriteArray(this.spriteArray[i], this.position_x, this.position_y + lineSpace + ofy, cols);
 		}
 		// dulog(this.cols);
