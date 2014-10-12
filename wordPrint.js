@@ -187,64 +187,110 @@ WordPrint.prototype ={
 	
 	makeStrId: function(MS)
 	{
-		var i, TheWord, baseword = 0, subword = this.SPACE_CODE
+		var i, theWord, baseword = 0, subword = this.SPACE_CODE
 			, baseWords = []//行の文字
 			, subWords = []//上段行の文字
 			, isHorizon =  this.isHorizon(), isVertical = this.isVertical(), isSoundmark
-			, len , w, ncnt
+			, len , w, ccnt, nlcnt
+			, spritStr = MS.split(this.escapeWord + this.newLineWord), str
+			, linelen = spritStr.length
 			;
+			
+		for(j = 0; j < linelen; j++){
+			str = spritStr[j];
+			len = str.length;
+			for(i = 0; i < len; i++){
+				theWord = str.substr(i, 1);
+				baseword = this.searchNum(theWord);
+				
+				isSoundmark = baseword in this.soundmarks;//濁点半濁点
+				if(isSoundmark && (isHorizon || isVertical)){
+					subword = baseword;
+					baseword = this.soundmarks[baseword];
+				}else{
+					subword = this.SPACE_CODE;
+					isSoundmark = false;
+				}
+				
+				if(baseword == -1){
+					baseword = 179;
+					subword = this.SPACE_CODE;
+				}else if(baseword == this.ESCAPE_CODE){//特殊
+					baseWords.push(str[i + 1]);
+					i += 1;
+					continue;
+				}
+				
+				baseWords.push(baseword);
+				if(isSoundmark){
+					if(isHorizon){
+						baseWords.push(subword);
+					}
+					this.soundmarkPos.push({pos: baseWords.length - 1, line:this.wordIds.length, left:baseWords.length - 1, word: subword});
+				}
+				
+				if((baseWords.length >= this.cols) && (this.cols > 0)){
+					baseWords.splice(this.cols, 0, this.newLineWord);
+					baseWords = this.newLineA(baseWords, this.cols);
+					continue;
+				}
+				
+			}
+			baseWords = this.newLineA(baseWords);
+			// baseWords = [];
+		}
 
 		//まずは1行に（改行コードそのまま）
 		for(i = 0; i < MS.length; i++){
-			TheWord = MS.substr(i, 1);
-			baseword = this.searchNum(TheWord);
-			
-			isSoundmark = baseword in this.soundmarks;//濁点半濁点
-			if(isSoundmark && (isHorizon || isVertical)){
-				subword = baseword;
-				baseword = this.soundmarks[baseword];
-			}else{
-				subword = this.SPACE_CODE;
-				isSoundmark = false;
-			}
-			
-			if(baseword == -1){
-				baseword = 179;
-				subword = this.SPACE_CODE;
-			}else if(baseword == this.ESCAPE_CODE){//特殊
-				baseWords.push(MS[i + 1]);
-				i += 1;
-				continue;
-			}
-			
-			baseWords.push(baseword);
-			if(isSoundmark){
-				if(isHorizon){
-					baseWords.push(subword);
-				}
-				this.soundmarkPos.push({pos: baseWords.length - 1, line:this.wordIds.length, left:baseWords.length - 1, word: subword});
-			}
-			
+			// TheWord = MS.substr(i, 1);
+			// baseword = this.searchNum(TheWord);
+// 			
+			// isSoundmark = baseword in this.soundmarks;//濁点半濁点
+			// if(isSoundmark && (isHorizon || isVertical)){
+				// subword = baseword;
+				// baseword = this.soundmarks[baseword];
+			// }else{
+				// subword = this.SPACE_CODE;
+				// isSoundmark = false;
+			// }
+// 			
+			// if(baseword == -1){
+				// baseword = 179;
+				// subword = this.SPACE_CODE;
+			// }else if(baseword == this.ESCAPE_CODE){//特殊
+				// baseWords.push(MS[i + 1]);
+				// i += 1;
+				// continue;
+			// }
+// 			
+			// baseWords.push(baseword);
+			// if(isSoundmark){
+				// if(isHorizon){
+					// baseWords.push(subword);
+				// }
+				// this.soundmarkPos.push({pos: baseWords.length - 1, line:this.wordIds.length, left:baseWords.length - 1, word: subword});
+			// }
+// 			
 		}
 		// 改行を与える
-		len = baseWords.length;
-		ncnt = 0;
-		for(i = 0; i < len; i++){
-			// if(this.wordIds.length >= this.rows){break;}
-			w = baseWords[ncnt];
-			//改行ポイント
-			if(!Number.isInteger(w)){//特殊
-				baseWords = this.exeCommand(w, baseWords, ncnt);
-				ncnt = 0;
-				continue;
-			}
-			if((ncnt >= this.cols) && (this.cols > 0)){
-				baseWords.splice(this.cols, 0, this.newLineWord);
-				baseWords = this.newLine(baseWords, this.cols);
-				ncnt = 0;
-			}
-			ncnt++;
-		}
+		// len = baseWords.length;
+		// ccnt = 0;
+		// for(i = 0; i < len; i++){
+			// // if(this.wordIds.length >= this.rows){break;}
+			// w = baseWords[ccnt];
+			// //改行ポイント
+			// if(!Number.isInteger(w)){//特殊
+				// baseWords = this.exeCommand(w, baseWords, ccnt);
+				// ccnt = 0;
+				// continue;
+			// }
+			// if((ccnt >= this.cols) && (this.cols > 0)){
+				// baseWords.splice(this.cols, 0, this.newLineWord);
+				// baseWords = this.newLine(baseWords, this.cols);
+				// ccnt = 0;
+			// }
+			// ccnt++;
+		// }
 		
 		if(baseWords.length > 0){
 			baseWords = this.newLine(baseWords);
@@ -346,7 +392,7 @@ WordPrint.prototype ={
 	parse: function(MS)// char length, message
 	{
 		var ar, spr, i, j, isHorizon = this.isHorizon(), subLine, baseWords;
-		this.wordIds = []//行
+		this.wordIds = [];//行
 		this.soundmarkPos = [];
 		
 		baseWords = this.makeStrId(MS + "");
@@ -358,7 +404,8 @@ WordPrint.prototype ={
 			
 		if(isHorizon){
 			this.soundmarkPos.forEach(function(mark, i){
-				this.spriteArray = this.spriteMarkRot(this.spriteArray, mark);
+				this.spriteArray[mark.line][mark.pos].rot(2);
+				// this.spriteArray = this.spriteMarkRot(this.spriteArray, mark);
 			}, this);
 		}
 	},
@@ -390,6 +437,17 @@ WordPrint.prototype ={
 		if(left == null){
 			this.wordIds.push(lineWords);
 			return '';
+		}else{
+			this.wordIds.push(lineWords.slice(0, left));
+			return lineWords.slice(left + 1);
+		}
+	},
+
+	newLineA: function(lineWords, left)
+	{
+		if(left == null){
+			this.wordIds.push(lineWords);
+			return [];
 		}else{
 			this.wordIds.push(lineWords.slice(0, left));
 			return lineWords.slice(left + 1);
