@@ -187,7 +187,7 @@ WordPrint.prototype ={
 	
 	makeStrId: function(MS)
 	{
-		var i, theWord, baseword = 0, subword = this.SPACE_CODE
+		var i, j, theWord, baseword = 0, subword = this.SPACE_CODE
 			, baseWords = []//行の文字
 			, subWords = []//上段行の文字
 			, isHorizon =  this.isHorizon(), isVertical = this.isVertical(), isSoundmark
@@ -195,7 +195,6 @@ WordPrint.prototype ={
 			, spritStr = MS.split(this.escapeWord + this.newLineWord), str
 			, linelen = spritStr.length
 			;
-			
 		for(j = 0; j < linelen; j++){
 			str = spritStr[j];
 			len = str.length;
@@ -339,7 +338,7 @@ WordPrint.prototype ={
 
 	parse: function(MS)// char length, message
 	{
-		var ar, spr, i, j, isHorizon = this.isHorizon(), subLine, baseWords;
+		var ar, spr, isHorizon = this.isHorizon(), subLine, baseWords;
 		this.wordIds = [];//行
 		this.soundmarkPos = [];
 		
@@ -427,7 +426,7 @@ WordPrint.prototype ={
 	
 	draw: function(scr)
 	{
-		var i, spr, ofs = 0
+		var i, spr, ofs = 0, line
 		, isHorizon = this.isHorizon()
 		, isVertical = this.isVertical()
 		, ofy = isVertical ? -this.vChipSize : 0
@@ -445,8 +444,9 @@ WordPrint.prototype ={
 		}
 		this.swapColor();
 		for(i = 0; i < this.spriteArray.length; i++){
+			line = isVertical ? (i * 0.5) | 0 : i;
 			if(this.rows > 0 && i >= this.rows){break;}
-			lineSpace = isVertical ? (((i / 2) | 0) * this.rowSpace) + (i * this.vChipSize) : i * (this.rowSpace + this.vChipSize);
+			lineSpace = isVertical ? (0 * this.rowSpace) + (i * this.vChipSize) : i * (this.rowSpace + this.vChipSize);
 			scr.drawSpriteArray(this.spriteArray[i], this.position_x, this.position_y + lineSpace + ofy, cols);
 		}
 		// dulog(this.cols);
