@@ -240,58 +240,6 @@ WordPrint.prototype ={
 			// baseWords = [];
 		}
 
-		//まずは1行に（改行コードそのまま）
-		for(i = 0; i < MS.length; i++){
-			// TheWord = MS.substr(i, 1);
-			// baseword = this.searchNum(TheWord);
-// 			
-			// isSoundmark = baseword in this.soundmarks;//濁点半濁点
-			// if(isSoundmark && (isHorizon || isVertical)){
-				// subword = baseword;
-				// baseword = this.soundmarks[baseword];
-			// }else{
-				// subword = this.SPACE_CODE;
-				// isSoundmark = false;
-			// }
-// 			
-			// if(baseword == -1){
-				// baseword = 179;
-				// subword = this.SPACE_CODE;
-			// }else if(baseword == this.ESCAPE_CODE){//特殊
-				// baseWords.push(MS[i + 1]);
-				// i += 1;
-				// continue;
-			// }
-// 			
-			// baseWords.push(baseword);
-			// if(isSoundmark){
-				// if(isHorizon){
-					// baseWords.push(subword);
-				// }
-				// this.soundmarkPos.push({pos: baseWords.length - 1, line:this.wordIds.length, left:baseWords.length - 1, word: subword});
-			// }
-// 			
-		}
-		// 改行を与える
-		// len = baseWords.length;
-		// ccnt = 0;
-		// for(i = 0; i < len; i++){
-			// // if(this.wordIds.length >= this.rows){break;}
-			// w = baseWords[ccnt];
-			// //改行ポイント
-			// if(!Number.isInteger(w)){//特殊
-				// baseWords = this.exeCommand(w, baseWords, ccnt);
-				// ccnt = 0;
-				// continue;
-			// }
-			// if((ccnt >= this.cols) && (this.cols > 0)){
-				// baseWords.splice(this.cols, 0, this.newLineWord);
-				// baseWords = this.newLine(baseWords, this.cols);
-				// ccnt = 0;
-			// }
-			// ccnt++;
-		// }
-		
 		if(baseWords.length > 0){
 			baseWords = this.newLine(baseWords);
 		}

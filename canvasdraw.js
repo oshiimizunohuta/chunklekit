@@ -959,7 +959,7 @@ function makeSpriteQuery(name, spq)
 		}
 	}catch(e){
 		console.error('Sprite query syntax error :' + spq);
-				console.log(mk, sprite);
+		console.log(mk, sprite);
 		return null;
 	}
 	return sprite;
