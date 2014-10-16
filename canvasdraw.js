@@ -869,32 +869,44 @@ var SPQ_VFLIP = 'fv';
 var SPQ_HFLIP = 'fh';
 var SPQ_ROT = 'r';
 var SPQ_ALL = 'a';
-var SPQREG_ID = new RegExp('^[0-9]+');
+var SPQ_REP = '$';
 var SPQREG_ROT = new RegExp('\\|r[0-4]');
 var SPQREG_VFLIP = new RegExp('\\|fv');
 var SPQREG_HFLIP = new RegExp('\\|fh');
 var SPQREG_RECTC = new RegExp('^[0-9]+\\+[0-9]+:[0-9]+\\+[0-9]+');
 var SPQREG_RECTR = new RegExp('^[0-9]+\\-[0-9]+:[0-9]+\\-[0-9]+');
-var SPQREG_MAKE = new RegExp(
-	'(^[0-9]+$)'
+var SPQREG_MAKE = new RegExp(''
+	+ '(^[0-9]+$)'
 	+ '|(^[0-9]+\\+[0-9]+:[0-9]+\\+[0-9]+$)'
 	+ '|(^[0-9]+\\-[0-9]+:[0-9]+\\-[0-9]+$)'
+	+ '|(^[0-9$]+$)'
+	// + '|([\\*\\^]+[0-9]+)'
+	// + '|(^[0-9$]+[\\*\\^]?[0-9]?)'
+	// + '|(^\\$+)'
 	);
+	
 var SPQREG_FLIP = new RegExp('\\|[fhv]{2,}');
 var SPQREG_ROT = new RegExp('\\|r([0-3])');
-var SPQREG_REPEAT = new RegExp('\\|[wh][0-9]+([wh][0-9]+)?');
-var SPQREG_REPW = new RegExp('w[0-9]+');
-var SPQREG_REPH = new RegExp('h[0-9]+');
+var SPQREG_HMULTI = new RegExp('\\*([0-9]+)$');
+var SPQREG_VMULTI = new RegExp('\\^([0-9]+)$');
+var SPQREG_PAT = new RegExp('\\([^()]*\\)', 'g');
 
 function makeSpriteQuery(name, spq)
 {
-	var sprite = [], spstr, i, j, s, sst, ilen, jlen, mk, mt, prerect;
+	var sprite = [], spstr, i, j, d, s, sst, ilen, jlen, mk, mt, prerect, sprstr;
 	if(spq == SPQ_ALL){
 		return makeSpriteImage(name);
 	}
 	try{
+		sppat = spq.match(SPQREG_PAT);
+		sppat = sppat == null ? null : sppat.map(function(s, i){
+			return makeSpriteQuery(name, s.replace(/\((\S*)\)/, '$1'));
+		});
+		spq = spq.replace(SPQREG_PAT, SPQ_REP);
+		
 		spstr = spq.split(SPQ_NEWLINE);
-	
+				// console.log(spq);
+
 		ilen = spstr.length;
 		for(i = 0; i < ilen; i++){
 			sst = spstr[i];
@@ -902,7 +914,9 @@ function makeSpriteQuery(name, spq)
 			jlen = s.length;
 			for(j = 0; j < jlen; j++){
 				// console.log("j" + j, s[j]);
-				mt = s[j].split(SPQ_CONNECT)[0].match(SPQREG_MAKE);
+				sprstr = s[j].replace(SPQREG_HMULTI, '').replace(SPQREG_VMULTI, '');
+				mt = sprstr.split(SPQ_CONNECT)[0].match(SPQREG_MAKE);
+				// console.log( s[j] );
 				if(mt == null){
 					continue;
 				}else if(mt[2] != null){
@@ -914,11 +928,16 @@ function makeSpriteQuery(name, spq)
 					prerect = mt[3].replace(':', '-').split('-').map(function(r){return r | 0;});
 					mk = makeSpriteChunk(name, makeRect(prerect[0], prerect[2], prerect[1] - prerect[0] + 1, prerect[3] - prerect[2] + 1));
 					// console.log(mk, prerect);
+				}else if(mt[4] != null){
+					mk = sppat.shift();
+					// console.log(sppat, mk, mt[4]);
+					// console.log(mt[4], s[j])
 				}else if(mt[1] != null){
 					//.e.g "id"
 					mk = makeSprite(name, mt[1]);
-					// console.log(mk);
+					// console.log(mt[1], mk);
 				}
+				// console.log(mt);
 				mt = s[j].match(SPQREG_FLIP);
 				if(mt != null){
 					// console.log("flip", mt);
@@ -931,30 +950,18 @@ function makeSpriteQuery(name, spq)
 					mk = rotSprite(mk, mt[1]);
 				}
 				
-				mt = s[j].match(SPQREG_REPEAT);
-				if(mt != null){
-					mt[1] = mt[0].match(SPREG_REPW);
-					mt[2] = mt[0].match(SPREG_REPH);
-					if(mt[1] != null){
-						mk.map(function(sa, l){
-							s.map(function(s, ll){
-								mk[l].push(s);
-							});
-							
-						});
-					}
+				mt = s[j].match(SPQREG_HMULTI);
+				mt = mt == null ? 1 : mt[1] | 0;
+				for(d = 0; d < mt; d++){
+					sprite = concatSprite(sprite, mk, i);
 				}
-				if(mk.length != null){
-					// chunk
-					mk.map(function(s, l){
-						sprite[i + l] = sprite[i + l] == null ? s : sprite[i + l].concat(s);
-						// console.log(sprite, s);
-					});
-				}else{
-					// id
-					// console.log(i, sprite[i]);
-					sprite[i] == null ? sprite[i] = [mk] : sprite[i].push(mk);
+				
+				mt = s[j].match(SPQREG_VMULTI);
+				mt = mt == null ? 0 : mt[1] | 0;
+				for(d = 1; d < mt; d++){
+					sprite = concatSprite(sprite, mk, sprite.length);
 				}
+				
 			}
 		}
 	}catch(e){
@@ -965,7 +972,20 @@ function makeSpriteQuery(name, spq)
 	return sprite;
 }
 
-
+function concatSprite(sprite1, sprite2, row)
+{
+	var i;
+	if(sprite2.length != null){
+		// chunk
+		sprite2.map(function(s, l){
+			sprite1[row + l] = sprite1[row + l] == null ? s : sprite1[row + l].concat(s);
+		});
+	}else{
+		// id
+		sprite1[row] == null ? sprite1[row] = [sprite2] : sprite1[row].push(sprite2);
+	}
+	return sprite1;
+}
 
 function spreadSpriteChunk(name, indexes, w, h)
 {
