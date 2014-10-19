@@ -870,6 +870,8 @@ var SPQ_HFLIP = 'fh';
 var SPQ_ROT = 'r';
 var SPQ_ALL = 'a';
 var SPQ_REP = '$';
+var SPQREG_BOTTOMLINE = new RegExp('\\!');
+var SPQREG_CHROW = new RegExp('\\?[0-9]+$');
 var SPQREG_ROT = new RegExp('\\|r[0-4]');
 var SPQREG_VFLIP = new RegExp('\\|fv');
 var SPQREG_HFLIP = new RegExp('\\|fh');
@@ -880,20 +882,17 @@ var SPQREG_MAKE = new RegExp(''
 	+ '|(^[0-9]+\\+[0-9]+:[0-9]+\\+[0-9]+$)'
 	+ '|(^[0-9]+\\-[0-9]+:[0-9]+\\-[0-9]+$)'
 	+ '|(^[0-9$]+$)'
-	// + '|([\\*\\^]+[0-9]+)'
-	// + '|(^[0-9$]+[\\*\\^]?[0-9]?)'
-	// + '|(^\\$+)'
 	);
 	
 var SPQREG_FLIP = new RegExp('\\|[fhv]{2,}');
 var SPQREG_ROT = new RegExp('\\|r([0-3])');
-var SPQREG_HMULTI = new RegExp('\\*([0-9]+)$');
-var SPQREG_VMULTI = new RegExp('\\^([0-9]+)$');
+var SPQREG_HMULTI = new RegExp('\\*([0-9]+)');
+var SPQREG_VMULTI = new RegExp('\\^([0-9]+)');
 var SPQREG_PAT = new RegExp('\\([^()]*\\)', 'g');
 
 function makeSpriteQuery(name, spq)
 {
-	var sprite = [], spstr, i, j, d, s, sst, ilen, jlen, mk, mt, prerect, sprstr;
+	var sprite = [], spstr, i, j, d, ofy, s, sst, ilen, jlen, mk, mt, prerect, sprstr;
 	if(spq == SPQ_ALL){
 		return makeSpriteImage(name);
 	}
@@ -908,13 +907,15 @@ function makeSpriteQuery(name, spq)
 				// console.log(spq);
 
 		ilen = spstr.length;
+		ofy = 0;
 		for(i = 0; i < ilen; i++){
 			sst = spstr[i];
 			s = sst.split(SPQ_DELIMITER);
 			jlen = s.length;
 			for(j = 0; j < jlen; j++){
 				// console.log("j" + j, s[j]);
-				sprstr = s[j].replace(SPQREG_HMULTI, '').replace(SPQREG_VMULTI, '');
+				sprstr = s[j].replace(SPQREG_HMULTI, '').replace(SPQREG_VMULTI, '').replace(SPQREG_BOTTOMLINE, '');
+
 				mt = sprstr.split(SPQ_CONNECT)[0].match(SPQREG_MAKE);
 				// console.log( s[j] );
 				if(mt == null){
@@ -953,7 +954,7 @@ function makeSpriteQuery(name, spq)
 				mt = s[j].match(SPQREG_HMULTI);
 				mt = mt == null ? 1 : mt[1] | 0;
 				for(d = 0; d < mt; d++){
-					sprite = concatSprite(sprite, mk, i);
+					sprite = concatSprite(sprite, mk, i + ofy);
 				}
 				
 				mt = s[j].match(SPQREG_VMULTI);
@@ -961,6 +962,18 @@ function makeSpriteQuery(name, spq)
 				for(d = 1; d < mt; d++){
 					sprite = concatSprite(sprite, mk, sprite.length);
 				}
+				
+				mt = s[j].match(SPQREG_BOTTOMLINE);
+				if(mt != null){
+					ofy = sprite.length - i - 1;
+					sprite.push([]);
+					// console.log(sprite , mt, ofy, i);
+				}
+// 				
+				// mt = s[j].match(SPQREG_CHROWLINE);
+				// if(mt != null){
+					// // ofy = mt[1] | 0;
+				// }
 				
 			}
 		}
