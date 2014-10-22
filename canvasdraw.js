@@ -870,6 +870,7 @@ var SPQ_HFLIP = 'fh';
 var SPQ_ROT = 'r';
 var SPQ_ALL = 'a';
 var SPQ_REP = '$';
+var SPQ_NSTREP = '@';
 var SPQREG_BOTTOMLINE = new RegExp('\\!');
 var SPQREG_CHROW = new RegExp('\\?[0-9]+$');
 var SPQREG_ROT = new RegExp('\\|r[0-4]');
@@ -882,6 +883,7 @@ var SPQREG_MAKE = new RegExp(''
 	+ '|(^[0-9]+\\+[0-9]+:[0-9]+\\+[0-9]+$)'
 	+ '|(^[0-9]+\\-[0-9]+:[0-9]+\\-[0-9]+$)'
 	+ '|(^[0-9$]+$)'
+	+ '|(^[0-9@]+$)'
 	);
 	
 var SPQREG_FLIP = new RegExp('\\|[fhv]{2,}');
@@ -889,22 +891,41 @@ var SPQREG_ROT = new RegExp('\\|r([0-3])');
 var SPQREG_HMULTI = new RegExp('\\*([0-9]+)');
 var SPQREG_VMULTI = new RegExp('\\^([0-9]+)');
 var SPQREG_PAT = new RegExp('\\([^()]*\\)', 'g');
+var SPQREG_INPAT = new RegExp('\\([^)]*\\(.*\\)[^(]*\\)', 'g');
 
+var SPQSUBREG_PAT = new RegExp('^\\((.*)\\)$');
+var SPQ_RCOUNT = 0;
 function makeSpriteQuery(name, spq)
 {
-	var sprite = [], spstr, i, j, d, ofy, s, sst, ilen, jlen, mk, mt, prerect, sprstr;
+	var mtpat, nstpat = [], sppat = [], sprite = []
+	, spstr, i, j, rw, rh, ofy, s, sst, ilen, jlen, mk, mt, prerect, sprstr;
+	SPQ_RCOUNT++;
+	if(	SPQ_RCOUNT > 200){
+		SPQ_RCOUNT--;
+		return;
+	}
 	if(spq == SPQ_ALL){
 		return makeSpriteImage(name);
 	}
 	try{
+		// console.log(spq.match(SPQREG_INPAT));
+		//Nest Groups
+		nstpat = spq.match(SPQREG_INPAT);
+		nstpat = nstpat == null ? nstpat : nstpat.map(function(s, i){
+			// console.log(s, nstpat);
+			return makeSpriteQuery(name, s.replace(SPQSUBREG_PAT, '$1'));
+		});
+		spq = spq.replace(SPQREG_INPAT, SPQ_NSTREP);
+
+		//Single Groups
 		sppat = spq.match(SPQREG_PAT);
-		sppat = sppat == null ? null : sppat.map(function(s, i){
-			return makeSpriteQuery(name, s.replace(/\((\S*)\)/, '$1'));
+		// console.log(mtpat);
+		sppat = sppat == null ? sppat : sppat.map(function(s, i){
+
+			return makeSpriteQuery(name, s.replace(SPQSUBREG_PAT, '$1'));
 		});
 		spq = spq.replace(SPQREG_PAT, SPQ_REP);
-		
 		spstr = spq.split(SPQ_NEWLINE);
-				// console.log(spq);
 
 		ilen = spstr.length;
 		ofy = 0;
@@ -931,7 +952,9 @@ function makeSpriteQuery(name, spq)
 					// console.log(mk, prerect);
 				}else if(mt[4] != null){
 					mk = sppat.shift();
-					// console.log(sppat, mk, mt[4]);
+					// console.log(mt[4], s[j])
+				}else if(mt[5] != null){
+					mk = nstpat.shift();
 					// console.log(mt[4], s[j])
 				}else if(mt[1] != null){
 					//.e.g "id"
@@ -952,16 +975,14 @@ function makeSpriteQuery(name, spq)
 				}
 				
 				mt = s[j].match(SPQREG_HMULTI);
-				mt = mt == null ? 1 : mt[1] | 0;
-				for(d = 0; d < mt; d++){
-					sprite = concatSprite(sprite, mk, i + ofy);
-				}
+				rw = mt == null ? 1 : mt[1] | 0;
 				
 				mt = s[j].match(SPQREG_VMULTI);
-				mt = mt == null ? 0 : mt[1] | 0;
-				for(d = 1; d < mt; d++){
-					sprite = concatSprite(sprite, mk, sprite.length);
-				}
+				rh = mt == null ? 1 : mt[1] | 0;
+				
+				mk = repeatSprite(mk, rw, rh);
+				
+				sprite = concatSprite(sprite, mk, ofy + i);
 				
 				mt = s[j].match(SPQREG_BOTTOMLINE);
 				if(mt != null){
@@ -969,11 +990,6 @@ function makeSpriteQuery(name, spq)
 					sprite.push([]);
 					// console.log(sprite , mt, ofy, i);
 				}
-// 				
-				// mt = s[j].match(SPQREG_CHROWLINE);
-				// if(mt != null){
-					// // ofy = mt[1] | 0;
-				// }
 				
 			}
 		}
@@ -982,7 +998,21 @@ function makeSpriteQuery(name, spq)
 		console.log(mk, sprite);
 		return null;
 	}
+	SPQ_RCOUNT--;
+
 	return sprite;
+}
+function repeatSprite(sprite, w, h)
+{
+	var row = [], mk = [], d;
+	for(d = 0; d < w; d++){
+		row = concatSprite(row, sprite, 0);
+	}
+	
+	for(d = 0; d < h; d++){
+		mk = concatSprite(mk, row, mk.length);
+	}
+	return mk;
 }
 
 function concatSprite(sprite1, sprite2, row)
