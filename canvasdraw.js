@@ -1227,6 +1227,9 @@ CanvasSprite.prototype = {
 	},
 	/**
 	 * 色を交換
+	 * ※連続的に変更する場合は
+	 * swapColorReset
+	 * も合わせて使うこと
 	 */
 	swapColor: function(to, from)
 	{
@@ -1234,7 +1237,22 @@ CanvasSprite.prototype = {
 		this.swaps.push([from, to]);
 	},
 
-	swapColorReset: function()
+	setSwapColor: function(to, from)
+	{
+		this.swaps = [];
+		this.swaps.push([from, to]);
+	},
+	pushSwapColor: function(to, from)
+	{
+		if(this.swaps == null){this.swaps = [];}
+		this.swaps.push([from, to]);
+	},
+
+
+	/**
+	 * 色交換をリセット
+	 */
+	resetSwapColor: function()
 	{
 		this.swaps = null;
 	},
