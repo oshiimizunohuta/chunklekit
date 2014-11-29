@@ -1072,18 +1072,27 @@ function flipSprite(sprite, h, v)
 	if(h){sprite.hflip(h);}
 	return sprite;
 }
-// 
-// function flipSprite(sprite, h, v)
-// {
-	// if(sprite.length != null){
-		// sprite = sprite.map(function(s, i){
-			// return flipSprite(s, v, h);
-		// });
-	// }
-	// if(v){sprite.vflip(v);}
-	// if(h){sprite.hflip(h);}
-	// return sprite;
-// }
+
+function setSwapColorSprite(sprite, to, from, reset)
+{
+	if(sprite.length != null){
+		sprite = sprite.map(function(s, i){
+			return setSwapColorSprite(s, to, from, reset);
+		});
+		return sprite;
+	}
+	if(to == null && from == null){
+		sprite.resetSwapColor();
+	}else{
+		if(reset != null && reset){
+			sprite.setSwapColor(to, from);
+		}else{
+			sprite.pushSwapColor(to, from);
+		}
+	}
+	return sprite;
+}
+
 
 function imageCellWidth(name)
 {
@@ -1196,6 +1205,7 @@ CanvasSprite.prototype = {
 	{
 		var tmp, data, bgdata, index = 0
 			, from , to, pixels = this.w * this.h, p, slen, i, swaps = this.swaps, swap
+			, index1 = 0, index2 = 1, index3 = 2, index4 = 3
 		;
 		if(swaps == null){swaps = [];}
 		slen = swaps.length;
@@ -1206,21 +1216,26 @@ CanvasSprite.prototype = {
 				swap = swaps[i];
 				from = swap[0];
 				to = swap[1];
-				if(data[index] == from[0] && data[index + 1] == from[1] && data[index + 2] == from[2] && data[index + 3] == from[3]){
-					data[index] = to[0];
-					data[index+1] = to[1];
-					data[index+2] = to[2];
-					data[index+3] = to[3];
+				if(data[index1] == from[0] && data[index2] == from[1] && data[index3] == from[2] && data[index4] == from[3]){
+					data[index1] = to[0];
+					data[index2] = to[1];
+					data[index3] = to[2];
+					data[index4] = to[3];
+					break;
 				}
 			}
-			if(data[index + 3] == 0){
+			if(data[index4] == 0){
 				//アルファ描画補正
-				data[index] = bgdata[index];
-				data[index+1] = bgdata[index + 1];
-				data[index+2] = bgdata[index + 2];
-				data[index+3] = bgdata[index + 3];
+				data[index1] = bgdata[index1];
+				data[index2] = bgdata[index2];
+				data[index3] = bgdata[index3];
+				data[index4] = bgdata[index4];
 			}
-			index += 4;
+			// index += 4;
+			index1 += 4;
+			index2 += 4;
+			index3 += 4;
+			index4 += 4;
 		}
 		this.swapImage = tmp;
 		return tmp;
@@ -1955,7 +1970,8 @@ var COLOR_LIGHTBLUE = [60, 188, 252, 255];
 var COLOR_TRANSPARENT = [0, 0, 0, 0];
 var COLOR_ADD = [82, 247, 148, 255];
 var COLOR_SUB = [247, 82, 148, 255];
-var COLOR_BLACK = [1, 1, 1, 255];
+// var COLOR_BLACK = [1, 1, 1, 255]; //pallet v
+var COLOR_BLACK = [0, 0, 1, 255]; //pallet: NesPallet_NTSC
 // var COLOR_WHITE = [255, 255, 255, 255];
 var COLOR_WHITE = [252, 252, 252, 255];//nespallette
 var COLOR_REQUID = [0, 140, 140, 255];
