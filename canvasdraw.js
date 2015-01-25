@@ -6,6 +6,8 @@
 //キャンバスことスクロール
 var canvasScrollBundle = {};
 var VIEWMULTI = 1;
+var SCROLL_MAX_SPRITES_DRAW = 32;
+var SCROLL_MAX_SPRITES_STACK = 2048;
 function makeScroll(name, mainFlag, width, height){
 	var scr = new CanvasScroll();
 	scr.init(name, mainFlag, width, height);
@@ -57,17 +59,17 @@ function CanvasScroll(name, mainFlag, width, height)
 		this.x = 0;
 		this.y = 0;
 		canvasScrollBundle[name] = this;
+		this.maxSprites = SCROLL_MAX_SPRITES_DRAW;
+		this.maxSpritesStack = SCROLL_MAX_SPRITES_STACK;
+		this.drawStack = [];
 	};
 	CanvasScroll.prototype.init = init;
-
-	function draw(otherScroll, x, y)
-	{
-		//this.ctx.drawImage(otherScroll, otherScroll.x, otherScroll.y, otherScroll.w, otherScroll.h, otherScroll.x, otherScroll.y, otherScroll.w, otherScroll.h);
-	}
 
 	function drawto(targetScroll, x, y, w, h)
 	{
 //		debugUser.log([x, y]);
+		
+		if(targetScroll == null){return;}
 		if(w == null){w = this.canvas.width;}
 		if(h == null){h = this.canvas.height;}
 		if(x == null){x = 0;}
@@ -135,6 +137,27 @@ function CanvasScroll(name, mainFlag, width, height)
 	}
 	CanvasScroll.prototype.nearestTo = nearestTo;
 
+	function drawStackDrawInfo()
+	{
+		var stack = this.drawStack, drawInfo, cnt = 0
+		;
+		while(stack.length){
+			if(cnt++ > this.maxSprites){
+				if(this.name == 'bg1'){console.log(this.name);}
+				break;
+			}
+			drawInfo = stack.shift();
+			if(drawInfo.sprite != null){
+				this.drawSpriteInfo(drawInfo);
+			}else if(drawInfo.fillrect != null){
+				this.drawFillRectInfo(drawInfo);
+			}else if(drawInfo.from != null){
+				this.drawSpriteLineInfo(drawInfo);
+			}
+		}
+	}
+	CanvasScroll.prototype.drawStackDrawInfo = drawStackDrawInfo;
+
 	/**
 	   * 描く
 	   * @param sprite
@@ -142,11 +165,27 @@ function CanvasScroll(name, mainFlag, width, height)
 	   * @param y
 	   */
 	function drawSprite(sprite, x, y)
-	{//echo(x + " " + y +  "   ");
-		var image
-			, vf = 1, hf = 1, r, rox = 0, roy = 0, w = sprite.w, h = sprite.h
-		;
+	{
+		this.drawStack.push({sprite: sprite, x: x, y: y});
+		if(this.maxSpritesStack < this.drawStack.length){
+			this.drawStack.shift();
+		}
+	};
+	CanvasScroll.prototype.drawSprite = drawSprite;
 
+	function drawSpriteInfo(spriteInfo)
+	{
+		var sprite, x, y
+				, image
+				, vf = 1, hf = 1, r, rox = 0, roy = 0, w = 0, h = 0
+				;
+		sprite = spriteInfo.sprite;
+		x = spriteInfo.x;
+		y = spriteInfo.y;
+		w = sprite.w;
+		h = sprite.h;
+			
+		;
 		if(sprite.swaps !== null){
 			//色変更
 			// image = new Image();
@@ -203,10 +242,10 @@ function CanvasScroll(name, mainFlag, width, height)
 			this.ctx.scale(hf, vf);
 			// sprite.flip();
 		}
-		
-	};
-	CanvasScroll.prototype.drawSprite = drawSprite;
-
+		//this.ctx.drawImage(otherScroll, otherScroll.x, otherScroll.y, otherScroll.w, otherScroll.h, otherScroll.x, otherScroll.y, otherScroll.w, otherScroll.h);
+	}
+	CanvasScroll.prototype.drawSpriteInfo = drawSpriteInfo;
+	
 	function drawSpriteArray(spriteArray, x, y, cellsWidth)
 	{
 		var posX, posY, slen = spriteArray.length, i
@@ -293,10 +332,9 @@ function CanvasScroll(name, mainFlag, width, height)
 	}
 	CanvasScroll.prototype.pset = pset;
 
-	// function spriteLine(from, to, sprite)
-	function spriteLine(from, to, color)
+	function drawSpriteLineInfo(lineInfo)
 	{
-		var i
+		var i, from = lineInfo.from, to = lineInfo.to, color = lineInfo.color
 			, point, x = from.x | 0, y = from.y | 0
 			, lx = (to.x - from.x) | 0
 			, ly = (to.y - from.y) | 0
@@ -306,7 +344,6 @@ function CanvasScroll(name, mainFlag, width, height)
 			, dy = pri == 'y' ? 1 : ly / lx
 			, ctx = this.ctx
 		;
-		
 		// if(isNaN(len)){
 			// return;
 		// }
@@ -336,7 +373,19 @@ function CanvasScroll(name, mainFlag, width, height)
 				this.ctx.putImageData(point, from.x, from.y);
 			}
 		}
-
+		
+	}
+	CanvasScroll.prototype.drawSpriteLineInfo = drawSpriteLineInfo;
+	
+	// function spriteLine(from, to, sprite)
+	function spriteLine(from, to, color)
+	{
+		var f = {x: from.x, y: from.y}, t = {x: to.x, y: to.y}, c = color
+		,info = {from : f, to: t, color: c};
+		this.drawStack.push(info);
+		if(this.maxSpritesStack < this.drawStack.length){
+			this.drawStack.shift();
+		}
 	}
 	CanvasScroll.prototype.spriteLine = spriteLine;
 	
@@ -345,11 +394,36 @@ function CanvasScroll(name, mainFlag, width, height)
 	*/
 	function clear(color, rect)
 	{
-//		echo(this.canvas.getAttribute("id"));
-
 		if(rect == null){
-			rect = {x: 0, y: 0, w: (0 | this.canvas.width), h: (0 | this.canvas.height)}
-		}else{
+			rect = {x: 0, y: 0, w: (0 | this.canvas.width), h: (0 | this.canvas.height)};
+			// console.log(rect);
+		}
+		if(color != null){
+			//this.canvas.style.backgroundColor = color;
+			this.ctx.fillStyle = makeRGB(color);
+			this.ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
+		}
+		this.drawStack.push({color: color == null ? null : color, fillrect: rect == null ? null : rect});
+		// console.log(color, rect);
+		// if(rect == null){
+			// rect = {x: 0, y: 0, w: (0 | this.canvas.width), h: (0 | this.canvas.height)};
+// 			
+		// }
+		// if(color != null){
+			// //this.canvas.style.backgroundColor = color;
+			// this.ctx.fillStyle = makeRGB(color);
+			// this.ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
+		// }else{		
+			// this.ctx.clearRect(rect.x, rect.y, rect.w, rect.h);
+		// }
+	};
+	CanvasScroll.prototype.clear = clear;
+	
+	function drawFillRectInfo(rectInfo)
+	{
+		var color = rectInfo.color, rect = rectInfo.fillrect;
+		if(rect == null){
+			rect = {x: 0, y: 0, w: (0 | this.canvas.width), h: (0 | this.canvas.height)};
 		}
 		if(color != null){
 			//this.canvas.style.backgroundColor = color;
@@ -357,9 +431,15 @@ function CanvasScroll(name, mainFlag, width, height)
 			this.ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
 		}else{		
 			this.ctx.clearRect(rect.x, rect.y, rect.w, rect.h);
-		}
-	};
-	CanvasScroll.prototype.clear = clear;
+		}		
+	}
+	CanvasScroll.prototype.drawFillRectInfo = drawFillRectInfo;
+	
+	function clearDrawInfoStack()
+	{
+		this.drawStack = [];
+	}
+	CanvasScroll.prototype.clearDrawInfoStack = clearDrawInfoStack;
 
 //未使用？
 	function colorSwap(sprite, left, top)
@@ -490,7 +570,7 @@ function CanvasScroll(name, mainFlag, width, height)
 function SSImgRemove(obj)
 {
 	// dulog(obj.parentNode.parentNode);
-	obj.parentNode.parentNode.removeChild(obj.parentNode)
+	obj.parentNode.parentNode.removeChild(obj.parentNode);
 }
 
 /**
@@ -505,6 +585,14 @@ function scrollByName(name)
 {
 	var scr = canvasScrollBundle == null ? layerScroll : canvasScrollBundle;
 	return (scr[name] != null) ? scr[name] : null;
+}
+
+function drawCanvasStacks()
+{
+	var k, scr = canvasScrollBundle == null ? layerScroll : canvasScrollBundle;
+	for(k in scr){
+		scr[k].drawStackDrawInfo();
+	}
 }
 /**
  * 画面キャプチャー
