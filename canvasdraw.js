@@ -61,14 +61,14 @@ function CanvasScroll(name, mainFlag, width, height)
 		canvasScrollBundle[name] = this;
 		this.maxSprites = SCROLL_MAX_SPRITES_DRAW;
 		this.maxSpritesStack = SCROLL_MAX_SPRITES_STACK;
-		this.drawStack = [];
+		this.drawInfoStack = [];
 	};
 	CanvasScroll.prototype.init = init;
 
 	function drawto(targetScroll, x, y, w, h)
 	{
 //		debugUser.log([x, y]);
-		
+		if(!this.is_visible()){return;}
 		if(targetScroll == null){return;}
 		if(w == null){w = this.canvas.width;}
 		if(h == null){h = this.canvas.height;}
@@ -84,6 +84,7 @@ function CanvasScroll(name, mainFlag, width, height)
 
 	function rasterto(targetScroll, sx, sy, sw, sh, dx, dy, dw, dh)
 	{
+		if(!this.is_visible()){return;}
 		if(sw == null){sw = this.canvas.width;}
 		if(sh == null){sh = this.canvas.height;}
 		if(sx == null){sx = 0;}
@@ -137,14 +138,14 @@ function CanvasScroll(name, mainFlag, width, height)
 	}
 	CanvasScroll.prototype.nearestTo = nearestTo;
 
-	function drawStackDrawInfo()
+	function drawDrawInfoStack()
 	{
-		var stack = this.drawStack, drawInfo, cnt = 0
+		var stack = this.drawInfoStack, drawInfo, cnt = 0
 		;
 		while(stack.length){
 			if(cnt++ > this.maxSprites){
 				if(this.name == 'bg1'){console.log(this.name);}
-				break;
+				return false;
 			}
 			drawInfo = stack.shift();
 			if(drawInfo.sprite != null){
@@ -155,8 +156,9 @@ function CanvasScroll(name, mainFlag, width, height)
 				this.drawSpriteLineInfo(drawInfo);
 			}
 		}
+		return true;
 	}
-	CanvasScroll.prototype.drawStackDrawInfo = drawStackDrawInfo;
+	CanvasScroll.prototype.drawDrawInfoStack = drawDrawInfoStack;
 
 	/**
 	   * 描く
@@ -166,9 +168,9 @@ function CanvasScroll(name, mainFlag, width, height)
 	   */
 	function drawSprite(sprite, x, y)
 	{
-		this.drawStack.push({sprite: sprite, x: x, y: y});
-		if(this.maxSpritesStack < this.drawStack.length){
-			this.drawStack.shift();
+		this.drawInfoStack.push({sprite: sprite, x: x, y: y});
+		if(this.maxSpritesStack < this.drawInfoStack.length){
+			this.drawInfoStack.shift();
 		}
 	};
 	CanvasScroll.prototype.drawSprite = drawSprite;
@@ -382,9 +384,9 @@ function CanvasScroll(name, mainFlag, width, height)
 	{
 		var f = {x: from.x, y: from.y}, t = {x: to.x, y: to.y}, c = color
 		,info = {from : f, to: t, color: c};
-		this.drawStack.push(info);
-		if(this.maxSpritesStack < this.drawStack.length){
-			this.drawStack.shift();
+		this.drawInfoStack.push(info);
+		if(this.maxSpritesStack < this.drawInfoStack.length){
+			this.drawInfoStack.shift();
 		}
 	}
 	CanvasScroll.prototype.spriteLine = spriteLine;
@@ -403,7 +405,7 @@ function CanvasScroll(name, mainFlag, width, height)
 			this.ctx.fillStyle = makeRGB(color);
 			this.ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
 		}
-		this.drawStack.push({color: color == null ? null : color, fillrect: rect == null ? null : rect});
+		this.drawInfoStack.push({color: color == null ? null : color, fillrect: rect == null ? null : rect});
 		// console.log(color, rect);
 		// if(rect == null){
 			// rect = {x: 0, y: 0, w: (0 | this.canvas.width), h: (0 | this.canvas.height)};
@@ -437,9 +439,15 @@ function CanvasScroll(name, mainFlag, width, height)
 	
 	function clearDrawInfoStack()
 	{
-		this.drawStack = [];
+		this.drawInfoStack = [];
 	}
 	CanvasScroll.prototype.clearDrawInfoStack = clearDrawInfoStack;
+
+	function isDrawingInfoStack()
+	{
+		return this.drawInfoStack.length > 0;
+	}
+	CanvasScroll.prototype.isDrawingInfoStack = isDrawingInfoStack;
 
 //未使用？
 	function colorSwap(sprite, left, top)
@@ -589,10 +597,11 @@ function scrollByName(name)
 
 function drawCanvasStacks()
 {
-	var k, scr = canvasScrollBundle == null ? layerScroll : canvasScrollBundle;
+	var k, scr = canvasScrollBundle == null ? layerScroll : canvasScrollBundle, complete = true;
 	for(k in scr){
-		scr[k].drawStackDrawInfo();
+		complete &= scr[k].drawDrawInfoStack();
 	}
+	return complete;
 }
 /**
  * 画面キャプチャー
