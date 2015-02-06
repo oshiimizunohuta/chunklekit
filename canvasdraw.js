@@ -144,7 +144,7 @@ function CanvasScroll(name, mainFlag, width, height)
 		;
 		while(stack.length){
 			if(cnt++ > this.maxSprites){
-				if(this.name == 'bg1'){console.log(this.name);}
+				// if(this.name == 'bg1'){console.log(this.name);}
 				return false;
 			}
 			drawInfo = stack.shift();
