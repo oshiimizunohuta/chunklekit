@@ -595,11 +595,18 @@ function scrollByName(name)
 	return (scr[name] != null) ? scr[name] : null;
 }
 
-function drawCanvasStacks()
+function drawCanvasStacks(max)
 {
-	var k, scr = canvasScrollBundle == null ? layerScroll : canvasScrollBundle, complete = true;
+	var cnt = 0, k, scr = canvasScrollBundle == null ? layerScroll : canvasScrollBundle, complete = true;
+	max = max == null ? SCROLL_MAX_SPRITES_DRAW * canvasScrollBundle.length : max;
 	for(k in scr){
 		complete &= scr[k].drawDrawInfoStack();
+		if(max <= cnt++){
+			break;
+		}
+	}
+	if(!complete && max > cnt){
+		return drawCanvasStacks(max - cnt);
 	}
 	return complete;
 }
