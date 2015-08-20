@@ -12,6 +12,7 @@ WordPrint.prototype ={
 		this.moji_alph = "ABCDEFGHIJKLMNOPQRSTUVWXYZ,.:;abcdefghijklmnopqrstuvwxyz ^&©";
 		this.moji_suji = "0123456789";
 		
+		//文字コード群から離れているモノ、間違えやすいモノ
 		this.sp_alph = {
 			',': ',', '.': '.', ':': ':', ';': ';' , ' ': ' ', '^': '^', '&': '&', '©': '©'
 			,'，': ',', '．': '.', '：': ':', '；': ';' , '　': ' ', '＾': '^', '＆': '&', '@': '©', '＠': '©', '™': '©'
@@ -20,6 +21,7 @@ WordPrint.prototype ={
 			'＝':'＝', '＋': '＋', '－': '－', '＊': '＊', '／': '／'
 			,'=':'＝', '+': '＋', '-': '－', '*': '＊', '/': '／'
 			, '_': '－'
+			, '☆':'☆', '★':'☆'
 		};
 		this.sp_hira = {
 			'ー': '⼀', '？': '？', '！': '！', '・':'・', '『': '『', '』': '』', '◯': '◯', '☓': '☓'
@@ -140,6 +142,7 @@ WordPrint.prototype ={
 
 	searchNum: function(w){
 		var match, ofs = 0, code = w.charCodeAt(0);
+
 		if(w in this.sp_alph){
 			match = this.moji_alph.indexOf(this.sp_alph[w]);
 			ofs = 180;
@@ -166,7 +169,7 @@ WordPrint.prototype ={
 			match = this.moji_kata.indexOf(w);
 			ofs = 90;
 		}
-
+// console.log(match);
 		if(w == this.escapeWord){
 			return this.ESCAPE_CODE;
 		}
