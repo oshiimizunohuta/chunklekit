@@ -586,7 +586,7 @@ function SSImgRemove(obj)
  */
 function screenView(to, from, multi)
 {
-	from.nearestTo(to, multi);
+	from.nearestTo(to, multi == null ? VIEWMULTI : multi);
 }
 
 function scrollByName(name)
