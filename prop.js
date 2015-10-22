@@ -9,6 +9,7 @@ var VIEWMULTI = 2;//基本サイズ拡大倍数
 var CHIPCELL_SIZE = 8;//基本サイズ1辺り 8*8
 var DISPLAY_WIDTH = 320;//表示基本幅
 var DISPLAY_HEIGHT = 240;//表示基本高
+var UI_SCREEN_ID = 'screen'; //イベント取得・拡大表示用
 
 var IMAGE_DIR = './img/';
 

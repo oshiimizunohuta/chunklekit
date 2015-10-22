@@ -8,26 +8,33 @@ var canvasScrollBundle = {};
 var VIEWMULTI = 1;
 var SCROLL_MAX_SPRITES_DRAW = 32;
 var SCROLL_MAX_SPRITES_STACK = 2048;
+
 function makeScroll(name, mainFlag, width, height){
 	var scr = new CanvasScroll();
 	scr.init(name, mainFlag, width, height);
 	return scr;
 };
+function makeCanvasScroll(scrollName, insertID){
+	var scr = new CanvasScroll();
+	scr.init(name, insertID == UI_SCREEN_ID, null, null, insertID);
+	return scr;
+};
+
 dulog = function(){return;};
 
 function CanvasScroll(name, mainFlag, width, height)
 {
-	function init(name, mainFlag, width, height){
+	function init(name, mainFlag, width, height, insertID){
 		var size = getDisplaySize()
 			, scrsize = getScrollSize()
-			, insertDiv
 			;
-			
+		
+		insertID = insertID == null ? 'display' : indertID;
 		this.canvas = document.getElementById(name);
 		if(this.canvas == null){
 			this.canvas = document.createElement('canvas');
 			this.canvas.setAttribute('id', name);
-			document.getElementById('display').appendChild(this.canvas);
+			document.getElementById(insertID).appendChild(this.canvas);
 		}
 	//	this.autoClear = true;//no actiove
 	//	this.clearTrig = false;//no clear trigger
@@ -62,6 +69,10 @@ function CanvasScroll(name, mainFlag, width, height)
 		this.maxSprites = SCROLL_MAX_SPRITES_DRAW;
 		this.maxSpritesStack = SCROLL_MAX_SPRITES_STACK;
 		this.drawInfoStack = [];
+		
+		this.rasterFunc = null;
+		this.rasterLines = {horizon: [], vertical: []};
+		this.rasterVolatile = true;
 	};
 	CanvasScroll.prototype.init = init;
 
@@ -93,8 +104,48 @@ function CanvasScroll(name, mainFlag, width, height)
 		if(dh == null){dh = sh;}
 		if(dx == null){dx = sx;}
 		if(dy == null){dy = sy;}
+		var i, raster, pos = {x: dx, y: dy}, line = 0;
 		
-		targetScroll.ctx.drawImage(this.canvas, 0 | sx, 0 | sy, 0 | sw, 0 | sh, 0 | dx, 0 | dy, 0 | dw, 0 | dh);
+		if(this.rasterLines.horizon.length > 0){
+			raster = this.rasterLines.horizon;
+			for(i = 0; i < sh; i++){
+				if(raster[i] != null){
+					if(line < i){
+						targetScroll.ctx.drawImage(this.canvas, 0, line, 0 | sw, i - line, 0 | pos.x, 0 | pos.y, 0 | dw, i - line);
+					}
+					pos = raster[i];
+					targetScroll.ctx.drawImage(this.canvas, 0, i, 0 | sw, 1, 0 | pos.x, 0 | pos.y, 0 | dw, 1);
+					line = i + 1;
+					pos.y++;
+				}
+			}
+			targetScroll.ctx.drawImage(this.canvas, 0, line, 0 | sw, i - line, 0 | pos.x, 0 | pos.y, 0 | dw, i - line);
+		}else if(this.rasterLines.vertical.length > 0){
+			raster = this.rasterLines.vertical;
+			for(i = 0; i < sw; i++){
+				if(raster[i] != null){
+					if(line < i){
+						targetScroll.ctx.drawImage(this.canvas, line, 0, 0 | i - line, 0 | sh, 0 | pos.x, 0 | pos.y, i - line, 0 | dh);
+					}
+					pos = raster[i];
+					targetScroll.ctx.drawImage(this.canvas, i, 0, 1, 0 | sh, 0 | pos.x, 0 | pos.y, 1, 0 | dh);
+					line = i + 1;
+					pos.y++;
+				}
+			}
+			targetScroll.ctx.drawImage(this.canvas, line, 0, 0 | i - line, 0 | sh, 0 | pos.x, 0 | pos.y, i - line, 0 | dh);
+			
+		}else{
+			if(this.rasterFunc == null){
+				targetScroll.ctx.drawImage(this.canvas, 0 | sx, 0 | sy, 0 | sw, 0 | sh, 0 | dx, 0 | dy, 0 | dw, 0 | dh);
+			}else{
+				this.rasterFunc(targetScroll, {sx: 0 | sx, sy: 0 | sy, sw: 0 | sw, sh: 0 | sh, dx: 0 | dx, dy: 0 | dy, dw: 0 | dw, dh: 0 | dh});
+			}
+		}
+		
+		if(this.rasterVolatile){
+			this.resetRaster();
+		}
 
 //		alert();
 	}
@@ -245,6 +296,8 @@ function CanvasScroll(name, mainFlag, width, height)
 			// sprite.flip();
 		}
 		//this.ctx.drawImage(otherScroll, otherScroll.x, otherScroll.y, otherScroll.w, otherScroll.h, otherScroll.x, otherScroll.y, otherScroll.w, otherScroll.h);
+		sprite = null;
+		image = null;
 	}
 	CanvasScroll.prototype.drawSpriteInfo = drawSpriteInfo;
 	
@@ -487,7 +540,12 @@ function CanvasScroll(name, mainFlag, width, height)
 
 		this.ctx.drawImage(tmp.canvas, left, top, sprite.w, sprite.h);
 		sprite.swaps = swaps;//もどしてやる
-
+		swaps = null;
+		tmp = null;
+		tmpimage = null;
+		from = null;
+		to = null;
+		data = null;
 	}
 	CanvasScroll.prototype.colorSwap = colorSwap;
 
@@ -524,6 +582,35 @@ function CanvasScroll(name, mainFlag, width, height)
 		  return true;
 	  }
 	  CanvasScroll.prototype.is_visible = is_visible;
+	  
+	  function setRasterFunc(func)
+	  {
+	  		this.rasterFunc = func;
+	  }
+	  CanvasScroll.prototype.setRasterFunc = setRasterFunc;
+	  
+	  
+	  function resetRaster()
+	  {
+	  	this.rasterLines.vertical = [];
+	  	this.rasterLines.horizon = [];
+	  }
+	  CanvasScroll.prototype.resetRaster = resetRaster;
+	  
+	  function setRasterHorizon(sy, dx, dy)
+	  {
+	  	this.rasterLines.vertical = [];
+	  	this.rasterLines.horizon[sy] = {x: dx, y: dy};
+	  }
+	  CanvasScroll.prototype.setRasterHorizon = setRasterHorizon;
+
+	  function setRasterVertical(sx, dx, dy)
+	  {
+	  	this.rasterLines.horizon = [];
+	  	this.rasterLines.vertical[sx] = {x: dx, y: dy};
+	  }
+	  CanvasScroll.prototype.setRasterVertical = setRasterVertical;
+	  
 
 	  function setPosition(x, y)
 	  {
@@ -595,6 +682,13 @@ function scrollByName(name)
 	return (scr[name] != null) ? scr[name] : null;
 }
 
+function getScrolls()
+{
+	var scr = canvasScrollBundle == null ? layerScroll : canvasScrollBundle;
+	return scr;
+	
+}
+
 function drawCanvasStacks(max)
 {
 	var cnt = 0, k, scr = canvasScrollBundle == null ? layerScroll : canvasScrollBundle, complete = true;
@@ -605,6 +699,7 @@ function drawCanvasStacks(max)
 			break;
 		}
 	}
+	scr = null;
 	if(!complete && max > cnt){
 		return drawCanvasStacks(max - cnt);
 	}
@@ -888,6 +983,7 @@ function loadImages(imageInfo, func)
 		info = typeof imageInfo[i] != 'string' ? imageInfo[i] : [imageInfo[i], CHIPCELL_SIZE, CHIPCELL_SIZE];
 		R.push(info[0], info[1], info[2]);
 	}
+	IMAGE_DIR = IMAGE_DIR.replace(/\/+$/, '') + '/';
 	R.dirpath = IMAGE_DIR;
 	R.onload = func == null ? R.onload : func;
 	R.createStack();
