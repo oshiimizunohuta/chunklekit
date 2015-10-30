@@ -2,6 +2,7 @@
  * Canvas Draw Library
  * Since 2013-11-19 07:43:37
  * @author しふたろう
+ * chunklekit_v0.2.0
  */
 //キャンバスことスクロール
 var canvasScrollBundle = {};
@@ -22,9 +23,12 @@ function makeCanvasScroll(scrollName, insertID){
 
 dulog = function(){return;};
 
-function CanvasScroll(name, mainFlag, width, height)
+function CanvasScroll()
 {
-	function init(name, mainFlag, width, height, insertID){
+	return;
+}
+CanvasScroll.prototype = {
+	init: function(name, mainFlag, width, height, insertID){
 		var size = getDisplaySize()
 			, scrsize = getScrollSize()
 			;
@@ -73,10 +77,9 @@ function CanvasScroll(name, mainFlag, width, height)
 		this.rasterFunc = null;
 		this.rasterLines = {horizon: [], vertical: []};
 		this.rasterVolatile = true;
-	};
-	CanvasScroll.prototype.init = init;
+	},
 
-	function drawto(targetScroll, x, y, w, h)
+	drawto: function(targetScroll, x, y, w, h)
 	{
 //		debugUser.log([x, y]);
 		if(!this.is_visible()){return;}
@@ -90,10 +93,9 @@ function CanvasScroll(name, mainFlag, width, height)
 		targetScroll.ctx.drawImage(this.canvas, 0 | -x, 0 | -y);
 
 //		alert();
-	}
-	CanvasScroll.prototype.drawto = drawto;
+	},
 
-	function rasterto(targetScroll, sx, sy, sw, sh, dx, dy, dw, dh)
+	rasterto: function(targetScroll, sx, sy, sw, sh, dx, dy, dw, dh)
 	{
 		if(!this.is_visible()){return;}
 		if(sw == null){sw = this.canvas.width;}
@@ -148,14 +150,13 @@ function CanvasScroll(name, mainFlag, width, height)
 		}
 
 //		alert();
-	}
-	CanvasScroll.prototype.rasterto = rasterto;
+	},
 	/**
 	 * ニアレストネイバー
 	 * @param targetScroll
 	 * @param multi
 	 */
-	function nearestTo(targetScroll, multi)
+	nearestTo: function(targetScroll, multi)
 	{
 		if(targetScroll.canvas == null){return;}
 		if(multi == null){multi = VIEWMULTI;}
@@ -186,10 +187,9 @@ function CanvasScroll(name, mainFlag, width, height)
 			targetScroll.ctx.drawImage(this.canvas, 0, 0, w, h, to.x - to.w, to.y - to.h, to.w, to.h);
 		}
 
-	}
-	CanvasScroll.prototype.nearestTo = nearestTo;
+	},
 
-	function drawDrawInfoStack()
+	drawDrawInfoStack: function()
 	{
 		var stack = this.drawInfoStack, drawInfo, cnt = 0
 		;
@@ -208,8 +208,7 @@ function CanvasScroll(name, mainFlag, width, height)
 			}
 		}
 		return true;
-	}
-	CanvasScroll.prototype.drawDrawInfoStack = drawDrawInfoStack;
+	},
 
 	/**
 	   * 描く
@@ -217,16 +216,15 @@ function CanvasScroll(name, mainFlag, width, height)
 	   * @param x
 	   * @param y
 	   */
-	function drawSprite(sprite, x, y)
+	drawSprite: function(sprite, x, y)
 	{
 		this.drawInfoStack.push({sprite: sprite, x: x, y: y});
 		if(this.maxSpritesStack < this.drawInfoStack.length){
 			this.drawInfoStack.shift();
 		}
-	};
-	CanvasScroll.prototype.drawSprite = drawSprite;
+	},
 
-	function drawSpriteInfo(spriteInfo)
+	drawSpriteInfo: function(spriteInfo)
 	{
 		var sprite, x, y
 				, image
@@ -298,10 +296,9 @@ function CanvasScroll(name, mainFlag, width, height)
 		//this.ctx.drawImage(otherScroll, otherScroll.x, otherScroll.y, otherScroll.w, otherScroll.h, otherScroll.x, otherScroll.y, otherScroll.w, otherScroll.h);
 		sprite = null;
 		image = null;
-	}
-	CanvasScroll.prototype.drawSpriteInfo = drawSpriteInfo;
+	},
 	
-	function drawSpriteArray(spriteArray, x, y, cellsWidth)
+	drawSpriteArray: function(spriteArray, x, y, cellsWidth)
 	{
 		var posX, posY, slen = spriteArray.length, i
 		;
@@ -320,10 +317,9 @@ function CanvasScroll(name, mainFlag, width, height)
 			}
 			this.drawSprite(sprite, posX, posY);
 		}
-	};
-	CanvasScroll.prototype.drawSpriteArray = drawSpriteArray;
+	},
 // TODO 旧バージョンの-値使用状況を調べる
-	function drawSprite2dArray(sprite2dArray, x, y)
+	drawSprite2dArray: function(sprite2dArray, x, y)
 	{
 		var j , i, posX, posY, s2len = sprite2dArray.length, slen;
 		for(j= 0; j < s2len; j++){
@@ -342,10 +338,9 @@ function CanvasScroll(name, mainFlag, width, height)
 				this.drawSprite(sprite, posX, posY);
 			}
 		}
-	};
-	CanvasScroll.prototype.drawSprite2dArray = drawSprite2dArray;
+	},
 
-	function drawSpriteChunk(chunk, x, y)
+	drawSpriteChunk: function(chunk, x, y)
 	{
 		if(chunk.length == null){
 			// dulog(chunk);
@@ -358,22 +353,19 @@ function CanvasScroll(name, mainFlag, width, height)
 			chunk = [chunk];
 		}
 		this.drawSprite2dArray(chunk, x, y);
-	}
-	CanvasScroll.prototype.drawSpriteChunk = drawSpriteChunk;
+	},
 
-	function stackClear()
+	stackClear: function()
 	{
 		DRAW_EVENTS.oneShot(this, "clear");
-	}
-	CanvasScroll.prototype.stackClear = stackClear;
+	},
 
-	function stackDraw(func)
+	stackDraw: function(func)
 	{
 		DRAW_EVENTS.oneShot(this, func);
-	}
-	CanvasScroll.prototype.stackDraw = stackDraw;
+	},
 
-	function pset(x, y, color)
+	pset: function(x, y, color)
 	{
 		var img = this.ctx.getImageData(0, 0)
 		// var img = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height)
@@ -384,10 +376,9 @@ function CanvasScroll(name, mainFlag, width, height)
 			// img[pos++] = color[1];
 			// img[pos++] = color[2];
 			// img[pos++] = color[3];
-	}
-	CanvasScroll.prototype.pset = pset;
+	},
 
-	function drawSpriteLineInfo(lineInfo)
+	drawSpriteLineInfo: function(lineInfo)
 	{
 		var i, from = lineInfo.from, to = lineInfo.to, color = lineInfo.color
 			, point, x = from.x | 0, y = from.y | 0
@@ -429,11 +420,10 @@ function CanvasScroll(name, mainFlag, width, height)
 			}
 		}
 		
-	}
-	CanvasScroll.prototype.drawSpriteLineInfo = drawSpriteLineInfo;
+	},
 	
 	// function spriteLine(from, to, sprite)
-	function spriteLine(from, to, color)
+	spriteLine: function(from, to, color)
 	{
 		var f = {x: from.x, y: from.y}, t = {x: to.x, y: to.y}, c = color
 		,info = {from : f, to: t, color: c};
@@ -441,13 +431,12 @@ function CanvasScroll(name, mainFlag, width, height)
 		if(this.maxSpritesStack < this.drawInfoStack.length){
 			this.drawInfoStack.shift();
 		}
-	}
-	CanvasScroll.prototype.spriteLine = spriteLine;
+	},
 	
 	/**
 	* 消す
 	*/
-	function clear(color, rect)
+	clear: function(color, rect)
 	{
 		if(rect == null){
 			rect = {x: 0, y: 0, w: (0 | this.canvas.width), h: (0 | this.canvas.height)};
@@ -471,10 +460,9 @@ function CanvasScroll(name, mainFlag, width, height)
 		// }else{		
 			// this.ctx.clearRect(rect.x, rect.y, rect.w, rect.h);
 		// }
-	};
-	CanvasScroll.prototype.clear = clear;
+	},
 	
-	function drawFillRectInfo(rectInfo)
+	drawFillRectInfo: function(rectInfo)
 	{
 		var color = rectInfo.color, rect = rectInfo.fillrect;
 		if(rect == null){
@@ -487,23 +475,20 @@ function CanvasScroll(name, mainFlag, width, height)
 		}else{		
 			this.ctx.clearRect(rect.x, rect.y, rect.w, rect.h);
 		}		
-	}
-	CanvasScroll.prototype.drawFillRectInfo = drawFillRectInfo;
+	},
 	
-	function clearDrawInfoStack()
+	clearDrawInfoStack: function()
 	{
 		this.drawInfoStack = [];
-	}
-	CanvasScroll.prototype.clearDrawInfoStack = clearDrawInfoStack;
+	},
 
-	function isDrawingInfoStack()
+	isDrawingInfoStack: function()
 	{
 		return this.drawInfoStack.length > 0;
-	}
-	CanvasScroll.prototype.isDrawingInfoStack = isDrawingInfoStack;
+	},
 
 //未使用？
-	function colorSwap(sprite, left, top)
+	colorSwap: function(sprite, left, top)
 	{
 		var swaps = sprite.swaps
 			, tmp, tmpimage
@@ -546,94 +531,86 @@ function CanvasScroll(name, mainFlag, width, height)
 		from = null;
 		to = null;
 		data = null;
-	}
-	CanvasScroll.prototype.colorSwap = colorSwap;
+	},
 
 	/**
 	* 映す
 	*/
-	function project(scrollsrc)
+	project: function(scrollsrc)
 	{
 		this.ctx.clearRect();
-	};
-	CanvasScroll.prototype.clear = clear;
+	},
 
-	function zIndex(z)
+	zIndex: function(z)
 	{
 		this.canvas.style.zIndex = z;
-	};
-	  CanvasScroll.prototype.zIndex = zIndex;
+	},
 
-	  function hide()
-	  {
-		  this.canvas.hidden = true;
-	  };
-	  CanvasScroll.prototype.hide = hide;
 
-	  function visible()
-	  {
-		  this.canvas.hidden = false;
-	  };
-	  CanvasScroll.prototype.visible = visible;
+	hide: function() {
+		this.canvas.hidden = true;
+	},
 
-	  function is_visible()
-	  {
-		  if(this.canvas.hidden){return false;}
-		  return true;
-	  }
-	  CanvasScroll.prototype.is_visible = is_visible;
-	  
-	  function setRasterFunc(func)
-	  {
-	  		this.rasterFunc = func;
-	  }
-	  CanvasScroll.prototype.setRasterFunc = setRasterFunc;
-	  
-	  
-	  function resetRaster()
-	  {
-	  	this.rasterLines.vertical = [];
-	  	this.rasterLines.horizon = [];
-	  }
-	  CanvasScroll.prototype.resetRaster = resetRaster;
-	  
-	  function setRasterHorizon(sy, dx, dy)
-	  {
-	  	this.rasterLines.vertical = [];
-	  	this.rasterLines.horizon[sy] = {x: dx, y: dy};
-	  }
-	  CanvasScroll.prototype.setRasterHorizon = setRasterHorizon;
+	visible: function() {
+		this.canvas.hidden = false;
+	},
 
-	  function setRasterVertical(sx, dx, dy)
-	  {
-	  	this.rasterLines.horizon = [];
-	  	this.rasterLines.vertical[sx] = {x: dx, y: dy};
-	  }
-	  CanvasScroll.prototype.setRasterVertical = setRasterVertical;
-	  
 
-	  function setPosition(x, y)
-	  {
-		  this.canvas.style.left = x + "px";
-		  this.canvas.style.top = y + "px";
-	  }
-	  CanvasScroll.prototype.setPosition = setPosition;
+	is_visible: function() {
+		if (this.canvas.hidden) {
+			return false;
+		}
+		return true;
+	},
 
-	  function getSize()
-	  {
-		  var size = new Array();
-		  size['w'] = this.canvas.width;
-		  size['h'] = this.canvas.height;
-		  return size;
-	  }
-	  CanvasScroll.prototype.getSize = getSize;
+	setRasterFunc: function(func) {
+		this.rasterFunc = func;
+	},
 
-	function screenShot()
+	resetRaster: function() {
+		this.rasterLines.vertical = [];
+		this.rasterLines.horizon = [];
+	},
+
+	setRasterHorizon: function(sy, dx, dy) {
+		this.rasterLines.vertical = [];
+		this.rasterLines.horizon[sy] = {
+			x : dx,
+			y : dy
+		};
+	},
+
+
+	setRasterVertical: function(sx, dx, dy) {
+		this.rasterLines.horizon = [];
+		this.rasterLines.vertical[sx] = {
+			x : dx,
+			y : dy
+		};
+	},
+
+	setPosition: function(x, y) {
+		this.canvas.style.left = x + "px";
+		this.canvas.style.top = y + "px";
+	},
+
+
+	getSize: function() {
+		var size = {}
+		;
+		size.h = this.canvas.height;
+		size.w = this.canvas.width;
+		return size;
+	},
+
+
+	screenShot: function()
 	{
 		//図形の保存
-		var img = new Image();
+		var img = new Image()
 		//保存できるタイプは、'image/png'と'image/jpeg'の2種類
-		var type = 'image/png';
+		, type = 'image/png'
+		, element_img, element_a, del_a, pair;
 		//imgオブジェクトのsrcに格納。
 		img.src = this.canvas.toDataURL(type);
 		//念のため、onloadで読み込み完了を待つ。
@@ -641,10 +618,10 @@ function CanvasScroll(name, mainFlag, width, height)
 			//例：現在のウィンドウに出力。
 			// location.href = img.src;
 			//別ウィンドウに表示
-			var element_img = document.createElement("img");
-			var element_a = document.createElement("a");
-			var del_a = document.createElement("a");
-			var pair = document.createElement("span");
+			element_img = document.createElement("img");
+			element_a = document.createElement("a");
+			del_a = document.createElement("a");
+			pair = document.createElement("span");
 			element_img.setAttribute("src", img.src);
 			element_img.setAttribute("width", "96px");
 			element_a.setAttribute("href", "javascript:window.open('" + img.src +"'); ");
@@ -657,8 +634,7 @@ function CanvasScroll(name, mainFlag, width, height)
 			
 			document.body.appendChild(pair);
 		}; 
-	}
-	CanvasScroll.prototype.screenShot = screenShot; 
+	},
 
 };
 
@@ -733,7 +709,7 @@ function contextInit(canvas)
 /**
  * イメージリソース
  */
-var imageResource = function(){};
+var imageResource = function(){return;};
 
 imageResource.init = function(){
 	this.data = [];
@@ -1232,11 +1208,11 @@ function concatSprite(sprite1, sprite2, row)
 
 function spreadSpriteChunk(name, indexes, w, h)
 {
+	var spArray = [], y, x;
 	try{
-		var spArray = [];
-		for(var y = 0; y < h; y++){
+		for(y = 0; y < h; y++){
 			spArray[y] = [];
-			for(var x = 0; x < w; x++){
+			for(x = 0; x < w; x++){
 				spArray[y].push(indexes);
 			}
 		}
@@ -1361,7 +1337,8 @@ CanvasSprite.prototype = {
 
 	makeRect: function(x, y)
 	{
-		var rects = new Rect(x, y, this.w, this.h);
+		var rects = new Rect();
+		rects.init(x, y, this.w, this.h);
 		return rects;
 	},
 
@@ -1503,52 +1480,50 @@ function tocellh(px)
 	return (px / CHIPCELL_SIZE) | 0;
 }
 
-function SpriteHandle(imageName, id, scroll)
-{
-//	alert(imageName);
-	this.x = 0;
-	this.y = 0;
-	this.sprite;
-	this.scroll = 'view';
-	this.disp = true;
-	this.id = null;
-	this.key = null;
-	this.destroy = false;
-	this.imageName = "";
-	this.sortIndex = 0;
-	this.frameAnimation = null;	// = new frameAnimation();
-	this.frameTransition = {x: null, y:null};	// = new frameTransition();
-	this.name = "noname";
-	this.priority = "";//多分使わない方向
+function SpriteHandle(imageName, id, scroll){
+	return;
+}
 
-	if(scroll != null){
-		this.scroll = scroll;
-	}
-
-//	this.sprite = imageResource.makeSprite(this.imageName, 0);
-	if(imageName != null){
-		this.imageName = imageName;
-	}
-	if(id != null){
-		this.id = id;
-	}
-	//スプライトをつくる
-	if(this.id != null && this.scroll != null){
-		this.sprite = imageResource.makeSprite(this.imageName, this.id);
-// console.log(111)
-	}
-
-	// function initWithResourceSpriteScroll(resource, sprite, scroll)
-	// {
-		// this.sprite = sprite;
-		// this.setImageName(resource);
-		// this.setScroll(scroll);
-		// this.key = SpriteHandleBundle.stack(this);//これがやばい→インスタンス時の参照渡しは厳禁
-	// }
-	// SpriteHandle.prototype.initWithResourceSpriteScroll = initWithResourceSpriteScroll;
-	
-	function initWithResourceSpriteIdScroll(resource, id, scroll)
+SpriteHandle.prototype = {
+	commonInitialize: function(imageName, id, scroll)
 	{
+	//	alert(imageName);
+		this.x = 0;
+		this.y = 0;
+		this.sprite;
+		this.scroll = 'view';
+		this.disp = true;
+		this.id = null;
+		this.key = null;
+		this.destroy = false;
+		this.imageName = "";
+		this.sortIndex = 0;
+		this.frameAnimation = null;	// = new frameAnimation();
+		this.frameTransition = {x: null, y:null};	// = new frameTransition();
+		this.name = "noname";
+		this.priority = "";//多分使わない方向
+	
+		if(scroll != null){
+			this.scroll = scroll;
+		}
+	
+	//	this.sprite = imageResource.makeSprite(this.imageName, 0);
+		if(imageName != null){
+			this.imageName = imageName;
+		}
+		if(id != null){
+			this.id = id;
+		}
+		//スプライトをつくる
+		if(this.id != null && this.scroll != null){
+			this.sprite = imageResource.makeSprite(this.imageName, this.id);
+	// console.log(111)
+		}
+	},
+	
+	initWithResourceSpriteIdScroll: function(resource, id, scroll)
+	{
+		this.commonInitialize(resource, id, scroll);
 		// dulog(resource);
 		this.setImageName(resource);
 		this.setId(id);
@@ -1557,11 +1532,11 @@ function SpriteHandle(imageName, id, scroll)
 			this.key = SpriteHandleBundle.stack(this);//
 		}
 		this.sortIndex = 0;
-	}
-	SpriteHandle.prototype.initWithResourceSpriteIdScroll = initWithResourceSpriteIdScroll;
+	},
 	
-	function initWithResourceSpriteRectScroll(resource, sprRect, scroll)
+	initWithResourceSpriteRectScroll: function(resource, sprRect, scroll)
 	{
+		this.commonInitialize(resource, 0, scroll);
 		this.setImageName(resource);
 		if(sprRect != null){
 			this.sprite = makeSpriteChunk(resource, sprRect);
@@ -1571,10 +1546,9 @@ function SpriteHandle(imageName, id, scroll)
 			this.key = SpriteHandleBundle.stack(this);//
 		}
 		this.sortIndex = 0;
-	}
-	SpriteHandle.prototype.initWithResourceSpriteRectScroll = initWithResourceSpriteRectScroll;
+	},
 	
-	function setTransition(dist, frame, points, delay, loop, func){
+	setTransition: function(dist, frame, points, delay, loop, func){
 		var trn = this.frameTransition; 
 		if(trn != null){
 			trn = this.initTransition(trn, dist, points, frame, (delay != null) ? delay : null, (loop != null) ? loop : null, (func != null) ? func : null);
@@ -1582,10 +1556,9 @@ function SpriteHandle(imageName, id, scroll)
 			trn = this.makeTransition("", dist, points, frame, (delay != null) ? delay : null, (loop != null) ? loop : null, (func != null) ? func : null);
 		}
 		this.frameTransition = trn;
-	}
-	SpriteHandle.prototype.setTransition = setTransition;
+	},
 
-	function setTransition_x(dist, frame, points, delay, loop, func){
+	setTransition_x: function(dist, frame, points, delay, loop, func){
 		var trn = this.frameTransition.x;
 		if(trn != null){
 			trn = this.initTransition(trn, dist, points, frame, (delay != null) ? delay : null, (loop != null) ? loop : null, (func != null) ? func : null);
@@ -1593,10 +1566,9 @@ function SpriteHandle(imageName, id, scroll)
 			trn = this.makeTransition(".x", dist, points, frame, (delay != null) ? delay : null, (loop != null) ? loop : null, (func != null) ? func : null);
 		}
 		this.frameTransition.x = trn;
-	}
-	SpriteHandle.prototype.setTransition_x = setTransition_x;
+	},
 	
-	function setTransition_y(dist, frame, points, delay, loop, func){
+	setTransition_y: function(dist, frame, points, delay, loop, func){
 		var trn = this.frameTransition.y;
 		if(trn != null){
 			trn = this.initTransition(trn, dist, points, frame, (delay != null) ? delay : null, (loop != null) ? loop : null, (func != null) ? func : null);
@@ -1605,16 +1577,14 @@ function SpriteHandle(imageName, id, scroll)
 		}
 		this.frameTransition.y = trn;
 
-	}
-	SpriteHandle.prototype.setTransition_y = setTransition_y;
+	},
 	
-	function getTransition()
+	getTransition: function()
 	{
 		return this.frameTransition;
-	}
-	SpriteHandle.prototype.getTransition = getTransition;
+	},
 
-	function makeTransition(ext, dist, points, frame, delay, loop, func){
+	makeTransition: function(ext, dist, points, frame, delay, loop, func){
 		var trn = new FrameTransition(this.imageName + "." + this.scroll + "." + this.key + ext);
 		this.initTransition(
 			trn, dist, 
@@ -1636,10 +1606,9 @@ function SpriteHandle(imageName, id, scroll)
 		// trn.loop = (loop != null) ? loop : trn.loop;
 
 		return trn;
-	}
-	SpriteHandle.prototype.makeTransition = makeTransition;
+	},
 	
-	function initTransition(trn, dist, points, frame, delay, loop, func){
+	initTransition: function(trn, dist, points, frame, delay, loop, func){
 		trn.setFramePoints(dist, frame, (points == null) ? null : points);
 		if(delay != null){//みしよう？
 			trn.setDelay(delay);
@@ -1651,49 +1620,42 @@ function SpriteHandle(imageName, id, scroll)
 		trn.loop = (loop != null) ? loop : trn.loop;
 
 		return trn;
-	}
-	SpriteHandle.prototype.initTransition = initTransition;
+	},
 
-	function resetTransition_x()
+	resetTransition_x: function()
 	{
 		this.frameTransition.x.resetCount();
-	}
-	SpriteHandle.prototype.resetTransition_x = resetTransition_x;
+	},
 	
-	function resetTransition_y()
+	resetTransition_y: function()
 	{
 		this.frameTransition.y.resetCount();
-	}
-	SpriteHandle.prototype.resetTransition_y = resetTransition_y;
+	},
 	
-	function doesTransition()
+	doesTransition: function()
 	{
 		return this.frameTransition == null ? false : !this.frameTransition.isFinish();
-	}
-	SpriteHandle.prototype.doesTransition = doesTransition;
+	},
 
-	function doesTransition_x()
+	doesTransition_x: function()
 	{
 		return this.frameTransition.x == null ? false : !this.frameTransition.x.isFinish();
-	}
-	SpriteHandle.prototype.doesTransition_x = doesTransition_x;
+	},
 
-	function doesTransition_y()
+	doesTransition_y: function()
 	{
 		return this.frameTransition.y == null ? false : !this.frameTransition.y.isFinish();
-	}
-	SpriteHandle.prototype.doesTransition_y = doesTransition_y;
+	},
 	
-	function doesAnimation()
+	doesAnimation: function()
 	{
 		return this.frameAnimation == null ? false : !this.frameAnimation.isFinish();
-	}
-	SpriteHandle.prototype.doesAnimation = doesAnimation;
+	},
 
-	function setAnimation(sprites, frames, delay, loop, func, primary)
+	setAnimation: function(sprites, frames, delay, loop, func, primary)
 	{
 		// var anm = new FrameAnimation(this.imageName + "." + this.scroll + "." + this.key);
-		var anm;
+		var anm, i;
 		if(this.frameAnimation == null){
 			anm = new FrameAnimation(this.priority + this.imageName + "." + this.scroll + "." + this.key);
 		}else{
@@ -1701,7 +1663,7 @@ function SpriteHandle(imageName, id, scroll)
 		}
 		anm.setSpritesFrames(sprites, frames);
 		this.sprite = [];
-		for(var i = 0; i < sprites.length; i++){
+		for(i = 0; i < sprites.length; i++){
 			if(sprites[i].length != null){
 				this.sprite.push(makeSprite(this.imageName, sprites[i]));
 			}else{
@@ -1713,29 +1675,25 @@ function SpriteHandle(imageName, id, scroll)
 			//	dulog(this.sprite);
 
 		this.frameAnimation = anm;
-	}
-	SpriteHandle.prototype.setAnimation = setAnimation;
+	},
 
-	function setName(name){
+	setName: function(name){
 		this.name = name;
-	}
-	SpriteHandle.prototype.setName = setName;
+	},
 
-	function setImageName(imageName){
+	setImageName: function(imageName){
 		this.imageName = imageName;
-	}
-	SpriteHandle.prototype.setImageName = setImageName;
+	},
 
-	function setScroll(scroll){
+	setScroll: function(scroll){
 		if(typeof scroll == "string"){
 			scroll = scrollByName(scroll);
 		}
 		this.scroll = scroll;
 		// dulog(this.scroll)
-	}
-	SpriteHandle.prototype.setScroll = setScroll;
+	},
 
-	function setId(id){
+	setId: function(id){
 		if(id == null){
 			id = 0;
 		}
@@ -1749,10 +1707,9 @@ function SpriteHandle(imageName, id, scroll)
 		this.sprite = imageResource.makeSprite(this.imageName, this.id);
 		var swap = this.getSwap();
 		this.setSwap(swap);
-	}
-	SpriteHandle.prototype.setId = setId;
+	},
 
-	function setIds(ids){
+	setIds: function(ids){
 		if(ids.length == 0){
 			ids = [[ids]];
 		}
@@ -1764,30 +1721,26 @@ function SpriteHandle(imageName, id, scroll)
 		this.sprite = makeSpriteChunk(this.imageName, this.id);
 		var swap = this.getSwap();
 		this.setSwap(swap);
-	}
-	SpriteHandle.prototype.setIds = setIds;
+	},
 
-	function setPos(x, y){
+	setPos: function(x, y){
 		if(x != null){
 			this.x = x;
 		}
 		if(y != null){
 			this.y = y;
 		}
-	}
-	SpriteHandle.prototype.setPos = setPos;
+	},
 
-	function getPos()
+	getPos: function()
 	{
-		var x = this.x;
+		var x = this.x, y = this.y;
 		x += (this.frameTransition.x != null) ? this.frameTransition.x.getNowPoint() : 0;
-		var y = this.y;
 		y += (this.frameTransition.y != null) ? this.frameTransition.y.getNowPoint() : 0;
 		return {x: x, y: y};
-	}
-	SpriteHandle.prototype.getPos = getPos;
+	},
 	
-	function getSprite()
+	getSprite: function()
 	{
 		// return (this.frameAnimation != null) ? this.sprite[this.frameAnimation.getNowSprite()] : this.sprite;
 		try{
@@ -1797,52 +1750,44 @@ function SpriteHandle(imageName, id, scroll)
 			throw 'getSprite error: ';
 		}
 		
-	}
-	SpriteHandle.prototype.getSprite = getSprite;
+	},
 	
-	function setSprite(sprite)
+	setSprite: function(sprite)
 	{
 		this.sprite = sprite;
-	}
-	SpriteHandle.prototype.setSprite = setSprite;
+	},
 	
-	function setSort(index)
+	setSort: function(index)
 	{
 		this.sortIndex = index;
-	}
-	SpriteHandle.prototype.setSort = setSort;
-	function getSortIndex(index)
+	},
+	getSortIndex: function(index)
 	{
 		return this.sortIndex;
-	}
-	SpriteHandle.prototype.getSortIndex = getSortIndex;
+	},
 	
-	function width()
+	width: function()
 	{
 		return this.sprite.w;
-	}
-	SpriteHandle.prototype.width = width;
+	},
 
-	function height()
+	height: function()
 	{
 		return this.sprite.h;
-	}
-	SpriteHandle.prototype.height = height;
+	},
 
-	function visible()
+	visible: function()
 	{
 		this.disp = true;
-	}
-	SpriteHandle.prototype.visible = visible;
+	},
 
-	function hide()
+	hide: function()
 	{
 		this.disp = false;
-	}
-	SpriteHandle.prototype.hide = hide;
+	},
 
 	//スクロールに書き込む
-	function drawScroll(scr, x, y){
+	drawScroll: function(scr, x, y){
 		if(scr == null){
 			if(this.scroll == null){return;}
 			scr = this.scroll;
@@ -1861,10 +1806,9 @@ function SpriteHandle(imageName, id, scroll)
 		}else{
 			scr.drawSpriteChunk(this.getSprite(), pos.x, pos.y);
 		}
-	}
-	SpriteHandle.prototype.drawScroll = drawScroll;
+	},
 
-	function getSwap()
+	getSwap: function()
 	{
 		if(this.sprite.length != null){
 			if(this.sprite[0].length != null){
@@ -1873,58 +1817,53 @@ function SpriteHandle(imageName, id, scroll)
 			return this.sprite[0].swaps;
 		}
 		return this.sprite.swaps;
-	}
-	SpriteHandle.prototype.getSwap = getSwap;
+	},
 
-	function setSwap(swap)
+	setSwap: function(swap)
 	{
+		var i, j;
 		if(this.sprite.length != null){
 			if(this.sprite[0].length != null){
-				for(var j in this.sprite){
-					for(var i in this.sprite[j]){
+				for(j in this.sprite){
+					for(i in this.sprite[j]){
 						this.sprite[j][i].swaps = swap;
 					}
 				}
 				return;
 			}
-			for(var i in this.sprite){
+			for(i in this.sprite){
 				this.sprite[i].swaps = swap;
 			}
 			return;
 		}
 		this.sprite.swaps = swap;
-	}
-	SpriteHandle.prototype.setSwap = setSwap;
+	},
 
-	function swapColor(to, from)
+	swapColor: function(to, from)
 	{
 //		alert(from);
 		this.sprite.swapColor(to, from);
-	}
-	SpriteHandle.prototype.swapColor = swapColor;
-	function swapColorReset()
+	},
+	swapColorReset: function()
 	{
 		this.sprite.swapColorReset();
-	}
-	SpriteHandle.prototype.swapColorReset = swapColorReset;
+	},
 	//スタックする
-//	function stack(scroll){
+//	stack: function(scroll){
 //		if(scroll != null){
 //			this.scroll = scroll;
 //		}
 ////		if(this.sprite == null){return;}alert(scroll);
-//	}
-//	SpriteHandle.prototype.stack = stack;
+//	},
 
-	function makeRect()
+	makeRect: function()
 	{
 		var rect = this.sprite.makeRect();
 		return rect;
-	}
-	SpriteHandle.prototype.makeRect = makeRect;
+	},
 
 
-	function remove(){
+	remove: function(){
 		this.destroy = true;
 		this.hide();
 		if(this.frameAnimation != null){
@@ -1941,9 +1880,8 @@ function SpriteHandle(imageName, id, scroll)
 			}
 		}
 		delete this.sprite;
-	}
-	SpriteHandle.prototype.remove = remove;
-}
+	},
+};
 
 function getScrollNum()
 {
@@ -1959,7 +1897,7 @@ var SpriteHandleBundle = {};
 
 SpriteHandleBundle.init = function()
 {
-	this.spriteStacks = new Array(getScrollNum());//sprite Handle
+	this.spriteStacks = [getScrollNum()];//sprite Handle
 
 	this.FrameEvent = new FrameEvent("sprite:frame");//FrameEventを先にインスタンスしないとDrawEventがインスタンスできない
 	this.DrawEvent = new DrawEvent("zzzsprite:draw", this);//これでいいのかよくわからない
@@ -1970,7 +1908,7 @@ SpriteHandleBundle.init = function()
 	this.stack = function(spriteh)
 	{
 		// console.log(111);
-		var scroll;
+		var scroll, returnKey;
 		// if(this.spriteStacks == null){return;}
 		if(spriteh.scroll == null){return;}
 		scroll = spriteh.scroll;
@@ -1980,7 +1918,7 @@ SpriteHandleBundle.init = function()
 			this.spriteStacks[scroll] = [];
 		}
 		// console.dir(spriteh);
-		var returnKey =this.spriteStacks[scroll].length;
+		returnKey =this.spriteStacks[scroll].length;
 		this.spriteStacks[scroll].push(spriteh);
 		// dulog(returnKey);
 		return returnKey;
@@ -1989,30 +1927,17 @@ SpriteHandleBundle.init = function()
 
 	this.sort = function()
 	{
-
+		return;
 	};
 
 	this.ysort = function(stacks)
 	{
-//		for(var j in stacks){
-//			for(var i in stacks[]){
-//
-//			if(this.spriteStacks[scroll].y )
-//			this.spriteStacks[scroll].y;
-//		}
+		return;
 	};
 
 	this.draw = function()
 	{
-// echoEnable = true;
-// for(var key in this.spriteStacks['view']){
-	// echo(this.spriteStacks['view'][key]);
-// }
-// dulog(this.spriteStacks);
-// echo(this.spriteStacks['view']); // cnt = 0;
-// return;
-
-		var stack, scrName;
+		var stack, scrName, sorted, sortIndexes, i;
 		if(this.spriteStacks == null){
 			return;
 		}
@@ -2025,12 +1950,12 @@ SpriteHandleBundle.init = function()
 			 stack = this.spriteStacks[scrName];
 			if(stack.length == 0){continue;}
 // dulog(scrName);
-			var sorted = [];
-			var sortIndexes = [];
+			sorted = [];
+			sortIndexes = [];
 			// dulog(stack.length);
 				//消す
 			try{
-				for(var i = 0; i < stack.length; i++){
+				for(i = 0; i < stack.length; i++){
 					if(stack[i].destroy){
 						stack[i] = null;
 						delete stack[i];
@@ -2046,18 +1971,18 @@ SpriteHandleBundle.init = function()
 				dulog([stack, i]);
 			}
 
-				for(var i = 0; i < stack.length; i++){
+				for(i = 0; i < stack.length; i++){
 					if(stack[i] == null){
 						dulog("sprite handle not found: " + i);
 					}
 					sortIndexes.push(stack[i].sortIndex);
 					sorted.push(stack[i]);
 				}
-				sorted.sort(function(a, b){return a.getSortIndex() - b.getSortIndex()});
+				sorted.sort(function(a, b){return a.getSortIndex() - b.getSortIndex();});
 	
 				//表示
 				try{
-					for(var i = 0; i < sorted.length; i++){
+					for(i = 0; i < sorted.length; i++){
 						// echoEnable = true;
 						// echo("<br>sprite::" + sorted[i].destroy + "<hr>");
 						// echo("<br>" + sorted.length);
@@ -2076,7 +2001,7 @@ SpriteHandleBundle.init = function()
 //要makeSprite
 function makeSpriteHandle(sprites, scrollName, x, y)
 {
-	var spritehandle = [[]];
+	var spritehandle = [[]], handle, j, i;
 	array_squrt(sprites);//2次元
 
 	if(x == null){
@@ -2085,10 +2010,11 @@ function makeSpriteHandle(sprites, scrollName, x, y)
 	if(y == null){
 		y = 0;
 	}
-	for(var j in sprites)
-		for(var i in sprites[j])
+	for(j in sprites)
+		for(i in sprites[j])
 		{
-			var handle = new SpriteHandle(sprites[j][i].image, 0, scrollName);
+			handle = new SpriteHandle();
+			handle.commonInitialize(sprites[j][i].image, 0, scrollName);
 			handle.setPos(x + (sprites[j][i].w * i) , y + (sprites[j][i].h * j));
 			spritehandle[j].push(handle);
 		}
@@ -2102,36 +2028,43 @@ function rectFromSprite(sprite, x, y)
 	}else if(typeof sprite[0] != "object"){
 		sprite = [sprite];
 	}
-	var rects = new Rect(0,0,0,0);
-	for(var j = 0; j < sprite.length; j++){
-		for(var i = 0; i < sprite[0].length; i++){
-			var w = sprite[j][i].w;
-			var h = sprite[j][i].h;
+	var rects = new Rect(), i, j, w, h;
+	rects.init(0,0,0,0);
+	for(j = 0; j < sprite.length; j++){
+		for(i = 0; i < sprite[0].length; i++){
+			w = sprite[j][i].w;
+			h = sprite[j][i].h;
 			rects.append(sprite[j][i].makeRect(x + (i * w),y + (j * h)));
 		}
 	}
 	return rects;
 }
 
-function Rect(x, y, w, h)
-{
-	this.x = x;
-	this.y = y;
-	this.w = w;
-	this.h = h;
-	this.overlapRect = new Array();
-	this.appendRect = new Array();
+function Rect(){
+	return;
+}
+Rect.prototype = {
+	init: function (x, y, w, h)
+	{
+		this.x = x;
+		this.y = y;
+		this.w = w;
+		this.h = h;
+		this.overlapRect = [];
+		this.appendRect = [];
+	},
 
-	function isContain(x, y)
+	isContain: function(x, y)
 	{
 //		alert(this.x + "-" + this.w + " > " + x + " , " + this.y + "-" + this.h + " >" + y);
 		//OR//
-		var orResult = false;
+		var orResult = false, i, len;
 		if(this.x <= x && this.y <= y && (this.x + this.w) > x && (this.y + this.h) > y){
 			orResult |= true;
 		}
-		if(this.appendRect.length > 0){
-			for(var i = 0; i < this.appendRect.length; i++){
+		len = this.appendRect.length;
+		if(len > 0){
+			for(i = 0; i < len; i++){
 				if(this.appendRect[i].isContain(x, y)){
 					orResult |= true;
 					break;
@@ -2141,25 +2074,26 @@ function Rect(x, y, w, h)
 		//OR//
 
 		return orResult;
-	}
-	Rect.prototype.isContain = isContain;
+	},
 
-	function append(add)
+	append: function(add)
 	{
 		this.appendRect.push(add);
-	}
-	Rect.prototype.append = append;
-}
+	},
+};
 
 function makeRect(x, y, w, h)
 {
+	var rects;
 	if(x.length != null && x.length == 4){
 		h = x['3'];
 		w = x['2'];
 		y = x['1'];
 		x = x['0'];
 	}
-	return new Rect(x, y, w, h);
+	rects = new Rect();
+	rects.init(x, y, w, h);
+	return rects;
 }
 
 //RGBA
@@ -2235,27 +2169,26 @@ function dividePattern(pattern, division)
 	this.pattern = pattern;
 	this.division = division;
 	this.max = this.pattern * this.division;
-	function init(division, pattern)
+}
+dividePattern.prototype = {
+	init: function(division, pattern)
 	{
 		this.count = 0;
 		this.pattern = pattern;
 		this.division = division;
-	}
-	dividePattern.prototype.init = init;
+	},
 		
-	function now()
+	now: function()
 	{
 		var d = ((this.count / this.division) | 0) % this.pattern;
 		return d;
-	}
-	dividePattern.prototype.now = now;
+	},
 	
-	function next()
+	next: function()
 	{
 		this.count = (this.count + 1) % (this.max);
-	}
-	dividePattern.prototype.next = next;
-}
+	},
+};
 
 
 /**
@@ -2265,11 +2198,13 @@ function dividePattern(pattern, division)
  */
 function quadrateCurve(t, pos)
 {
-	var term = [];//ax^2 + bx + c = y
-	var plen = pos.length;
-	for(var i = 0; i < plen; i++){
+	var term = []//ax^2 + bx + c = y
+		, plen = pos.length
+		, i, p, tlen, j, d, k, l, sub, m, res, n
+		;
+	for(i = 0; i < plen; i++){
 		term[i] = [];
-		for(var p = 0; p < plen; p++){
+		for(p = 0; p < plen; p++){
 			term[i].push(Math.pow(pos[i].x, plen - 1 - p));
 		}
 		term[i].push(pos[i].y);
@@ -2279,13 +2214,13 @@ function quadrateCurve(t, pos)
 		//900 30 0 25
 		 // alert(term[i]);
 	}
-	var tlen = term[0].length;
-	for(var j = 0; j < plen; j++){
-		var d = term[j][j];//注目式の係数を１にするための値
+	tlen = term[0].length;
+	for(j = 0; j < plen; j++){
+		d = term[j][j];//注目式の係数を１にするための値
 		// alert(d);
 		//100 , 400?, 900?
 		//
-		for(var k = j; k < tlen; k++){
+		for(k = j; k < tlen; k++){
 			term[j][k] = (d != 0) ? term[j][k] / d : 0 ;//0を割るところはスキップされている
 			
 			//term[j][k] = (d != 0) ? term[j][k] / d : 1 ;//0を割るところはスキップされている
@@ -2296,19 +2231,19 @@ function quadrateCurve(t, pos)
 			// if(d==0){dulog("0divide")}
 		}
 		
-		for(var l = 0; l < plen; l++){
+		for(l = 0; l < plen; l++){
 			if(l == j){continue;}//注目式スキップ
-			var sub = term[l][j];
+			sub = term[l][j];
 			// _ 400, 900
 			// alert(sub);
-			for(var m = j; m < tlen; m++){
+			for(m = j; m < tlen; m++){
 				term[l][m] = term[l][m] - (sub * term[j][m]);
 			// _ 400, 900
 			}
 		}
 	}
-	var res = 0;
-	for(var n= 0; n < plen - 1; n++){
+	res = 0;
+	for(n= 0; n < plen - 1; n++){
 		res += Math.pow(t, plen - 1 - n) * term[n][tlen - 1];
 		// dulog(res);
 	}
