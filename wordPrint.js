@@ -160,7 +160,7 @@ WordPrint.prototype ={
 			//アルファベット
 			match = this.moji_alph.indexOf(w);
 			ofs = 180;
-		}else if(code < 12450){
+		}else if(code < 12450 && code > 9829){
 			//ひらがな
 			match = this.moji_hira.indexOf(w);
 			ofs = 0;
