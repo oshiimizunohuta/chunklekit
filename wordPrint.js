@@ -40,12 +40,14 @@ WordPrint.prototype ={
 	
 		this.color;
 		this.bgcolor;
+		
+		
 	//	this.newLineWord = "\n";
 		this.newLineWord = "n";
 		this.escapeWord = "$";
 		this.cols = 0; //自動改行までの文字数
 		this.rows = 0; //文字表示行数
-		this.rowSpace = 2; //文字表示行数
+		this.rowSpace = 2; //改行幅
 		
 		this.NOTFOUND_CODE = 83; //'？'
 		this.SPACE_CODE = 236; //'　'
@@ -54,15 +56,21 @@ WordPrint.prototype ={
 		this.chipSize = 8;
 		this.vChipSize = 8;
 		this.fontSize = '8px';
+		sizetype = sizetype != null ? sizetype : '8px';
 		this.imageName = 'font8p';
 		this.DEFAULT_COLOR = COLOR_FONT8;
+		// this.canvas = null;
+		// this.context = null;
+		this.canvasSpriteSource = null;
+		// this.canvasSprite = null;
+		this.coloredCanvasSprite = {};
+		this.scroll;
+		
+		this.setFontSize(sizetype);
+		
 		this.wordIds;// = new Array();
-		if(sizetype != null){
-			this.setFontSize(sizetype != null ? sizetype : '12px');
-		}
 		this.DEFAULT_BGCOLOR = COLOR_TRANSPARENT;
 	
-		this.scroll;
 		// this.targetScroll;
 		this.position_x = 0;
 		this.position_y = 0;
@@ -72,6 +80,27 @@ WordPrint.prototype ={
 		this.DrawEvent;// = new DrawEvent();
 		this.str;
 		this.disp = true;
+	},
+	
+	initCanvas: function()
+	{
+		var w, h, res
+		, img = this.imageName
+		, cs = new CanvasSprite()
+		, self = this
+		;
+		res = resourceByName(img);
+		this.canvasSpriteSource = cs;
+		if(res == null){
+			//TODO まだ使いたくない使わない
+			appendImageOnload(img, function(res){
+				// var cs = self.canvasSpriteSource;
+				cs.init(img, 0, 0, res.data.width, res.data.height);
+			});
+		}else{
+			cs.init(img, 0, 0, res.data.width, res.data.height);
+			self.coloredCanvasSprite.def = self.cs;
+		}
 	},
 
 	setScroll: function(scrollStr)
@@ -194,17 +223,17 @@ WordPrint.prototype ={
 			, baseWords = []//行の文字
 			, subWords = []//上段行の文字
 			, isHorizon =  this.isHorizon(), isVertical = this.isVertical(), isSoundmark
-			, len , w, ccnt, nlcnt
-			, spritStr = MS.split(this.escapeWord + this.newLineWord), str
+			, str, len , w, ccnt, nlcnt
+			, isDirectNum = typeof MS != 'string' && typeof MS != 'number'
+			, spritStr = !isDirectNum ? MS.split(this.escapeWord + this.newLineWord) : (MS[0].length != null ? MS : [MS])
 			, linelen = spritStr.length
 			;
 		for(j = 0; j < linelen; j++){
 			str = spritStr[j];
 			len = str.length;
 			for(i = 0; i < len; i++){
-				theWord = str.substr(i, 1);
-				baseword = this.searchNum(theWord);
-				
+				baseword = isDirectNum ? str[i] : this.searchNum(str.substr(i, 1));
+
 				isSoundmark = baseword in this.soundmarks;//濁点半濁点
 				if(isSoundmark && (isHorizon || isVertical)){
 					subword = baseword;
@@ -296,7 +325,9 @@ WordPrint.prototype ={
 			this.vChipSize = 12;
 		}else{
 			console.log('font no select!!');
+			return;
 		}
+		this.initCanvas();
 	},
 	
 	setMarkAlign: function(align)
@@ -310,12 +341,43 @@ WordPrint.prototype ={
 		this.parse(str);
 	},
 	
-	spriteWordIds: function(words)
+	spriteWordIds_o: function(words)
 	{
 		var len = words.length, sprites = [], i, spr;
 		for(i = 0; i < len; i++){
 			if(this.rows > 0 && i >= this.rows){break;}
 			spr = imageResource.makeSpriteArray(this.imageName, words[i]);
+			sprites.push(spr);
+		}
+		this.spriteArray = sprites;
+		return sprites;
+	},	
+	
+	/**
+	 * カラースワップ済み取得 
+	 */
+	getColoredSprite: function()
+	{
+		var q = this.colorQuery();
+		if(q.length == 0){
+			return this.coloredCanvasSprite.def;
+		}else{
+			return this.coloredCanvasSprite[q];
+		}
+	},
+	
+	spriteWordIds: function(words)
+	{
+		var len = words.length, sprites = [], i, spr
+			// , cv = this.canvasSprite.swapImage == null ? this.canvasSprite.image : this.canvasSprite.swapImage
+			, cv = this.getColoredSprite().swapImage
+			, rows = this.rows + (this.isVertical() * this.rows)
+
+		;
+		for(i = 0; i < len; i++){
+			if(rows > 0 && i >= rows){break;}
+			// spr = makeSpriteArrayInCanvas(cv, this.chipSize, this.vChipSize, words[i]);
+			spr = makeSpriteArrayInCanvas(cv, this.chipSize, this.vChipSize, words[i]);
 			sprites.push(spr);
 		}
 		this.spriteArray = sprites;
@@ -345,7 +407,11 @@ WordPrint.prototype ={
 		this.wordIds = [];//行
 		this.soundmarkPos = [];
 		
-		baseWords = this.makeStrId(MS + "");
+		
+		if(typeof MS == "number"){
+			MS += "";
+		}
+		baseWords = this.makeStrId(MS);
 		this.patchSoundmarks();
 
 		this.spriteArray =[];
@@ -434,6 +500,7 @@ WordPrint.prototype ={
 		, isVertical = this.isVertical()
 		, ofy = isVertical ? -this.vChipSize : 0
 		, cols = this.cols > 0 ? this.cols : 256
+		, rows = this.rows + (isVertical * this.rows)
 		;
 		
 		if(!this.disp){
@@ -445,10 +512,10 @@ WordPrint.prototype ={
 		if(typeof scr == "string"){
 			scr = layerScroll[scr];
 		}
-		this.swapColor();
+		// this.swapColor();
 		for(i = 0; i < this.spriteArray.length; i++){
 			line = isVertical ? (i * 0.5) | 0 : i;
-			if(this.rows > 0 && i >= this.rows){break;}
+			if(rows > 0 && i >= rows){break;}
 			lineSpace = isVertical ? (0 * this.rowSpace) + (i * this.vChipSize) : i * (this.rowSpace + this.vChipSize);
 			scr.drawSpriteArray(this.spriteArray[i], this.position_x, this.position_y + lineSpace + ofy, cols);
 		}
@@ -479,7 +546,7 @@ WordPrint.prototype ={
 //		this.swapColor();
 	},
 
-	swapColor: function()
+	swapColor_o: function()
 	{
 		// for(var j in this.spriteArray){
 		for(var j = 0; j < this.spriteArray.length; j++){
@@ -496,16 +563,55 @@ WordPrint.prototype ={
 		}
 
 	},
+	
+	/**
+	 * カラースワップアクセス用連想キー取得
+	 */
+	colorQuery: function()
+	{
+		var colorQuery = [];
+		colorQuery.push(this.color != null ? this.color.join(',') : '');
+		colorQuery.push(this.bgcolor != null ? this.bgcolor.join(',') : '');
+		return colorQuery.join(':');
+	},
+	
+	/**
+	 * カラースワップ開始
+	 * スワップパレットに格納
+	 */
+	swapColor: function()
+	{
+		var cs = this.canvasSpriteSource
+			, c
+			, colorQuery = this.colorQuery()
+		;
+		c = copyCanvasSprite(cs);
+		// console.log(this.color, this.bgcolor);
+		
+		if(this.coloredCanvasSprite[colorQuery] == null){
+			if(this.color != null){
+				c.pushSwapColor(this.color, this.DEFAULT_COLOR);
+			}
+			if(this.bgcolor != null){
+				c.pushSwapColor(this.bgcolor, this.DEFAULT_BGCOLOR);
+			}
+			c.swapStart();
+			this.coloredCanvasSprite[colorQuery] = c;
+			// console.log(c);
+		}
+		
+	},
 
 	print: function(str, x, y, color, bgcolor)
 	{
 		// var startTime = performance.now();
 
-		this.parse(str);
 		if(x != null){this.position_x = x;}
 		if(y != null){this.position_y = y;}
 		if(color != null){this.color = color;}
 		if(bgcolor != null){this.bgcolor = bgcolor;}
+		this.swapColor();
+		this.parse(str);
 		this.draw();
 		// var endTime = performance.now();
 		// console.log(str, endTime - startTime);
