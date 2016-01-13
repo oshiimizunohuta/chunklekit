@@ -122,9 +122,9 @@ WordPrint.prototype ={
 	
 	getSpriteArray: function(str, color, bgColor)
 	{
-		this.parse(str);
 		this.setColor(color == null ? this.color : color, bgColor == null ? this.bgcolor : bgColor);
 		this.swapColor();
+		this.parse(str);
 		return this.spriteArray;
 	},
 	
