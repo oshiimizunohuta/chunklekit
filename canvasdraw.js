@@ -1435,8 +1435,10 @@ CanvasSprite.prototype = {
 		this.w = w; this.h = h;
 		this.swaps = null;
 		this.swapImage = null;
-		this.swapCanvas = createCanvas(w, h);
-		this.swapContext = initContext(this.swapCanvas);
+		this.swapCanvas = null;
+		this.swapContext = null;
+		// this.swapCanvas = createCanvas(w, h);
+		// this.swapContext = initContext(this.swapCanvas);
 		this.hFlipFlag = false;
 		this.vFlipFlag = false;
 		this.rotFlag = 0; //0:↑ 1:→ 2:↓ 3:←
@@ -1563,6 +1565,8 @@ CanvasSprite.prototype = {
 			index3 += 4;
 			index4 += 4;
 		}
+		this.swapCanvas = createCanvas(this.w, this.h);
+		this.swapContext = initContext(this.swapCanvas);
 		this.swapContext.putImageData(tmp, 0, 0);
 		this.swapImage = this.swapCanvas;
 		this.swaps = [];
