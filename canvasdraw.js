@@ -70,6 +70,8 @@ function CanvasScroll(name, mainFlag, width, height)
 		this.maxSpritesStack = SCROLL_MAX_SPRITES_STACK;
 		this.drawInfoStack = [];
 		
+		this.pointImage = this.ctx.createImageData(1, 1);
+		
 		this.rasterFunc = null;
 		this.rasterLines = {horizon: [], vertical: []};
 		this.rasterVolatile = true;
@@ -410,7 +412,8 @@ function CanvasScroll(name, mainFlag, width, height)
 			ctx.fillRect(x, y, lx, ly);
 
 		}else{
-			point = this.ctx.getImageData(0, 0, 1, 1);
+			// point = this.ctx.getImageData(0, 0, 1, 1);
+			point = this.pointImage;
 			
 			point.data[0] = color[0];
 			point.data[1] = color[1];
