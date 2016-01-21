@@ -1350,6 +1350,30 @@ function flipSprite(sprite, h, v)
 	if(h){sprite.hflip(h);}
 	return sprite;
 }
+function swapColorSpriteRecursive(sprite, type, from, to)
+{
+	// try{
+		if(sprite.length != null){
+			sprite.forEach(function(s, i){
+				swapColorSpriteRecursive(s, type, from, to);
+			});
+			return;
+		}
+		
+		if(type == null || type == 'set'){
+			sprite.setSwapColor(to, from);
+		}else if(type == 'push'){
+			sprite.pushSwapColor(to, from);
+		}else if(type == 'start'){
+			sprite.swapStart();
+		}else if(type == 'reset'){
+			sprite.resetSwapColor();
+		}
+		return;
+	// }catch(e){
+		// console.error(e, 'not sprite:', sprite);
+	// }
+}
 
 function setSwapColorSprite(sprite, to, from, reset)
 {
@@ -1544,9 +1568,16 @@ CanvasSprite.prototype = {
 			, from , to, pixels = this.w * this.h, p, slen, i, swaps = this.swaps, swap
 			, index1 = 0, index2 = 1, index3 = 2, index4 = 3
 		;
-		if(swaps == null){swaps = [];}
+		if(swaps == null){
+			swaps = [];
+		}
 		slen = swaps.length;
 		tmp = this.ctx.getImageData(this.x, this.y, this.w, this.h);
+		if(swaps.length == 0){
+			// no swqp empty swapcolors
+			return tmp;
+		}
+		
 		data = tmp.data;
 		// bgdata = bg.data;
 		for(p = 0; p < pixels; p++){
@@ -1597,7 +1628,22 @@ CanvasSprite.prototype = {
 	pushSwapColor: function(to, from)
 	{
 		if(this.swaps == null){this.swaps = [];}
+		if(this.isSwapColor(to, from)){
+			return;
+		};
 		this.swaps.push([from, to]);
+	},
+	
+	isSwapColor: function(to, from)
+	{
+		var i, fromto = from.join(',') + ':' + to.join(',');
+		if(this.swaps == null){this.swaps = [];}
+		for(i = 0; i < this.swaps.length; i++){
+			if(this.swaps[i][0].join(',') + ':' + this.swaps[i][1].join(',') == fromto){
+				return true;
+			}
+		}
+		return false;
 	},
 
 
