@@ -5,14 +5,18 @@
  */
 
 //canvas
-var VIEWMULTI = 2;//基本サイズ拡大倍数
+var VIEWMULTI = 2;//キャンバス基本サイズ拡大倍数
 var CHIPCELL_SIZE = 8;//基本サイズ1辺り 8*8
-var DISPLAY_WIDTH = 320;//表示基本幅
-var DISPLAY_HEIGHT = 240;//表示基本高
+var DISPLAY_WIDTH = 320;//キャンバス表示基本幅
+var DISPLAY_HEIGHT = 240;//キャンバス表示基本高
 var UI_SCREEN_ID = 'screen'; //イベント取得・拡大表示用
 
-var IMAGE_DIR = './img/';
+var SCROLL_MAX_SPRITES_DRAW = 32; //スプライト最大描画数
+var SCROLL_MAX_SPRITES_STACK = 2048; //スプライト最大スタック数
+
+var IMAGE_DIR = './img/'; //画像ファイル読み込みパス(URLフルパスも可)
 
 //keyevent
 var KEYCONTROLL_HOLDTIME = 16; //キー固定判定時間[fps]
+
 

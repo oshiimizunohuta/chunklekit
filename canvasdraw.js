@@ -5,9 +5,9 @@
  */
 //キャンバスことスクロール
 var canvasScrollBundle = {};
-var VIEWMULTI = 1;
-var SCROLL_MAX_SPRITES_DRAW = 32;
-var SCROLL_MAX_SPRITES_STACK = 2048;
+//var VIEWMULTI = 1;
+// var SCROLL_MAX_SPRITES_DRAW = 32;
+// var SCROLL_MAX_SPRITES_STACK = 2048;
 
 function makeScroll(name, mainFlag, width, height){
 	var scr = new CanvasScroll();
@@ -29,7 +29,7 @@ function CanvasScroll(name, mainFlag, width, height)
 			, scrsize = getScrollSize()
 			;
 		
-		insertID = insertID == null ? 'display' : indertID;
+		insertID = insertID == null ? 'display' : insertID;
 		this.canvas = document.getElementById(name);
 		if(this.canvas == null){
 			this.canvas = document.createElement('canvas');
@@ -1487,14 +1487,14 @@ CanvasSprite.prototype = {
 	vflip: function(toggle)
 	{
 		this.vFlipFlag = toggle == null ? !this.vFlipFlag : toggle;
-		return this.vFlipFlag;
+		return this;
 	},
 	
 	hflip: function(toggle)
 	{
 		this.hFlipFlag = toggle == null ? !this.hFlipFlag : toggle;
 		
-		return this.hFlipFlag;
+		return this;
 	},
 	
 	flip: function()
@@ -1514,7 +1514,7 @@ CanvasSprite.prototype = {
 	rot: function(trbl)
 	{
 		this.rotFlag = trbl == null ? (trbl + 1) % 4 : trbl;
-		return this.rotFlag;
+		return this;
 	},
 
 	/**
@@ -1617,6 +1617,7 @@ CanvasSprite.prototype = {
 	{
 		if(this.swaps == null){this.swaps = [];}
 		this.swaps.push([from, to]);
+		return this;
 	},
 
 	setSwapColor: function(to, from)
@@ -1624,14 +1625,16 @@ CanvasSprite.prototype = {
 		this.swaps = [];
 		this.swaps.push([from, to]);
 		this.swapStart();
+		return this;
 	},
 	pushSwapColor: function(to, from)
 	{
 		if(this.swaps == null){this.swaps = [];}
 		if(this.isSwapColor(to, from)){
-			return;
+			return this;
 		};
 		this.swaps.push([from, to]);
+		return this;
 	},
 	
 	isSwapColor: function(to, from)
