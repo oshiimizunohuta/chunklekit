@@ -272,7 +272,7 @@ function CanvasScroll(name, mainFlag, width, height)
 			rox = x;
 			roy = y;
 			x = (((Math.cos(r) + Math.sin(r)) * w) - w) * 0.5;
-			y = (((Math.cos(r + (Math.PI * 0.5)) + Math.sin(r + (Math.PI * 0.5))) * w) - w) * 0.5;
+			y = (((Math.cos(r + (Math.PI * 0.5)) + Math.sin(r + (Math.PI * 0.5))) * h) - h) * 0.5;
 			this.ctx.translate(rox , roy);
 			this.ctx.rotate(r);
 		}
@@ -2372,6 +2372,13 @@ function makeRGBA(color)
 {
 	var csv = color.join(", ");
 	return 'rgba(' + csv + ')';
+}
+function makeColorArray(str)
+{
+	var a = str.slice(1).split(/([0-9a-fA-F]{2})/).filter(Boolean).concat("255");
+	return a.map(function(b){
+		return parseInt(b, 16);
+	});
 }
 
 /**

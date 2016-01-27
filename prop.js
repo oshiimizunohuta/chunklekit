@@ -16,6 +16,14 @@ var SCROLL_MAX_SPRITES_STACK = 2048; //スプライト最大スタック数
 
 var IMAGE_DIR = './img/'; //画像ファイル読み込みパス(URLフルパスも可)
 
+//wordprint
+
+var WORDPRINT_FONT8PX = 'font8p';
+var WORDPRINT_FONT4V6PX = 'font4v6p';
+var WORDPRINT_FONT12PX = 'font12p';
+
+
+
 //keyevent
 var KEYCONTROLL_HOLDTIME = 16; //キー固定判定時間[fps]
 

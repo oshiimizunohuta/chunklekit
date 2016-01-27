@@ -53,11 +53,19 @@ WordPrint.prototype ={
 		this.SPACE_CODE = 236; //'　'
 		this.HYPHEN_CODE = 177; //'-'
 		this.ESCAPE_CODE = 254; //$
+		this.imageNames = {
+			'8px': WORDPRINT_FONT8PX
+			, '12px': WORDPRINT_FONT12PX
+			, '4v6px': WORDPRINT_FONT4V6PX
+		};
+		
 		this.chipSize = 8;
 		this.vChipSize = 8;
 		this.fontSize = '8px';
 		sizetype = sizetype != null ? sizetype : '8px';
-		this.imageName = 'font8p';
+		this.imageName = WORDPRINT_FONT8PX;
+		
+		
 		this.DEFAULT_COLOR = COLOR_FONT8;
 		// this.canvas = null;
 		// this.context = null;
@@ -98,8 +106,12 @@ WordPrint.prototype ={
 				cs.init(img, 0, 0, res.data.width, res.data.height);
 			});
 		}else{
+			//スワップ済みはクリーン
+			//TODO デフォルトはいらないかもしれない
 			cs.init(img, 0, 0, res.data.width, res.data.height);
-			self.coloredCanvasSprite.def = self.cs;
+			this.coloredCanvasSprite = [];
+			this.coloredCanvasSprite.def = cs;
+			this.swapColor();
 		}
 	},
 
@@ -309,17 +321,20 @@ WordPrint.prototype ={
 	setFontSize: function(sizetype)
 	{
 		if(sizetype == "8px"){
-			this.imageName = "font8p";
+			// this.imageName = "font8p";
+			this.imageName = this.imageNames[sizetype];
 			this.DEFAULT_COLOR = COLOR_FONT8;
 			this.chipSize = 8;
 			this.vChipSize = 8;
 		}else if(sizetype == "4v6px"){
-			this.imageName = "font4v6p";
+			// this.imageName = "font4v6p";
+			this.imageName = this.imageNames[sizetype];
 			this.DEFAULT_COLOR = COLOR_FONT8;
 			this.chipSize = 4;
 			this.vChipSize = 6;
 		}else if(sizetype == "12px"){
-			this.imageName = "font12p";
+			// this.imageName = "font12p";
+			this.imageName = this.imageNames[sizetype];
 			this.DEFAULT_COLOR = COLOR_FONT12;
 			this.chipSize = 12;
 			this.vChipSize = 12;
@@ -328,6 +343,7 @@ WordPrint.prototype ={
 			return;
 		}
 		this.initCanvas();
+		this.setColor(this.DEFAULT_COLOR, this.DEFAULT_BGCOLOR);
 	},
 	
 	setMarkAlign: function(align)
@@ -495,7 +511,7 @@ WordPrint.prototype ={
 	
 	draw: function(scr)
 	{
-		var i, spr, ofs = 0, line
+		var i, spr, ofs = 0
 		, isHorizon = this.isHorizon()
 		, isVertical = this.isVertical()
 		, ofy = isVertical ? -this.vChipSize : 0
@@ -514,9 +530,9 @@ WordPrint.prototype ={
 		}
 		// this.swapColor();
 		for(i = 0; i < this.spriteArray.length; i++){
-			line = isVertical ? (i * 0.5) | 0 : i;
+			// line = isVertical ? (i * 0.5) | 0 : i;
 			if(rows > 0 && i >= rows){break;}
-			lineSpace = isVertical ? (0 * this.rowSpace) + (i * this.vChipSize) : i * (this.rowSpace + this.vChipSize);
+			lineSpace = isVertical ? i * this.vChipSize : i * (this.rowSpace + this.vChipSize);
 			scr.drawSpriteArray(this.spriteArray[i], this.position_x, this.position_y + lineSpace + ofy, cols);
 		}
 		// dulog(this.cols);
