@@ -20,11 +20,13 @@ WordPrint.prototype ={
 		this.sp_kata = {
 			'＝':'＝', '＋': '＋', '－': '－', '＊': '＊', '／': '／'
 			,'=':'＝', '+': '＋', '-': '－', '*': '＊', '/': '／'
-			, '_': '－'
+			, '_': '－', '～': '～', '（':  '（', '）': '）'
+			, '♥':'♥', '♡':'♥', '❤':'♡' 
 			, '☆':'☆', '★':'☆'
 		};
 		this.sp_hira = {
-			'ー': '⼀', '？': '？', '！': '！', '・':'・', '『': '『', '』': '』', '◯': '◯', '☓': '☓'
+			'、': '、', '。': '。'  
+			, 'ー': '⼀', '？': '？', '！': '！', '・':'・', '『': '『', '』': '』', '◯': '◯', '☓': '☓'
 			,'･':'・', '?': '？', '!': '！',  '「': '『', '」': '』', '○': '◯', '×': '☓'
 		};
 		this.soundmarks = {
@@ -182,7 +184,7 @@ WordPrint.prototype ={
 	},
 
 	searchNum: function(w){
-		var match, ofs = 0, code = w.charCodeAt(0);
+		var match = -1, ofs = 0, code = w.charCodeAt(0);
 
 		if(w in this.sp_alph){
 			match = this.moji_alph.indexOf(this.sp_alph[w]);
@@ -201,11 +203,13 @@ WordPrint.prototype ={
 			//アルファベット
 			match = this.moji_alph.indexOf(w);
 			ofs = 180;
-		}else if(code < 12450 && code > 9829){
+		// }else if(code < 12450 && code > 9829){
+		}else if(code >= 12353 && code <= 12438){
 			//ひらがな
 			match = this.moji_hira.indexOf(w);
 			ofs = 0;
-		}else{
+		// }else{
+		}else if(code >= 12448 && code <= 12538){
 			//カタカナ
 			match = this.moji_kata.indexOf(w);
 			ofs = 90;
