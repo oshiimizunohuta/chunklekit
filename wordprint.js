@@ -180,7 +180,8 @@ WordPrint.prototype ={
 		//数字
 		if(i < 250){return this.moji_suji.substr(i - 240, 1);}
 
-		return this.NOTFOUND_CODE;
+		// return this.NOTFOUND_CODE;
+		return -1;
 	},
 
 	searchNum: function(w){
