@@ -1326,14 +1326,14 @@ function flipSprite(sprite, h, v)
 	if(h){sprite.hflip(h);}
 	return sprite;
 }
-function swapColorSpriteRecursive(sprite, type, from, to)
+function swapColorSpriteRecursive(sprite, type, to, from)
 {
 	// try{
 		if(sprite.length != null){
 			sprite.forEach(function(s, i){
-				swapColorSpriteRecursive(s, type, from, to);
+				swapColorSpriteRecursive(s, type, to, from);
 			});
-			return;
+			return sprite;
 		}
 		
 		if(type == null || type == 'set'){
@@ -1345,7 +1345,7 @@ function swapColorSpriteRecursive(sprite, type, from, to)
 		}else if(type == 'reset'){
 			sprite.resetSwapColor();
 		}
-		return;
+		return sprite;
 	// }catch(e){
 		// console.error(e, 'not sprite:', sprite);
 	// }
