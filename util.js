@@ -68,3 +68,17 @@ function str_pad(input, pad_length, pad_string, pad_type)
 
 //	dulog(charArray);
 }
+
+function clone(src){
+	var dst, k
+	;
+	if(typeof src != 'object'){
+		return src;
+	}
+	dst = src instanceof Array ? [] : {};
+	for(k in src) {
+		dst[k] = typeof src[k] == 'object' && (k != 'prototype' || k != '__proto__') ? clone(src[k]) : src[k];
+	}
+	return dst;
+}
+
