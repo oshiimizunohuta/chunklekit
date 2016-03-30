@@ -79,65 +79,62 @@ CanvasScroll.prototype = {
 		this.rasterFunc = null;
 		this.rasterLines = {horizon: [], vertical: []};
 		this.rasterVolatile = true;
+		
+		this.mirrorMode = null;
 	},
 
 	drawto: function(targetScroll, x, y, w, h)
 	{
-//		debugUser.log([x, y]);
 		if(!this.is_visible()){return;}
 		if(targetScroll == null){return;}
 		if(w == null){w = this.canvas.width;}
 		if(h == null){h = this.canvas.height;}
 		if(x == null){x = 0;}
 		if(y == null){y = 0;}
-//		debugUser.log([this.canvas, targetScroll, x, y]);
-//		targetScroll.ctx.drawImage(this.canvas, 0 | -x, 0 | -y, 0 | w, 0 | h);
 		targetScroll.ctx.drawImage(this.canvas, 0 | -x, 0 | -y);
-
-//		alert();
 	},
 
-	rasterto: function(targetScroll, sx, sy, sw, sh, dx, dy, dw, dh)
+	//拡大しない
+	rasterto: function(targetScroll, dx, dy, dw, dh)
 	{
 		if(!this.is_visible()){return;}
-		if(sw == null){sw = this.canvas.width;}
-		if(sh == null){sh = this.canvas.height;}
-		if(sx == null){sx = 0;}
-		if(sy == null){sy = 0;}
-		if(dw == null){dw = sw;}
-		if(dh == null){dh = sh;}
-		if(dx == null){dx = sx;}
-		if(dy == null){dy = sy;}
-		var i, raster, pos = {x: dx, y: dy}, line = 0;
+		if(dw == null){dw = this.canvas.width;}
+		if(dh == null){dh = this.canvas.height;}
+		if(dx == null){dx = this.x;}
+		if(dy == null){dy = this.y;}
+		var sw = dw, sh = dh	, sx = 0, sy = 0
+			, i, raster, pos = {x: 0, y: 0}, fixpos = {x: dx, y: dy}, line = 0;
 		
 		if(this.rasterLines.horizon.length > 0){
 			raster = this.rasterLines.horizon;
 			for(i = 0; i < sh; i++){
 				if(raster[i] != null){
 					if(line < i){
-						targetScroll.ctx.drawImage(this.canvas, 0, line, 0 | sw, i - line, 0 | pos.x, 0 | pos.y, 0 | dw, i - line);
+						targetScroll.ctx.drawImage(this.canvas, 0, line, 0 | sw, i - line, 0 | (pos.x + fixpos.x) % (dw * 2), 0 | (pos.y + fixpos.y) % (dh * 2), 0 | dw, i - line);
 					}
-					pos = raster[i];
-					targetScroll.ctx.drawImage(this.canvas, 0, i, 0 | sw, 1, 0 | pos.x, 0 | pos.y, 0 | dw, 1);
+					pos.x = raster[i].x;
+					pos.y = raster[i].y;
+					targetScroll.ctx.drawImage(this.canvas, 0, i, 0 | sw, 1, 0 | (pos.x + fixpos.x) % (dw * 2), 0 | (pos.y + fixpos.y) % (dh * 2), 0 | dw, 1);
 					line = i + 1;
 					pos.y++;
 				}
 			}
-			targetScroll.ctx.drawImage(this.canvas, 0, line, 0 | sw, i - line, 0 | pos.x, 0 | pos.y, 0 | dw, i - line);
+			targetScroll.ctx.drawImage(this.canvas, 0, line, 0 | sw, i - line, 0 | pos.x + fixpos.x, 0 | pos.y + fixpos.y, 0 | dw, i - line);
 		}else if(this.rasterLines.vertical.length > 0){
 			raster = this.rasterLines.vertical;
 			for(i = 0; i < sw; i++){
 				if(raster[i] != null){
 					if(line < i){
-						targetScroll.ctx.drawImage(this.canvas, line, 0, 0 | i - line, 0 | sh, 0 | pos.x, 0 | pos.y, i - line, 0 | dh);
+						targetScroll.ctx.drawImage(this.canvas, line, 0, 0 | i - line, 0 | sh, 0 | pos.x + fixpos.x, 0 | pos.y + fixpos.y, i - line, 0 | dh);
 					}
-					pos = raster[i];
-					targetScroll.ctx.drawImage(this.canvas, i, 0, 1, 0 | sh, 0 | pos.x, 0 | pos.y, 1, 0 | dh);
+					rpos.x = raster[i].x;
+					rpos.y = raster[i].y;
+					targetScroll.ctx.drawImage(this.canvas, i, 0, 1, 0 | sh, 0 | pos.x + fixpos.x, 0 | pos.y + fixpos.y, 1, 0 | dh);
 					line = i + 1;
 					pos.y++;
 				}
 			}
-			targetScroll.ctx.drawImage(this.canvas, line, 0, 0 | i - line, 0 | sh, 0 | pos.x, 0 | pos.y, i - line, 0 | dh);
+			targetScroll.ctx.drawImage(this.canvas, line, 0, 0 | i - line, 0 | sh, 0 | pos.x + fixpos.x, 0 | pos.y + fixpos.y, i - line, 0 | dh);
 			
 		}else{
 			if(this.rasterFunc == null){
@@ -476,9 +473,9 @@ CanvasScroll.prototype = {
 			//this.canvas.style.backgroundColor = color;
 			this.ctx.fillStyle = makeRGB(color);
 			this.ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
-		}else{		
+		}else{
 			this.ctx.clearRect(rect.x, rect.y, rect.w, rect.h);
-		}		
+		}
 	},
 	
 	clearDrawInfoStack: function()

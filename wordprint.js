@@ -65,7 +65,7 @@ WordPrint.prototype ={
 		this.vChipSize = 8;
 		this.fontSize = '8px';
 		sizetype = sizetype != null ? sizetype : '8px';
-		this.imageName = WORDPRINT_FONT8PX;
+		this.imageName = this.imageNames[sizetype];
 		
 		
 		this.DEFAULT_COLOR = COLOR_FONT8;
