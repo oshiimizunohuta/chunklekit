@@ -1,8 +1,8 @@
 /**
  * Canvas Draw Library
  * Since 2013-11-19 07:43:37
- * @author しふたろう
- * chunklekit_v0.2.0
+ * @author bitchunk
+ * chunklekit_v0.3.0
  */
 //キャンバスことスクロール
 var canvasScrollBundle = {};
