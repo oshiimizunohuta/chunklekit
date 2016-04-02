@@ -1,3 +1,62 @@
+/**
+ * 矩形クラス 
+ */
+
+function Rect(){
+	return;
+}
+Rect.prototype = {
+	init: function (x, y, w, h)
+	{
+		this.x = x;
+		this.y = y;
+		this.w = w;
+		this.h = h;
+		this.overlapRect = [];
+		this.appendRect = [];
+	},
+
+	isContain: function(x, y)
+	{
+//		alert(this.x + "-" + this.w + " > " + x + " , " + this.y + "-" + this.h + " >" + y);
+		//OR//
+		var orResult = false, i, len;
+		if(this.x <= x && this.y <= y && (this.x + this.w) > x && (this.y + this.h) > y){
+			orResult |= true;
+		}
+		len = this.appendRect.length;
+		if(len > 0){
+			for(i = 0; i < len; i++){
+				if(this.appendRect[i].isContain(x, y)){
+					orResult |= true;
+					break;
+				}
+			}
+		}
+		//OR//
+
+		return orResult;
+	},
+
+	append: function(add)
+	{
+		this.appendRect.push(add);
+	},
+};
+
+function makeRect(x, y, w, h)
+{
+	var rects;
+	if(x.length != null && x.length == 4){
+		h = x['3'];
+		w = x['2'];
+		y = x['1'];
+		x = x['0'];
+	}
+	rects = new Rect();
+	rects.init(x, y, w, h);
+	return rects;
+}
 
 /**
  * 0で桁埋め
@@ -5,12 +64,7 @@
  * @param num
  * @returns {String}
  */
-//function formatNum(keta, num) {
-//	  var src = new String(num);
-//	  var cnt = keta - src.length;
-//	  if (cnt <= 0) return src;
-//	  while (cnt-- > 0) src = "0" + src; return src;
-//}
+
 function formatNum(num, keta)
 {
 

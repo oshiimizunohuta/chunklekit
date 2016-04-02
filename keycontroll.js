@@ -36,7 +36,7 @@ window.onkeyup = function(e){
 
 //選択しない
 window.onmousedown = function(e){
-	e.preventDefault();
+	// e.preventDefault();
 };
 
 //ウィンドウ離れた
@@ -379,3 +379,133 @@ function KeyControll(idname)
 	KeyControll.prototype.initCommonKey = initCommonKey;
 
 }
+
+/**
+ * ポインティング(マウス・タッチ)コントロール
+ */
+function PointingControll(){return;}
+PointingControll.prototype ={
+	init: function(){
+		this.tapStartPos = -1;
+		this.tapMovePos = -1;
+		this.tapStartItems = [];
+		this.flickableItems = [];
+		
+	},
+	
+	clearEventItem: function(items, name)
+	{
+		var rep = [], i;
+		if(name == null){
+			return [];
+		}
+		for(i = 0; i < items.length; i++){
+			if(items[i].name){
+				continue;
+			}
+			rep.push(items[i]);
+		}
+		items = [];
+		items = rep;
+		return items;
+	},
+	
+	makeTapEvent: function(rect, func, cancel, name){
+		return {rect: rect, func: func, cancel: cancel == null ? null : cancel, name: name, pos:{x:-1, y:-1}};
+	},
+	
+	appendTapStartItem: function(rect, func, cancel, name)
+	{
+		this.tapStartItems.push(this.makeTapEvent(rect,func, cancel == null ? null : cancel, name == null ? this.tapStartItems.lengh : name));
+		return this.tapStartItems.length;
+	},
+	
+	clearTapStartItem: function(name){
+		this.tapStartItems = this.clearEventItem(this.tapStartItems, name);
+		return this.tapStartItems.length;
+	},	
+	
+	appendTappableItem: function(rect, func, cancel, name)
+	{
+		this.tappableItems.push(this.makeTapEvent(rect,func, cancel == null ? null : cancel, name == null ? this.tappableItems.lengh : name));
+		return this.tappableItems.length;
+	},
+	
+	clearTappableItem: function(name){
+		this.tappableItems = this.clearEventItem(this.tappableItems, name);
+		return this.tappableItems.length;
+	},
+	
+	appendFlickableItem: function(rect, func, cancel, name)
+	{
+		this.flickableItems.push(this.makeTapEvent(rect,func, cancel == null ? null : cancel, name == null ? this.flickableItems.lengh : name));
+		return this.flickableItems.length;
+	},	
+	
+	clearFlickableItem: function(name){
+		this.flickableItems = this.clearEventItem(this.flickableItems, name);
+		return this.flickableItems.length;
+	},	
+	
+	touchStartEvent: function(x, y)
+	{
+		var i, item, pos;
+		this.tapStartPos.x = x;
+		this.tapStartPos.y = y;
+		this.tapMovePos.x = x;
+		this.tapMovePos.y = y;
+		pos = this.tapStartPos;
+		for(i = 0; i < this.tapStartItems.length; i++){
+			item = this.tapStartItems[i];
+			if(item.rect.isContain(x, y) && item.rect.isContain(pos.x, pos.y)){
+				if(item.func(item) == false){
+					break;
+				};
+			}
+		}
+		
+	},
+	
+	touchEndEvent: function(x, y)
+	{
+		var i, item, pos = this.tapStartPos;
+		for(i = 0; i < this.tappableItems.length; i++){
+			item = this.tappableItems[i];
+			if(item.rect.isContain(x, y) && item.rect.isContain(pos.x, pos.y)){
+				if(item.func(item) == false){
+					break;
+				};
+			}
+		}
+		this.tapStartPos.x = -1;
+		this.tapStartPos.y = -1;
+		this.tapMovePos.x = x;
+		this.tapMovePos.y = y;
+	},
+	
+	touchMoveEvent: function(x, y)
+	{
+		var i, item, mpos = this.tapMovePos, tpos = this.tapStartPos, isContain;
+		for(i = 0; i < this.flickableItems.length; i++){
+			item = this.flickableItems[i];
+			isContain = item.rect.isContain(x, y);
+			item.pos.x = x;
+			item.pos.y = y;
+			if(item.rect.isContain(tpos.x, tpos.y)){
+				if(isContain){
+					if(item.func != null && item.func(item, x, y) == false){
+						break;
+					};
+				}else{
+					if(item.cancel != null && item.cancel(item, x, y) == false){
+						break;
+					};
+				}
+			}
+		}
+		this.tapMovePos.x = x;
+		this.tapMovePos.y = y;
+		
+	},
+	
+};

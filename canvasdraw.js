@@ -928,25 +928,28 @@ imageResource.height = function(name)
  * ロードされた
  * イベントより呼び出されたものなのでthisはImageオブジェクト？
  */
-imageResource.loaded = function (){
+imageResource.loaded = function (img){
 	imageResource.loadcount++;	
 	var canvas, ctx, workSpace, i, data
 	;
+	
+	console.log(img.src);
+	img = img.src == null ? this : img;
 	canvas = document.createElement('canvas');
-	canvas.width = this.width;
-	canvas.height = this.height;
+	canvas.width = img.width;
+	canvas.height = img.height;
 	ctx = contextInit(canvas);
-	ctx.drawImage(this, 0, 0);
-	imageResource.data[this.name] = canvas;
+	ctx.drawImage(img, 0, 0);
+	imageResource.data[img.name] = canvas;
 	data = canvas;
-	imageResource.ctx[this.name] = ctx;
+	imageResource.ctx[img.name] = ctx;
 	
 	canvas = document.createElement('canvas');
-	canvas.width = imageResource.separateWidth[this.name];
-	canvas.height = imageResource.separateHeight[this.name];
+	canvas.width = imageResource.separateWidth[img.name];
+	canvas.height = imageResource.separateHeight[img.name];
 	ctx = contextInit(canvas);
 	workSpace = {canvas:canvas, ctx:ctx, data: data};
-	imageResource.workSpace[this.name] = workSpace;
+	imageResource.workSpace[img.name] = workSpace;
 	delete img;
 	if(imageResource.isload()){
 		console.log('Onload ImageResource.');
@@ -2223,61 +2226,6 @@ function rectFromSprite(sprite, x, y)
 	return rects;
 }
 
-function Rect(){
-	return;
-}
-Rect.prototype = {
-	init: function (x, y, w, h)
-	{
-		this.x = x;
-		this.y = y;
-		this.w = w;
-		this.h = h;
-		this.overlapRect = [];
-		this.appendRect = [];
-	},
-
-	isContain: function(x, y)
-	{
-//		alert(this.x + "-" + this.w + " > " + x + " , " + this.y + "-" + this.h + " >" + y);
-		//OR//
-		var orResult = false, i, len;
-		if(this.x <= x && this.y <= y && (this.x + this.w) > x && (this.y + this.h) > y){
-			orResult |= true;
-		}
-		len = this.appendRect.length;
-		if(len > 0){
-			for(i = 0; i < len; i++){
-				if(this.appendRect[i].isContain(x, y)){
-					orResult |= true;
-					break;
-				}
-			}
-		}
-		//OR//
-
-		return orResult;
-	},
-
-	append: function(add)
-	{
-		this.appendRect.push(add);
-	},
-};
-
-function makeRect(x, y, w, h)
-{
-	var rects;
-	if(x.length != null && x.length == 4){
-		h = x['3'];
-		w = x['2'];
-		y = x['1'];
-		x = x['0'];
-	}
-	rects = new Rect();
-	rects.init(x, y, w, h);
-	return rects;
-}
 
 //RGBA
 var COLOR_RED = [247, 49, 0, 255];
