@@ -44,6 +44,13 @@ Rect.prototype = {
 	},
 };
 
+/**
+ * Make Rect 
+ * x, y, w, h
+ * OR
+ * x: [String] space delimiter & *x 
+ * x: [Array]
+ */
 function makeRect(x, y, w, h)
 {
 	var rects, m = 1;
@@ -51,7 +58,7 @@ function makeRect(x, y, w, h)
 		x = x.split(' ');
 	}
 	if(typeof x == 'object'){
-		m = x['4'] != null ? x['4'].replase('*', '') : m;
+		m = x['4'] != null ? x['4'].replace(/[x*]/, '') | 0 : m;
 		h = x['3'];
 		w = x['2'];
 		y = x['1'];
