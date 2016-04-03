@@ -1666,6 +1666,17 @@ function tocellh(px)
 	return (px / CHIPCELL_SIZE) | 0;
 }
 
+/**
+ * セルサイズで割り切れる値 
+ */
+function parseCell(px, size)
+{
+	size = size == null ? CHIPCELL_SIZE : size;
+	px |= 0;
+	return px - (px % size);
+	
+}
+
 function SpriteHandle(imageName, id, scroll){
 	return;
 }
