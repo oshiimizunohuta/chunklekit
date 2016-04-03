@@ -46,15 +46,19 @@ Rect.prototype = {
 
 function makeRect(x, y, w, h)
 {
-	var rects;
-	if(x.length != null && x.length == 4){
+	var rects, m = 1;
+	if(typeof x == 'string'){
+		x = x.split(' ');
+	}
+	if(typeof x == 'object'){
+		m = x['4'] != null ? x['4'].replase('*', '') : m;
 		h = x['3'];
 		w = x['2'];
 		y = x['1'];
 		x = x['0'];
 	}
 	rects = new Rect();
-	rects.init(x, y, w, h);
+	rects.init(x * m, y * m, w * m, h * m);
 	return rects;
 }
 
