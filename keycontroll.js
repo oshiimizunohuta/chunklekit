@@ -385,12 +385,72 @@ function KeyControll(idname)
  */
 function PointingControll(){return;}
 PointingControll.prototype ={
-	init: function(){
-		this.tapStartPos = -1;
-		this.tapMovePos = -1;
+	init: function(screenScroll, baseScroll){
+		this.tapStartPos = {x: -1, y: -1};
+		this.tapMovePos = {x: -1, y: -1};
 		this.tapStartItems = [];
 		this.flickableItems = [];
+		this.tappableItems = [];
+		this.screenScroll = screenScroll;
+		this.baseScroll = baseScroll == null ? screenScroll : baseScroll;
+		this.sizeRate = {
+			w: screenScroll.canvas.width / baseScroll.canvas.width,
+			h: screenScroll.canvas.height / baseScroll.canvas.height,
+		};
+		this.initFlickables();
+		this.initTappables();
+	},
+	
+	initTappables: function()
+	{
+		var self = this
+			, tsfunc = function(e){
+				var pos = self.getTouchPos(e);
+				self.touchStartEvent(pos.x, pos.y);
+				e.preventDefault();
+				return false;
+			}
+			, tefunc = function(e){
+				var pos = self.getTouchPos(e);
+				self.touchEndEvent(pos.x, pos.y);
+				e.preventDefault();
+				return false;
+			}
+			, scr = this.screenScroll
+		;
+
+		scr.canvas.addEventListener('mousedown', tsfunc, false);
+		scr.canvas.addEventListener('mouseup', tefunc, false);
+		scr.canvas.addEventListener('touchstart', tsfunc, false);
+		scr.canvas.addEventListener('touchend', tefunc, false);
+	},
+	
+	initFlickables: function()
+	{
+		var self = this
+			, mvfunc =  function(e){
+				var pos = self.getTouchPos(e);
+				self.touchMoveEvent(pos.x, pos.y);
+				e.preventDefault();
+				return false;
+			}
+			, scr = this.screenScroll
+			;
 		
+		scr.canvas.addEventListener('mousemove', mvfunc, false);
+		scr.canvas.addEventListener('touchmove', mvfunc, false);
+	},
+	
+	getTouchPos: function(e)
+	{
+		var me = e.changedTouches != null ? e.changedTouches[0] : e
+			, view = this.baseScroll
+			, scr = this.screenScroll
+			, bounds = scr.canvas.getBoundingClientRect(), w = view.canvas.width, h = view.canvas.height
+			, x = ((((me.clientX - bounds.left) / this.sizeRate.w) | 0) - view.x + w) % w
+			, y = ((((me.clientY - bounds.top) / this.sizeRate.h) | 0) - view.y + h) % h
+		;
+		return {x: x, y: y};
 	},
 	
 	clearEventItem: function(items, name)
