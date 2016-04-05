@@ -53,16 +53,31 @@ Rect.prototype = {
  */
 function makeRect(x, y, w, h)
 {
-	var rects, m = 1;
+	var rects, m = 1, ptp = false, opt
+		, reg  = /[x*]([0-9]+)/, c, xf, yf;
 	if(typeof x == 'string'){
 		x = x.split(' ');
 	}
 	if(typeof x == 'object'){
-		m = x['4'] != null ? x['4'].replace(/[x*]/, '') | 0 : m;
-		h = x['3'];
-		w = x['2'];
-		y = x['1'];
-		x = x['0'];
+		x = x.map(function(a){
+			return a.search(/^\d+$/) > -1 ? a | 0 : a;
+		});
+		opt = x[4] != null ? x[4] : '';
+		m = opt != '' && opt.search(reg) > -1 ? opt.replace(reg, '$1') | 0 : m;
+		ptp = opt != '' ? opt.search(/:pos/, '') > -1 : ptp;
+		if(ptp){
+			yf = x[1] > x[3];
+			xf = x[0] > x[2];
+			h = yf ? x[1] - x[3] : x[3] - x[1];
+			w = xf ? x[0] - x[2] : x[2] - x[0];
+			y = yf ? x[3] : x[1];
+			x = xf ? x[2] : x[0];
+		}else{
+			h = x[3];
+			w =x[2];
+			y = x[1];
+			x = x[0];
+		}
 	}
 	rects = new Rect();
 	rects.init(x * m, y * m, w * m, h * m);
