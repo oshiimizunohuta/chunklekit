@@ -405,14 +405,14 @@ PointingControll.prototype ={
 	{
 		var self = this
 			, tsfunc = function(e){
-				var pos = self.getTouchPos(e);
-				self.touchStartEvent(pos.x, pos.y);
+				var pos = self.getTapPos(e);
+				self.tapStartEvent(pos.x, pos.y);
 				e.preventDefault();
 				return false;
 			}
 			, tefunc = function(e){
-				var pos = self.getTouchPos(e);
-				self.touchEndEvent(pos.x, pos.y);
+				var pos = self.getTapPos(e);
+				self.tapEndEvent(pos.x, pos.y);
 				e.preventDefault();
 				return false;
 			}
@@ -429,8 +429,8 @@ PointingControll.prototype ={
 	{
 		var self = this
 			, mvfunc =  function(e){
-				var pos = self.getTouchPos(e);
-				self.touchMoveEvent(pos.x, pos.y);
+				var pos = self.getTapPos(e);
+				self.tapMoveEvent(pos.x, pos.y);
 				e.preventDefault();
 				return false;
 			}
@@ -441,7 +441,7 @@ PointingControll.prototype ={
 		scr.canvas.addEventListener('touchmove', mvfunc, false);
 	},
 	
-	getTouchPos: function(e)
+	getTapPos: function(e)
 	{
 		var me = e.changedTouches != null ? e.changedTouches[0] : e
 			, view = this.baseScroll
@@ -474,17 +474,6 @@ PointingControll.prototype ={
 		return {rect: rect, func: func, cancel: cancel == null ? null : cancel, name: name, pos:{x:-1, y:-1}};
 	},
 	
-	appendTapStartItem: function(rect, func, cancel, name)
-	{
-		this.tapStartItems.push(this.makeTapEvent(rect,func, cancel == null ? null : cancel, name == null ? this.tapStartItems.lengh : name));
-		return this.tapStartItems.length;
-	},
-	
-	clearTapStartItem: function(name){
-		this.tapStartItems = this.clearEventItem(this.tapStartItems, name);
-		return this.tapStartItems.length;
-	},	
-	
 	appendTappableItem: function(rect, func, cancel, name)
 	{
 		this.tappableItems.push(this.makeTapEvent(rect,func, cancel == null ? null : cancel, name == null ? this.tappableItems.lengh : name));
@@ -507,7 +496,7 @@ PointingControll.prototype ={
 		return this.flickableItems.length;
 	},	
 	
-	touchStartEvent: function(x, y)
+	tapStartEvent: function(x, y)
 	{
 		var i, item, pos;
 		this.tapStartPos.x = x;
@@ -515,10 +504,10 @@ PointingControll.prototype ={
 		this.tapMovePos.x = x;
 		this.tapMovePos.y = y;
 		pos = this.tapStartPos;
-		for(i = 0; i < this.tapStartItems.length; i++){
-			item = this.tapStartItems[i];
+		for(i = 0; i < this.tappableItems.length; i++){
+			item = this.tappableItems[i];
 			if(item.rect.isContain(x, y) && item.rect.isContain(pos.x, pos.y)){
-				if(item.func(item) == false){
+				if(item.func != null && item.func(item, x, y) == false){
 					break;
 				};
 			}
@@ -526,13 +515,13 @@ PointingControll.prototype ={
 		
 	},
 	
-	touchEndEvent: function(x, y)
+	tapEndEvent: function(x, y)
 	{
 		var i, item, pos = this.tapStartPos;
 		for(i = 0; i < this.tappableItems.length; i++){
 			item = this.tappableItems[i];
 			if(item.rect.isContain(x, y) && item.rect.isContain(pos.x, pos.y)){
-				if(item.func(item) == false){
+				if(item.cancel != null && item.cancel(item, x, y) == false){
 					break;
 				};
 			}
@@ -543,7 +532,7 @@ PointingControll.prototype ={
 		this.tapMovePos.y = y;
 	},
 	
-	touchMoveEvent: function(x, y)
+	tapMoveEvent: function(x, y)
 	{
 		var i, item, mpos = this.tapMovePos, tpos = this.tapStartPos, isContain;
 		for(i = 0; i < this.flickableItems.length; i++){
