@@ -933,7 +933,6 @@ imageResource.loaded = function (img){
 	var canvas, ctx, workSpace, i, data
 	;
 	
-	console.log(img.src);
 	img = img.src == null ? this : img;
 	canvas = document.createElement('canvas');
 	canvas.width = img.width;
@@ -1076,12 +1075,25 @@ function makeSpriteInCanvas(canvas, x, y, w, h)
 	return s;
 }
 
-function copyCanvasSprite(canvasSprite)
+function copyCanvasSprite(sprite)
 {
 	var s = new CanvasSprite();
-	s.copyCanvas(canvasSprite.image, 0, 0, canvasSprite.w, canvasSprite.h);
+	s.copySprite(sprite);
 	return s;
 }
+
+function copyCanvasSpriteChunk(spriteChunk)
+{
+	var x, y, res = [];
+	for(y = 0; y < spriteChunk.length; y++){
+		res[y] = [];
+		for(x = 0; x < spriteChunk[y].length; x++){
+			res[y][x] = copyCanvasSprite(spriteChunk[y][x]);
+		}
+	}
+	return res;
+}
+
 
 function makeSpriteArrayInCanvas(canvas, w, h, indexes)
 {
@@ -1372,7 +1384,7 @@ function setSwapColorSprite(sprite, to, from, reset)
 }
 
 
-function imageCellWidth(name)
+function imageWidth(name)
 {
 	return imageResource.data[name].width;
 }
@@ -1381,9 +1393,27 @@ function imageSeparateWidth(name)
 {
 	return imageResource.separateWidth[name];
 }
+
+/**
+ * 1セルのサイズ
+ */
+function imageCellSize(name){
+	var img = imageResource;
+	return {w: separateWidth[name], h: separateHeight[name]};
+}
+
+/**
+ * 画像のサイズ(セル単位)
+ */
+function imageCellsNum(name){
+	var size = imageCellSize(name)
+		, img = imageResource.data[name];
+	return {w: (img.width / size.w) | 0, h: (img.height / size.h) | 0};
+}
+
 function imageChipSize(name)
 {
-	return imageResource.separateWidth[name];
+	return imageCellSize[name];
 }
 
 function spriteFromImage(name, index)
@@ -1423,13 +1453,16 @@ CanvasSprite.prototype = {
 		this.initCommon('incanvas', x, y, w, h);
 	},
 	
-	copyCanvas: function(canvas, x, y, w, h)
+	copySprite: function(sprite)
 	{
-		this.image = createCanvas(canvas.width, canvas.height);
+		this.image = createCanvas(sprite.image.width, sprite.image.height);
 		this.ctx = initContext(this.image);
-		this.ctx.drawImage(canvas, 0, 0);
+		this.ctx.drawImage(sprite.image, 0, 0);
 		this.workSpace = {canvas: this.image, ctx: this.ctx, data: this.image};
-		this.initCommon('copycanvas', x, y, w, h);
+		this.initCommon('copySprite', sprite.x, sprite.y, sprite.w, sprite.h);
+		this.hFlipFlag =  sprite.hFlipFlag;
+		this.vFlipFlag =  sprite.vFlipFlag;
+		this.rotFlag = sprite.rotFlag;
 	},
 	
 	initCommon: function(canvas, x, y, w, h)
