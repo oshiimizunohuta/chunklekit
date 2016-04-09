@@ -84,6 +84,53 @@ function makeRect(x, y, w, h)
 	return rects;
 }
 
+
+function Ease(){
+		this.count;
+		this.range;
+		this.start = 0;
+		this.division;
+		this.time;
+		this.func;
+	return;
+}
+Ease.prototype = {
+	init: function(s, e, t){
+		this.count = 0;
+		this.start = s;
+		this.end = e;
+		this.range = e - s;
+		this.time = t;
+	},
+	
+	exp: function(s, e, t){
+		var self = this;
+		this.init(s, e, t);
+		this.division = t * 0.1;
+		this.func = function(){
+			return 1 / Math.exp(self.division / (self.count + 1));
+		};
+	},
+	
+	swing: function(s, e, t){
+		var self = this;
+		this.init(s, e, t);
+		this.division = t;
+		this.func = function(){
+			return 0.5 - Math.cos(self.count * (Math.PI / self.division)) / 2;
+		};
+	},
+	
+	next: function(){
+		if(this.func == null){
+			return this.start;
+		}
+		var p = this.func();
+		this.count = this.count < this.time ? this.count + 1 : this.time;
+		return p * this.range + this.start;
+	}
+};
+
 /**
  * 0で桁埋め
  * @param keta
