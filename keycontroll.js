@@ -3,7 +3,7 @@
  * Since 2013-11-19 07:43:37
  * @author しふたろう
  */
-
+//TODO jslint
 var allcontrolls = {};
 var allcontrollsKeys = {};
 var nowkey;
@@ -144,8 +144,6 @@ function KeyControll(idname)
 		this.controlls[name]['off'] = false;
 		this.controlls[name]['hold'] = false;
 		this.controlls[name]['time'] = 0;
-//		allcontrolls[this.idname] = this;
-	// console.dir(this.controlls);
 	}
 	KeyControll.prototype.setKey = setKey;
 
@@ -379,26 +377,49 @@ function KeyControll(idname)
 	KeyControll.prototype.initCommonKey = initCommonKey;
 
 }
-
+//TODO 右クリック判定確認
 /**
  * ポインティング(マウス・タッチ)コントロール
  */
 function PointingControll(){return;}
 PointingControll.prototype ={
 	init: function(screenScroll, baseScroll){
-		this.tapStartPos = {x: -1, y: -1};
-		this.tapMovePos = {x: -1, y: -1};
-		this.tapStartItems = [];
+		this.tapStartPos = {
+			left: {x: -1, y: -1},
+			middle: {x: -1, y: -1},
+			right: {x: -1, y: -1}
+		};
+		this.tapMovePos = {
+			left: {x: -1, y: -1},
+			middle: {x: -1, y: -1},
+			right: {x: -1, y: -1}
+		};
+		
 		this.flickableItems = [];
 		this.tappableItems = [];
+		
+		this.button = null;
+		this.state = {
+			l: false,
+			m: false,
+			r: false,
+		};
+		this.trig = {
+			l: false,
+			m: false,
+			r: false,
+		};
+		
 		this.screenScroll = screenScroll;
 		this.baseScroll = baseScroll == null ? screenScroll : baseScroll;
 		this.sizeRate = {
 			w: screenScroll.canvas.width / baseScroll.canvas.width,
 			h: screenScroll.canvas.height / baseScroll.canvas.height,
 		};
+		this.isContextMenu = false;
 		this.initFlickables();
 		this.initTappables();
+		this.initMenuables();
 	},
 	
 	initTappables: function()
@@ -406,13 +427,27 @@ PointingControll.prototype ={
 		var self = this
 			, tsfunc = function(e){
 				var pos = self.getTapPos(e);
-				self.tapStartEvent(pos.x, pos.y);
+				switch(e.which){
+					case 1: self.state.l = true; self.button = 'left'; break;
+					case 2: self.state.m = true; self.button = 'middle'; break;
+					case 3: self.state.r = true; self.button = 'right'; break;
+					default: return;
+				}
+				self.tapStartEvent(pos.x, pos.y, e);
+				self.button = null;
 				e.preventDefault();
 				return false;
 			}
 			, tefunc = function(e){
 				var pos = self.getTapPos(e);
-				self.tapEndEvent(pos.x, pos.y);
+				switch(e.which){
+					case 1: self.state.l = false; self.button = 'left'; break;
+					case 2: self.state.m = false; self.button = 'middle'; break;
+					case 3: self.state.r = false; self.button = 'right'; break;
+					default: return;
+				}
+				self.tapEndEvent(pos.x, pos.y, e);
+				self.button = null;
 				e.preventDefault();
 				return false;
 			}
@@ -425,12 +460,29 @@ PointingControll.prototype ={
 		scr.canvas.addEventListener('touchend', tefunc, false);
 	},
 	
+	initMenuables: function()
+	{
+		var self = this
+			, scr = this.screenScroll
+		;
+		scr.canvas.addEventListener('contextmenu', function(e){
+			e.preventDefault();
+		}, false);
+	},
+	
 	initFlickables: function()
 	{
 		var self = this
 			, mvfunc =  function(e){
 				var pos = self.getTapPos(e);
-				self.tapMoveEvent(pos.x, pos.y);
+				switch(e.which){
+					case 1: self.button = 'left'; break;
+					case 2: self.button = 'middle'; break;
+					case 3: self.button = 'right'; break;
+					default: return;
+				}
+				self.tapMoveEvent(pos.x, pos.y, e);
+				self.button = null;
 				e.preventDefault();
 				return false;
 			}
@@ -447,9 +499,11 @@ PointingControll.prototype ={
 			, view = this.baseScroll
 			, scr = this.screenScroll
 			, bounds = scr.canvas.getBoundingClientRect(), w = view.canvas.width, h = view.canvas.height
-			, x = ((((me.clientX - bounds.left) / this.sizeRate.w) | 0) - view.x + w) % w
-			, y = ((((me.clientY - bounds.top) / this.sizeRate.h) | 0) - view.y + h) % h
+			, x = ((me.clientX - bounds.left) / this.sizeRate.w) - view.x
+			, y = ((me.clientY - bounds.top) / this.sizeRate.h) - view.y
 		;
+		x = view.mirrorH ? (x + w) % w : x | 0;
+		y = view.mirrorV ? (y + h) % h: y | 0;
 		return {x: x, y: y};
 	},
 	
@@ -470,13 +524,22 @@ PointingControll.prototype ={
 		return items;
 	},
 	
-	makeTapEvent: function(rect, func, cancel, name){
-		return {rect: rect, func: func, cancel: cancel == null ? null : cancel, name: name, pos:{x:-1, y:-1}};
+	makeTapEvent: function(rect, func, cancel, name, button){
+		return {
+			rect: rect
+			, func: func
+			, cancel: cancel == null ? null : cancel
+			, name: name
+			, pos:{x:-1, y:-1}
+			, button: button
+		};
 	},
 	
-	appendTappableItem: function(rect, func, cancel, name)
+	appendTappableItem: function(rect, func, cancel, name, button)
 	{
-		this.tappableItems.push(this.makeTapEvent(rect,func, cancel == null ? null : cancel, name == null ? this.tappableItems.lengh : name));
+		button = button == null ? 'left' : button;
+		var item = this.makeTapEvent(rect,func, cancel == null ? null : cancel, name == null ? this.tappableItems.lengh : name, button);
+		this.tappableItems.push(item);
 		return this.tappableItems.length;
 	},
 	
@@ -485,76 +548,104 @@ PointingControll.prototype ={
 		return this.tappableItems.length;
 	},
 	
-	appendFlickableItem: function(rect, func, cancel, name)
+	appendFlickableItem: function(rect, func, cancel, name, button)
 	{
-		this.flickableItems.push(this.makeTapEvent(rect,func, cancel == null ? null : cancel, name == null ? this.flickableItems.lengh : name));
+		button = button == null ? 'left' : button;
+		var item = this.makeTapEvent(rect,func, cancel == null ? null : cancel, name == null ? this.tappableItems.lengh : name, button);
+		this.flickableItems.push(item);
 		return this.flickableItems.length;
-	},	
+	},
 	
 	clearFlickableItem: function(name){
 		this.flickableItems = this.clearEventItem(this.flickableItems, name);
 		return this.flickableItems.length;
-	},	
+	},
 	
-	tapStartEvent: function(x, y)
+	tapStartEvent: function(x, y, e)
 	{
-		var i, item, pos;
-		this.tapStartPos.x = x;
-		this.tapStartPos.y = y;
-		this.tapMovePos.x = x;
-		this.tapMovePos.y = y;
-		pos = this.tapStartPos;
-		for(i = 0; i < this.tappableItems.length; i++){
-			item = this.tappableItems[i];
+		var i, item, pos, items, b = this.button
+		;
+		pos = this.tapStartPos[b];
+		pos.x = x;
+		pos.y = y;
+		this.tapMovePos[b].x = x;
+		this.tapMovePos[b].y = y;
+		items = this.tappableItems;
+		for(i = 0; i < items.length; i++){
+			item = items[i];
+			if(item.button !== b){
+				continue;
+			}
 			if(item.rect.isContain(x, y) && item.rect.isContain(pos.x, pos.y)){
 				if(item.func != null && item.func(item, x, y) == false){
 					break;
-				};
+				}
 			}
 		}
 		
 	},
 	
-	tapEndEvent: function(x, y)
+	tapEndEvent: function(x, y, e)
 	{
-		var i, item, pos = this.tapStartPos;
-		for(i = 0; i < this.tappableItems.length; i++){
-			item = this.tappableItems[i];
-			if(item.rect.isContain(x, y) && item.rect.isContain(pos.x, pos.y)){
+		var i, item
+			, base = this.baseScroll.canvas
+			, gx = x + base.x, gy = y + base.y
+			, b = this.button
+			, pos = this.tapStartPos[b]
+			, items = this.tappableItems
+		;
+		for(i = 0; i < items.length; i++){
+			item = items[i];
+			if(item.button !== b){
+				continue;
+			}
+			if(item.rect.isContain(x, y) === false || item.rect.isContain(pos.x, pos.y) === false){
+				continue;
+			}
+			if(item.cancel != null && item.cancel(item, x, y) === false){
+				break;
+			}
+			
+		}
+		pos.x = -1;
+		pos.y = -1;
+		this.tapMovePos[b].x = x;
+		this.tapMovePos[b].y = y;
+	},
+	
+	tapMoveEvent: function(x, y, e)
+	{
+		var i, item, isContain
+			, base = this.baseScroll.canvas
+			, gx = x + base.x, gy = y + base.y
+			, b = this.button
+			, tpos = this.tapStartPos[b]
+			, mpos = this.tapMovePos[b]
+			, items = this.flickableItems
+		;
+		for(i = 0; i < items.length; i++){
+			item = items[i];
+			if(item.button !== b){
+				continue;
+			}
+			isContain = item.rect.isContain(x, y);
+			item.pos.x = x;
+			item.pos.y = y;
+			if(item.rect.isContain(tpos.x, tpos.y) === false){
+				continue;
+			}
+			if(isContain){
+				if(item.func != null && item.func(item, x, y) == false){
+					break;
+				};
+			}else{
 				if(item.cancel != null && item.cancel(item, x, y) == false){
 					break;
 				};
 			}
 		}
-		this.tapStartPos.x = -1;
-		this.tapStartPos.y = -1;
-		this.tapMovePos.x = x;
-		this.tapMovePos.y = y;
-	},
-	
-	tapMoveEvent: function(x, y)
-	{
-		var i, item, mpos = this.tapMovePos, tpos = this.tapStartPos, isContain;
-		for(i = 0; i < this.flickableItems.length; i++){
-			item = this.flickableItems[i];
-			isContain = item.rect.isContain(x, y);
-			item.pos.x = x;
-			item.pos.y = y;
-			if(item.rect.isContain(tpos.x, tpos.y)){
-				if(isContain){
-					if(item.func != null && item.func(item, x, y) == false){
-						break;
-					};
-				}else{
-					if(item.cancel != null && item.cancel(item, x, y) == false){
-						break;
-					};
-				}
-			}
-		}
-		this.tapMovePos.x = x;
-		this.tapMovePos.y = y;
+		mpos.x = x;
+		mpos.y = y;
 		
 	},
-	
 };
