@@ -81,6 +81,8 @@ CanvasScroll.prototype = {
 		this.rasterVolatile = true;
 		
 		this.mirrorMode = null;
+		this.mirrorH = false;
+		this.mirrorV = false;
 	},
 
 	drawto: function(targetScroll, x, y, w, h)
@@ -595,7 +597,6 @@ CanvasScroll.prototype = {
 		this.canvas.style.top = y + "px";
 	},
 
-
 	getSize: function() {
 		var size = {}
 		;
@@ -604,6 +605,9 @@ CanvasScroll.prototype = {
 		return size;
 	},
 
+	getRect: function() {
+		return makeRect(this.x, this.y, this.canvas.width, this.canvas.width);
+	},
 
 	screenShot: function()
 	{
@@ -924,16 +928,26 @@ imageResource.height = function(name)
 {
 	return this.data[name].height;
 };
+imageResource.makeWorkSpace = function(img, w, h)
+{
+	var canvas = document.createElement('canvas');
+	canvas.width = w;
+	canvas.height = h;
+	ctx = contextInit(canvas);
+	return {canvas:canvas, ctx:ctx, data: canvas};
+};
 /**
  * ロードされた
  * イベントより呼び出されたものなのでthisはImageオブジェクト？
  */
 imageResource.loaded = function (img){
-	imageResource.loadcount++;	
 	var canvas, ctx, workSpace, i, data
+		, r = imageResource
 	;
+	r.loadcount++;	
 	
 	img = img.src == null ? this : img;
+	//make canvas & context
 	canvas = document.createElement('canvas');
 	canvas.width = img.width;
 	canvas.height = img.height;
@@ -943,12 +957,8 @@ imageResource.loaded = function (img){
 	data = canvas;
 	imageResource.ctx[img.name] = ctx;
 	
-	canvas = document.createElement('canvas');
-	canvas.width = imageResource.separateWidth[img.name];
-	canvas.height = imageResource.separateHeight[img.name];
-	ctx = contextInit(canvas);
-	workSpace = {canvas:canvas, ctx:ctx, data: data};
-	imageResource.workSpace[img.name] = workSpace;
+	//make workspace
+	r.workSpace[img.name] = r.makeWorkSpace(img, r.separateWidth[img.name], r.separateHeight[img.name]);
 	delete img;
 	if(imageResource.isload()){
 		console.log('Onload ImageResource.');
@@ -1036,6 +1046,14 @@ function appendImageOnload(name, func)
 		func(imageResource.workSpace[name]);
 	});
 }
+
+function setResourceFromCanvas(canvasScroll, sepw, seph){
+	var cv = canvasScroll, r = imageResource;
+	r.appendImage(cv.name, cv.canvas, sepw, seph);
+	r.workSpace[cv.name] = r.makeWorkSpace(cv.canvas, sepw, seph);
+	
+}
+
 /**
  * 短縮系関数
  * 
