@@ -12,16 +12,19 @@ Rect.prototype = {
 		this.y = y;
 		this.w = w;
 		this.h = h;
+		this.ex = x + w;
+		this.ey = y + h;
+		
 		this.overlapRect = [];
 		this.appendRect = [];
 	},
 
 	isContain: function(x, y)
 	{
-//		alert(this.x + "-" + this.w + " > " + x + " , " + this.y + "-" + this.h + " >" + y);
 		//OR//
 		var orResult = false, i, len;
-		if(this.x <= x && this.y <= y && (this.x + this.w) > x && (this.y + this.h) > y){
+		// if(this.x <= x && this.y <= y && (this.x + this.w) > x && (this.y + this.h) > y){
+		if(this.x <= x && this.y <= y && this.ex > x && this.ey > y){
 			orResult |= true;
 		}
 		len = this.appendRect.length;
