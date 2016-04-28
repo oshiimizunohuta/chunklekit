@@ -385,11 +385,13 @@ function PointingControll(){return;}
 PointingControll.prototype ={
 	init: function(screenScroll, baseScroll){
 		this.tapStartPos = {
+			common: {x: -1, y: -1},
 			left: {x: -1, y: -1},
 			middle: {x: -1, y: -1},
 			right: {x: -1, y: -1}
 		};
 		this.tapMovePos = {
+			common: {x: -1, y: -1},
 			left: {x: -1, y: -1},
 			middle: {x: -1, y: -1},
 			right: {x: -1, y: -1}
@@ -398,7 +400,7 @@ PointingControll.prototype ={
 		this.flickableItems = [];
 		this.tappableItems = [];
 		
-		this.button = null;
+		this.button = 'common';
 		this.state = {
 			l: false,
 			m: false,
@@ -426,12 +428,12 @@ PointingControll.prototype ={
 	{
 		var self = this
 			, tsfunc = function(e){
-				var pos = self.getTapPos(e);
+				var pos = self.getClientPos(e);
+				self.button = 'common';
 				switch(e.which){
 					case 1: self.state.l = true; self.button = 'left'; break;
 					case 2: self.state.m = true; self.button = 'middle'; break;
 					case 3: self.state.r = true; self.button = 'right'; break;
-					default: return;
 				}
 				self.tapStartEvent(pos.x, pos.y, e);
 				self.button = null;
@@ -439,12 +441,12 @@ PointingControll.prototype ={
 				return false;
 			}
 			, tefunc = function(e){
-				var pos = self.getTapPos(e);
+				var pos = self.getClientPos(e);
+				self.button = 'common';
 				switch(e.which){
 					case 1: self.state.l = false; self.button = 'left'; break;
 					case 2: self.state.m = false; self.button = 'middle'; break;
 					case 3: self.state.r = false; self.button = 'right'; break;
-					default: return;
 				}
 				self.tapEndEvent(pos.x, pos.y, e);
 				self.button = null;
@@ -474,12 +476,12 @@ PointingControll.prototype ={
 	{
 		var self = this
 			, mvfunc =  function(e){
-				var pos = self.getTapPos(e);
+				var pos = self.getClientPos(e);
+				self.button = 'common';
 				switch(e.which){
 					case 1: self.button = 'left'; break;
 					case 2: self.button = 'middle'; break;
 					case 3: self.button = 'right'; break;
-					default: return;
 				}
 				self.tapMoveEvent(pos.x, pos.y, e);
 				self.button = null;
@@ -493,7 +495,19 @@ PointingControll.prototype ={
 		scr.canvas.addEventListener('touchmove', mvfunc, false);
 	},
 	
-	getTapPos: function(e)
+	getMovePos: function(button)
+	{
+		button = button == null ? 'common' : button;
+		return this.tapMovePos[button];
+	},
+	
+	getStartPos: function(button)
+	{
+		button = button == null ? 'common' : button;
+		return this.tapStartPos[button];
+	},
+	
+	getClientPos: function(e)
 	{
 		var me = e.changedTouches != null ? e.changedTouches[0] : e
 			, view = this.baseScroll
@@ -559,6 +573,18 @@ PointingControll.prototype ={
 	clearFlickableItem: function(name){
 		this.flickableItems = this.clearEventItem(this.flickableItems, name);
 		return this.flickableItems.length;
+	},
+	
+	setStartPos: function(x, y, button)
+	{
+		this.tapStartPos[button].x = x;
+		this.tapStartPos[button].y = y;
+	},
+	
+	setMovePos: function(x, y, button)
+	{
+		this.tapMovePos[button].x = x;
+		this.tapMovePos[button].y = y;
 	},
 	
 	tapStartEvent: function(x, y, e)
