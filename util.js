@@ -51,7 +51,7 @@ Rect.prototype = {
  * Make Rect 
  * x, y, w, h
  * OR
- * x: [String] space delimiter & *x 
+ * x: [String] space delimiter & *x (startX startY endX endY)
  * x: [Array]
  */
 function makeRect(x, y, w, h)
