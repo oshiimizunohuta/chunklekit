@@ -40,6 +40,25 @@ Rect.prototype = {
 
 		return orResult;
 	},
+	
+	isOverlap: function(r)
+	{
+		var orResult = false, i, len;
+		if(this.isContain(r.x, r.y) || this.isContain(r.x, r.ey - 1) || this.isContain(r.ex - 1, r.y) || this.isContain(r.ex - 1, r.ey - 1)){
+			orResult |= true;
+		}
+		len = this.appendRect.length;
+		if(len > 0){
+			for(i = 0; i < len; i++){
+				if(this.appendRect[i].isOverlap(r)){
+					orResult |= true;
+					break;
+				}
+			}
+		}
+
+		return orResult;
+	},
 
 	append: function(add)
 	{
