@@ -1401,7 +1401,7 @@ function setSwapColorSprite(sprite, to, from, reset)
 	return sprite;
 }
 
-
+//TODO 使用してなさそう
 function imageWidth(name)
 {
 	return imageResource.data[name].width;
@@ -1473,11 +1473,14 @@ CanvasSprite.prototype = {
 	
 	copySprite: function(sprite)
 	{
+		var name = 'copySprite_' + Object.keys(imageResource.data).length;
 		this.image = createCanvas(sprite.image.width, sprite.image.height);
 		this.ctx = initContext(this.image);
 		this.ctx.drawImage(sprite.image, 0, 0);
+		imageResource.makeWorkSpace(this.image, sprite.w, sprite.h);
+		imageResource.appendImage(name, this.image, sprite.w, sprite.h);
 		this.workSpace = {canvas: this.image, ctx: this.ctx, data: this.image};
-		this.initCommon('copySprite', sprite.x, sprite.y, sprite.w, sprite.h);
+		this.initCommon(name, sprite.x, sprite.y, sprite.w, sprite.h);
 		this.hFlipFlag =  sprite.hFlipFlag;
 		this.vFlipFlag =  sprite.vFlipFlag;
 		this.rotFlag = sprite.rotFlag;
@@ -1497,7 +1500,7 @@ CanvasSprite.prototype = {
 		this.vFlipFlag = false;
 		this.rotFlag = 0; //0:↑ 1:→ 2:↓ 3:←
 		this.name = canvas;
-		
+		this.id = (this.x / this.w) + (this.y * (imageResource.data[this.name].width / this.w) / this.h) | 0;
 	},
 	
 	drawScroll: function(scroll, x, y)
