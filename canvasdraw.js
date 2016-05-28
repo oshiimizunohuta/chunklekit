@@ -1035,6 +1035,10 @@ function makeSprite(name, sprite)
 {
 	return imageResource.makeSprite(name, sprite);
 };
+function resourceSizeByName(name)
+{
+	return {w: imageResource.data[name].width, h: imageResource.data[name].height};
+}
 function resourceByName(name)
 {
 	return imageResource.workSpace[name];
@@ -1465,10 +1469,13 @@ CanvasSprite.prototype = {
 	
 	initInCanvas: function(canvas, x, y, w, h)
 	{
+		var name = 'incanvas_' + Object.keys(imageResource.data).length;
 		this.image = canvas;
 		this.ctx = canvas.getContext('2d');
+		// this.workSpace = imageResource.makeWorkSpace(this.image, sprite.w, sprite.h);
+		imageResource.appendImage(name, this.image, w, h);
 		this.workSpace = {canvas: this.image, ctx: this.ctx, data: this.image};
-		this.initCommon('incanvas', x, y, w, h);
+		this.initCommon(name, x, y, w, h);
 	},
 	
 	copySprite: function(sprite)
