@@ -99,18 +99,18 @@ WordPrint.prototype ={
 		, cs = new CanvasSprite()
 		, self = this
 		;
-		res = resourceByName(img);
+		res = resourceSizeByName(img);
 		this.canvasSpriteSource = cs;
 		if(res == null){
 			//TODO まだ使いたくない使わない
 			appendImageOnload(img, function(res){
 				// var cs = self.canvasSpriteSource;
-				cs.init(img, 0, 0, res.data.width, res.data.height);
+				cs.init(img, 0, 0, res.w, res.h);
 			});
 		}else{
 			//スワップ済みはクリーン
 			//TODO デフォルトはいらないかもしれない
-			cs.init(img, 0, 0, res.data.width, res.data.height);
+			cs.init(img, 0, 0, res.w, res.h);
 			this.coloredCanvasSprite = [];
 			this.coloredCanvasSprite.def = cs;
 			this.swapColor();
