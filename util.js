@@ -250,3 +250,60 @@ function clone(src){
 	return dst;
 }
 
+/**
+ * APIインターフェース 
+ */
+var APIServer = {url: null};
+function initAPIServer(apiUrl)
+{
+	APIServer.url = apiUrl;
+};
+
+function sendToAPIServer(method, api, params, func, errorFunc)
+{
+	var query = [], key, x = new XMLHttpRequest();
+	if(APIServer.url == null){console.error('not initialize api server'); return;}
+	if(func != null){
+		x.onreadystatechange = function(){
+			var j;
+			switch(x.readyState){
+				case 0:break;//オブジェクト生成
+				case 1:break;//オープン
+				case 2:break;//ヘッダ受信
+				case 3:break;//ボディ受信
+				case 4:
+							if((200 <= x.status && x.status < 300) || (x.status == 304)){
+								j = x.responseText;
+								try{
+									j = typeof j == 'string' ? JSON.parse(j) : '';
+								}catch(e){
+									j = null;
+								}
+								func(j);
+								x.abort();
+							}else{
+								errorFunc();
+								x.abort();
+							}
+							 break;//send()完了
+			}
+		//	func;
+		};
+	}
+	for(key in params){
+		query.push(key + '=' + params[key]);
+	}
+	str = query.join('&');
+	if(method.toUpperCase() == 'GET'){
+		x.open(method, APIServer.url + '/' + api + '?' + str , true);
+		str = "";
+	}else{
+		x.open(method, APIServer.url + '/' + api, true);
+	}
+	x.withCredentials = true;
+	x.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded;charset=UTF-8');
+	// Set-Cookie:LITROSOUND=8lr6fpmr30focapfnejn807mo5;
+	x.send(str);
+};
+
+
