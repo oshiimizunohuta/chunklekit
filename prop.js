@@ -5,7 +5,8 @@
  */
 
 //canvas
-var VIEWMULTI = 2;//キャンバス基本サイズ拡大倍数
+var DISPLAY_SCALERATE = 2;//キャンバス基本サイズ拡大倍数
+var VIEWMULTI = DISPLAY_SCALERATE;
 var CHIPCELL_SIZE = 8;//基本サイズ1辺り 8*8
 var DISPLAY_WIDTH = 320;//キャンバス表示基本幅
 var DISPLAY_HEIGHT = 240;//キャンバス表示基本高
