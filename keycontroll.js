@@ -7,29 +7,41 @@
 var allcontrolls = {};
 var allcontrollsKeys = {};
 var nowkey;
+var ELSE_LOCK = false;
 window.onkeydown = function(e){
 	var enabled = true, i, c, indexes = Object.keys(allcontrolls), len = indexes.length;
 	for(i = 0; i < len; i++){
 		c = allcontrolls[indexes[i]];
-		if(!(e.keyCode in c.code2name)){return;}//余計なキーは反応させない
+		if(!(e.keyCode in c.code2name)){
+			if(ELSE_LOCK) {
+				e.preventDefault();
+				return false;
+			}
+			return true;
+		}//余計なキーは反応させない
 		c.stateDown(e.keyCode);
 		enabled = false;
 	}
-	// Object.keys(allcontrolls).forEach(function(idname){
-	// });
-//	nowkey = e.keyCode;
+
 	return enabled;//false: 他の処理が無効
 };
 window.onkeyup = function(e){
 	var enabled = true, i, c, indexes = Object.keys(allcontrolls), len = indexes.length;
 	for(i = 0; i < len; i++){
 		c = allcontrolls[indexes[i]];
-		if(!(e.keyCode in c.code2name)){return;}//余計なキーは反応させない
+		if(!(e.keyCode in c.code2name)){
+			if(ELSE_LOCK) {
+				e.preventDefault();
+				return false;
+			}
+			return true;
+		}//余計なキーは反応させない
 		c.stateUp(e.keyCode);
 		enabled = false;
 	}
-	// Object.keys(allcontrolls).forEach(function(idname){
-	// });
+	if(enabled && ELSE_LOCK) {
+		e.preventDefault();
+	}
 	return enabled;
 };
 
@@ -52,13 +64,37 @@ window.addEventListener('blur', function(){
 	// keyUntrig();
 // }, true);
 
+
+/**
+ * clickをロックする 
+ */
+function clickLock(func)
+{
+	func = func == null ? function(e){
+		e.preventDefault();
+		return false;
+	} : func;
+	document.body.addEventListener('mousedown', func, false);
+	document.body.addEventListener('contextmenu', func, false);
+}
+
+function debugLock()
+{
+	ELSE_LOCK = true;
+}
 /**
  * キーのトリガとホールドのチェック（設置はmainの後ろ）
  */
+var KEYSTATE_CHECKFUNC = function(){return;};
 function keyStateCheck()
 {
+	KEYSTATE_CHECKFUNC();
 	keyUntrig();
 	keyHold();
+}
+
+function setKeySetCheck(func){
+	KEYSTATE_CHECKFUNC = func;
 }
 
 /**
@@ -548,7 +584,14 @@ PointingControll.prototype ={
 			, button: button
 		};
 	},
-	
+	/**
+	 * 各種イベントを登録する
+	 * @param {Object} rect
+	 * @param {Object} func
+	 * @param {Object} cancel
+	 * @param {Object} name
+	 * @param {Object} button
+	 */
 	appendTappableItem: function(rect, func, cancel, name, button)
 	{
 		button = button == null ? 'left' : button;
