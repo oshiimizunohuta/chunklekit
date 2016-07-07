@@ -21,8 +21,24 @@ function makeCanvasScroll(scrollName, insertID){
 	return scr;
 };
 
+/**
+ * 描画リピート
+ */
+var CANVASDRAWREPEATFUNC = function(){return;}; 
+function setCanvasDrawRepeat(func){
+	CANVASDRAWREPEATFUNC = func;
+}
+function canvasDrawRepeat()
+{
+	CANVASDRAWREPEATFUNC();
+}
+
 dulog = function(){return;};
 
+
+/**
+ * スクロール風canvas
+ */
 function CanvasScroll()
 {
 	return;
@@ -55,8 +71,6 @@ CanvasScroll.prototype = {
 		}else{
 			display = 'inline';///////////////////////
 		}
-	//	this.canvas.width = width * VIEWMULTI;
-	//	this.canvas.height = height * VIEWMULTI;
 		this.name = name;
 		this.canvas.width = width;
 		this.canvas.height = height;
@@ -1089,6 +1103,9 @@ function makeSpriteImage(name)
 		
 };
 
+/**
+ * spriteからcanvasを生成
+ */
 function makeSpriteInCanvas(canvas, x, y, w, h)
 {
 	var s = new CanvasSprite();
@@ -1144,6 +1161,29 @@ function makeSpriteArrayInCanvas(canvas, w, h, indexes)
 		}
 		// console.log(spriteArray);
 	return spriteArray;
+}
+
+/**
+ * spriteChunkを結合して一つのspriteにする 
+ */
+function convertChunk(spriteChunk){
+	var i, j, chunk, sprite, clen, slen, w, h
+		, scroll
+	;
+	clen = spriteChunk.length;
+	sprite = spriteChunk[0][0];
+	h = clen;
+	w = spriteChunk[0].length;
+	scroll = makeScroll('sprc['+ sprite.name + ',' + w + ':' + h + ',' + sprite.x + ':' + sprite.y+ ']', false, sprite.w * w, sprite.h * h);
+	for(j = 0; j < clen; j++){
+		chunk = spriteChunk[j];
+		slen = chunk.length;
+		for(i = 0; i < slen; i++){
+			sprite = chunk[i];
+			scroll.drawSpriteInfo({sprite: sprite, x: sprite.w * i, y: sprite.h * j});
+		}
+	}
+	return makeSpriteInCanvas(scroll.canvas, 0, 0, w * sprite.w, h * sprite.h);
 }
 
 //スプライト生成クエリ
@@ -1287,8 +1327,7 @@ function makeSpriteQuery(name, spq)
 		return null;
 	}
 	SPQ_RCOUNT--;
-
-	return sprite;
+	return convertChunk(sprite);
 }
 function repeatSprite(sprite, w, h)
 {
@@ -1469,7 +1508,7 @@ CanvasSprite.prototype = {
 	
 	initInCanvas: function(canvas, x, y, w, h)
 	{
-		var name = 'incanvas_' + Object.keys(imageResource.data).length;
+		var name = canvas.name != null ? canvas.name :  'incanvas_' + Object.keys(imageResource.data).length;
 		this.image = canvas;
 		this.ctx = canvas.getContext('2d');
 		// this.workSpace = imageResource.makeWorkSpace(this.image, sprite.w, sprite.h);
