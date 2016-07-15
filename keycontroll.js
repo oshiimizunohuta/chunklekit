@@ -564,7 +564,7 @@ PointingControll.prototype ={
 			return [];
 		}
 		for(i = 0; i < items.length; i++){
-			if(items[i].name){
+			if(items[i].name == name){
 				continue;
 			}
 			rep.push(items[i]);
@@ -596,6 +596,7 @@ PointingControll.prototype ={
 	{
 		button = button == null ? 'left' : button;
 		var item = this.makeTapEvent(rect,func, cancel == null ? null : cancel, name == null ? this.tappableItems.lengh : name, button);
+		this.clearTappableItem(name);
 		this.tappableItems.push(item);
 		return this.tappableItems.length;
 	},
@@ -609,6 +610,7 @@ PointingControll.prototype ={
 	{
 		button = button == null ? 'left' : button;
 		var item = this.makeTapEvent(rect,func, cancel == null ? null : cancel, name == null ? this.tappableItems.lengh : name, button);
+		this.clearFlickableItem(name);
 		this.flickableItems.push(item);
 		return this.flickableItems.length;
 	},
