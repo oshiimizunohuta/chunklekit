@@ -263,7 +263,6 @@ CanvasScroll.prototype = {
 			//通常
 			image = sprite.image;
 		}
-
 		//反転
 		if(sprite.vFlipFlag || sprite.hFlipFlag){
 			hf = (-sprite.hFlipFlag + !sprite.hFlipFlag) | 0;
@@ -1078,15 +1077,18 @@ function setResourceFromCanvas(canvasScroll, sepw, seph){
  * sprect:sprite rect or 2dArray
  * makeRect(x,y,w,h)
  * [a1,a2,a3,a4]
+ * 結合する
  */
 function makeSpriteChunk(name, sprect)
 {
+	var c;
 	try{
 		if(sprect.length != null){
-			return imageResource.makeSpriteChunk(name, sprect);
+			c = imageResource.makeSpriteChunk(name, sprect);
+		}else{
+			c = imageResource.makeSpriteChunkFromRect(name, sprect);
 		}
-//		debugUser.log(sprect);
-		return imageResource.makeSpriteChunkFromRect(name, sprect);
+		return convertChunk(c, '');
 	}catch(e){
 		dulog(name + ": error makeSpriteChunk");
 		dulog(sprect);
@@ -1116,6 +1118,9 @@ function makeSpriteInCanvas(canvas, x, y, w, h)
 
 function copyCanvasSprite(sprite)
 {
+	if(sprite.length != null){
+		return copyCanvasSpriteChunk(sprite);
+	}
 	var s = new CanvasSprite();
 	s.copySprite(sprite);
 	return s;
@@ -1166,24 +1171,40 @@ function makeSpriteArrayInCanvas(canvas, w, h, indexes)
 /**
  * spriteChunkを結合して一つのspriteにする 
  */
-function convertChunk(spriteChunk){
+var CONVERT_COUNT = 0;
+function convertChunk(spriteChunk, query){
 	var i, j, chunk, sprite, clen, slen, w, h
-		, scroll
+		, scroll, sname, maked, ids = [], rot
 	;
 	clen = spriteChunk.length;
+	slen = spriteChunk[0].length;
 	sprite = spriteChunk[0][0];
-	h = clen;
-	w = spriteChunk[0].length;
-	scroll = makeScroll('sprc['+ sprite.name + ',' + w + ':' + h + ',' + sprite.x + ':' + sprite.y+ ']', false, sprite.w * w, sprite.h * h);
+	
+	// rot = query.replace(/\S*|?r(\d)\S*/, "$1") | 0;
+		h = clen;
+		w = slen;
+	
+	sname = 'sprc-' + CONVERT_COUNT + '['+ sprite.name + ',' + w + ':' + h + ',' + sprite.x + ':' + sprite.y+ ']';
+	scroll = makeScroll(sname, false, sprite.w * w, sprite.h * h);
 	for(j = 0; j < clen; j++){
 		chunk = spriteChunk[j];
 		slen = chunk.length;
+		ids[j] = [];
 		for(i = 0; i < slen; i++){
 			sprite = chunk[i];
 			scroll.drawSpriteInfo({sprite: sprite, x: sprite.w * i, y: sprite.h * j});
+			ids[j][i] = sprite.id;
 		}
 	}
-	return makeSpriteInCanvas(scroll.canvas, 0, 0, w * sprite.w, h * sprite.h);
+	CONVERT_COUNT++;
+	maked = makeSpriteInCanvas(scroll.canvas, 0, 0, w * sprite.w, h * sprite.h);
+	maked.chunkQuery = query;
+	if(clen == 1 && slen == 1 && ids[0][0] == 0){
+		maked.chunkIds = sprite.chunkIds;
+	}else{
+		maked.chunkIds = ids;
+	}
+	return maked;
 }
 
 //スプライト生成クエリ
@@ -1214,7 +1235,7 @@ var SPQREG_MAKE = new RegExp(''
 	+ '|(^[0-9@]+$)'
 	);
 	
-var SPQREG_FLIP = new RegExp('\\|[fhv]{2,}');
+var SPQREG_FLIP = new RegExp('\\|[fhv|]{2,}');
 var SPQREG_ROT = new RegExp('\\|r([0-3])');
 var SPQREG_HMULTI = new RegExp('\\*([0-9]+)');
 var SPQREG_VMULTI = new RegExp('\\^([0-9]+)');
@@ -1327,7 +1348,7 @@ function makeSpriteQuery(name, spq)
 		return null;
 	}
 	SPQ_RCOUNT--;
-	return convertChunk(sprite);
+	return convertChunk(sprite, spq);
 }
 function repeatSprite(sprite, w, h)
 {
@@ -1547,6 +1568,8 @@ CanvasSprite.prototype = {
 		this.rotFlag = 0; //0:↑ 1:→ 2:↓ 3:←
 		this.name = canvas;
 		this.id = (this.x / this.w) + (this.y * (imageResource.data[this.name].width / this.w) / this.h) | 0;
+		this.chunkQuery = '';
+		this.chunkIds = null;
 	},
 	
 	drawScroll: function(scroll, x, y)
