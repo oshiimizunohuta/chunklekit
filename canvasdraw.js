@@ -1174,15 +1174,17 @@ function makeSpriteArrayInCanvas(canvas, w, h, indexes)
 var CONVERT_COUNT = 0;
 function convertChunk(spriteChunk, query){
 	var i, j, chunk, sprite, clen, slen, w, h
-		, scroll, sname, maked, ids = [], rot
+		, scroll, dirScroll, sname, maked, ids = [[]], rot, subChunk, subQuery = [[]]
+		, bspriteChunk = spriteChunk
 	;
+	query = query == null ? '' : query;
 	clen = spriteChunk.length;
 	slen = spriteChunk[0].length;
 	sprite = spriteChunk[0][0];
 	
 	// rot = query.replace(/\S*|?r(\d)\S*/, "$1") | 0;
-		h = clen;
-		w = slen;
+	h = clen;
+	w = slen;
 	
 	sname = 'sprc-' + CONVERT_COUNT + '['+ sprite.name + ',' + w + ':' + h + ',' + sprite.x + ':' + sprite.y+ ']';
 	scroll = makeScroll(sname, false, sprite.w * w, sprite.h * h);
@@ -1190,21 +1192,135 @@ function convertChunk(spriteChunk, query){
 		chunk = spriteChunk[j];
 		slen = chunk.length;
 		ids[j] = [];
+		subQuery[j] = [];
 		for(i = 0; i < slen; i++){
 			sprite = chunk[i];
+			if(sprite == null){
+				continue;
+			}
+			if(sprite.chunkIds != null && (clen > 1 || slen > 1)){
+				//TODO 仮 原理要検証
+				subChunk = sprite.chunkIds == null ? null : sprite.chunkIds;
+				
+			}
+			subQuery[j][i] = sprite.chunkQuery;
 			scroll.drawSpriteInfo({sprite: sprite, x: sprite.w * i, y: sprite.h * j});
 			ids[j][i] = sprite.id;
 		}
+		if(subChunk != null){
+			/**
+			 * pattern 1 
+			 * [
+			 *     [id, id, ...]
+			 * ] 
+			 */
+			ids[j] = subChunk[0];
+			subChunk = null;
+		}
 	}
+	subQuery[0][0] = subQuery[0][0] == null ? query : subQuery[0][0];
 	CONVERT_COUNT++;
 	maked = makeSpriteInCanvas(scroll.canvas, 0, 0, w * sprite.w, h * sprite.h);
+	
 	maked.chunkQuery = query;
-	if(clen == 1 && slen == 1 && ids[0][0] == 0){
+	//query|$ のときchunkIdsを参照
+	// if(clen == 1 && slen == 1 && ids[0][0] == 0){
+	if(query.indexOf('$') >= 0){
 		maked.chunkIds = sprite.chunkIds;
 	}else{
 		maked.chunkIds = ids;
+		maked.chunkMap = subQuery;
 	}
+	// console.log(maked, query)
 	return maked;
+}
+/**
+ * 配列を回転・反転させる
+ * caution: make empry element
+ */
+function directionSortSprites(sprites, dir)
+{
+	if(sprites == null || sprites.length == null){
+		return sprites;
+	}
+	var i, j, h = sprites.length, w = sprites[0].length
+		, rsorted = [], sorted = [], len
+	;
+	len = dir.rot == 1 || dir.rot == 3 ? w : h;
+	
+	for(j = 0; j < len; j++){
+		rsorted[j] = [];
+		sorted[j] = [];
+	}
+
+	if(dir.rot == 1){
+		for(j = 0; j < h; j++){
+			for(i = 0; i < w; i++){
+				rsorted[i][h - j - 1] = sprites[j][i];
+			}
+		}
+	}else if(dir.rot == 2){
+		for(j = 0; j < h; j++){
+			for(i = 0; i < w; i++){
+				rsorted[h - j - 1][w - i - 1] = sprites[j][i];
+			}
+		}
+	}else if(dir.rot == 3){
+		for(j = 0; j < h; j++){
+			for(i = 0; i < w; i++){
+				rsorted[w - i - 1][j] = sprites[j][i];
+			}
+		}
+	}else{
+		for(j = 0; j < h; j++){
+			for(i = 0; i < w; i++){
+				rsorted[j][i] = sprites[j][i];
+			}
+		}
+	}
+	
+	h = rsorted.length;
+	w = rsorted[0].length;
+	if(dir.flip_h > 0){
+		for(j = 0; j < h; j++){
+			for(i = 0; i < w; i++){
+				sorted[j][w - i - 1] = rsorted[j][i];
+			}
+		}
+	}else{
+		for(j = 0; j < h; j++){
+			for(i = 0; i < w; i++){
+				sorted[j][i] = rsorted[j][i];
+			}
+		}
+	}
+	
+	if(dir.flip_v > 0){
+		for(j = 0; j < h; j++){
+			for(i = 0; i < w; i++){
+				rsorted[h - j - 1][i] = sorted[j][i];
+			}
+		}
+	}else{
+		for(j = 0; j < h; j++){
+			for(i = 0; i < w; i++){
+				rsorted[j][i] = sorted[j][i];
+			}
+		}
+	}
+	return rsorted;
+}
+
+function dstrToDirection(dstr)
+{
+	var dir = {rot: 0, flip_v: 0, flip_h: 0}
+		, rotexp = /\S*\|?r(\d)\S*/
+		;
+		
+	dir.rot = (dstr.indexOf('r') >= 0 ? dstr.replace(rotexp, "$1") | 0 : 0);
+	dir.flip_h = dstr.indexOf('fh') >= 0 ? 1 : 0;
+	dir.flip_v = dstr.indexOf('fv') >= 0 ? 1 : 0;
+	return dir;
 }
 
 //スプライト生成クエリ
@@ -1244,10 +1360,16 @@ var SPQREG_INPAT = new RegExp('\\([^)]*\\(.*\\)[^(]*\\)', 'g');
 
 var SPQSUBREG_PAT = new RegExp('^\\((.*)\\)$');
 var SPQ_RCOUNT = 0;
+
+/**
+ * クエリからスプライト(結合)を生成 
+ */
 function makeSpriteQuery(name, spq)
 {
 	var mtpat, nstpat = [], sppat = [], sprite = []
-	, spstr, i, j, rw, rh, ofy, s, sst, ilen, jlen, mk, mt, prerect, sprstr;
+	, spstr, i, j, rw, rh, ofy, s, sst, ilen, jlen, mk, mt, prerect, sprstr
+	, rotq = '', flipq = '', sourceq = spq, dir
+	;
 	SPQ_RCOUNT++;
 	if(	SPQ_RCOUNT > 200){
 		SPQ_RCOUNT--;
@@ -1283,12 +1405,18 @@ function makeSpriteQuery(name, spq)
 			s = sst.split(SPQ_DELIMITER);
 			jlen = s.length;
 			for(j = 0; j < jlen; j++){
+				if(s[j].indexOf('7*16') > -1){
+					// debugger
+				}
 				// console.log("j" + j, s[j]);
 				sprstr = s[j].replace(SPQREG_HMULTI, '').replace(SPQREG_VMULTI, '').replace(SPQREG_BOTTOMLINE, '');
 
 				mt = sprstr.split(SPQ_CONNECT)[0].match(SPQREG_MAKE);
 				// console.log( s[j] );
+				//rectsight
 				if(mt == null){
+					flipq = '';
+					rotq = '';
 					continue;
 				}else if(mt[2] != null){
 					//.e.g "xx+ww:yy+hh"
@@ -1311,6 +1439,16 @@ function makeSpriteQuery(name, spq)
 					// console.log(mt[1], mk);
 				}
 				// console.log(mt);
+				//repeat
+				mt = s[j].match(SPQREG_HMULTI);
+				rw = mt == null ? 1 : mt[1] | 0;
+				
+				mt = s[j].match(SPQREG_VMULTI);
+				rh = mt == null ? 1 : mt[1] | 0;
+				
+				mk = repeatSprite(mk, rw, rh);
+
+				//direction
 				mt = s[j].match(SPQREG_FLIP);
 				if(mt != null){
 					// console.log("flip", mt);
@@ -1322,17 +1460,14 @@ function makeSpriteQuery(name, spq)
 					// console.log("rot", mt);
 					mk = rotSprite(mk, mt[1]);
 				}
-				
-				mt = s[j].match(SPQREG_HMULTI);
-				rw = mt == null ? 1 : mt[1] | 0;
-				
-				mt = s[j].match(SPQREG_VMULTI);
-				rh = mt == null ? 1 : mt[1] | 0;
-				
-				mk = repeatSprite(mk, rw, rh);
-				
+				dir = dstrToDirection(s[j]);
+				//配列の回転
+				if(dir.rot > 0 || dir.flip_v > 0 || dir.flip_h > 0){
+					mk = directionSortSprites(mk, dir);
+				}
+
 				sprite = concatSprite(sprite, mk, ofy + i);
-				
+	// console.log(sprite, spq, rotq + flipq, dstrToDirection(s[j]));
 				mt = s[j].match(SPQREG_BOTTOMLINE);
 				if(mt != null){
 					ofy = sprite.length - i - 1;
@@ -1343,13 +1478,22 @@ function makeSpriteQuery(name, spq)
 			}
 		}
 	}catch(e){
-		console.error('Sprite query syntax error :' + spq);
+		console.error(e, 'Sprite query syntax error :' + spq);
 		console.log(mk, sprite);
 		return null;
 	}
 	SPQ_RCOUNT--;
-	return convertChunk(sprite, spq);
+	if(SPQ_RCOUNT == 0){
+		sprite = convertChunk(sprite, sourceq);
+	}
+	if((rotq + flipq).length > 0){
+		sprite[0][0].chunkQuery = sourceq;
+	}
+	// console.log(sprite, spq, rotq + flipq, dstrToDirection(rotq + flipq));
+	return sprite;
 }
+
+
 function repeatSprite(sprite, w, h)
 {
 	var row = [], mk = [], d;
@@ -1568,8 +1712,9 @@ CanvasSprite.prototype = {
 		this.rotFlag = 0; //0:↑ 1:→ 2:↓ 3:←
 		this.name = canvas;
 		this.id = (this.x / this.w) + (this.y * (imageResource.data[this.name].width / this.w) / this.h) | 0;
-		this.chunkQuery = '';
-		this.chunkIds = null;
+		this.chunkQuery = ''; //CurrentQuery
+		this.chunkIds = null; //CurrentSpriteId
+		this.chunkMap = [[]]; //ChunkQuery-Position
 	},
 	
 	drawScroll: function(scroll, x, y)
@@ -1613,7 +1758,15 @@ CanvasSprite.prototype = {
 	//回転非対応
 	rot: function(trbl)
 	{
+		var pr = this.rotFlag, ph;
 		this.rotFlag = trbl == null ? (trbl + 1) % 4 : trbl;
+
+		if(this.rotFlag != pr && (this.rotFlag - pr + 4) % 2 == 1){
+			ph = this.h;
+			this.h = this.w;
+			// this.w = ph;
+		}
+		
 		return this;
 	},
 
