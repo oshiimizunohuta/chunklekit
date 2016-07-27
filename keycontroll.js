@@ -137,146 +137,152 @@ function keyUntrig(){
  * @param idname
  * @returns
  */
-function KeyControll(idname)
-{
-	this.controlls = {};//操作名に対する状態
-	this.code2name = {};//codeに対応する操作名
-	this.name2code = {};//操作名に対応するcode
-	this.idname = idname;
-	this.action; //カスタム関数
-	allcontrolls[this.idname] = this;
-	try{
-		this.holdTime = KEYCONTROLL_HOLDTIME;
-	}catch(e){
-		this.holdTime = 20;
-		console.warn(e);
-		console.log('key controll set hold on time: 20');
-	}
-//	alert(toString(this.action));
+function KeyControll(){return;}
+KeyControll.prototype = {
+	initCommon: function(idname){
+		this.controlls = {};//操作名に対する状態
+		this.code2name = {};//codeに対応する操作名
+		this.name2code = {};//操作名に対応するcode
+		this.idname = idname == null ? allcontrolls.length : idname;
+		this.action; //カスタム関数
+		allcontrolls[this.idname] = this;
+		try{
+			this.holdTime = KEYCONTROLL_HOLDTIME;
+		}catch(e){
+			this.holdTime = 20;
+			console.warn(e);
+			console.log('key controll set hold on time: 20');
+		}		
+	},
 	/**
 	 * 関数を登録
 	 * @param name
 	 * @param function f
 	 */
-	function setAction(f){
+	setAction: function(f){
 		this.action = f;
 		this.action.prototype.action = this.action;
 //		allcontrolls[this.idname] = this;
-	}
-	KeyControll.prototype.setAction = setAction;
+	},
 
 	/**
 	 * 操作名でキーコードを登録
 	 * @param name
 	 * @param code
 	 */
-	function setKey(name, code)
+	setKey: function(name, code)
 	{
 		this.code2name[code + ""] = name;
 		this.name2code[name] = code;
-		this.controlls[name] = new Array();
-		this.controlls[name]['state'] = false;
-		this.controlls[name]['trig'] = false;
-		this.controlls[name]['off'] = false;
-		this.controlls[name]['hold'] = false;
-		this.controlls[name]['time'] = 0;
-	}
-	KeyControll.prototype.setKey = setKey;
+		this.controlls[name] = [];
+		this.controlls[name].state = false;
+		this.controlls[name].trig = false;
+		this.controlls[name].off = false;
+		this.controlls[name].hold = false;
+		this.controlls[name].time = 0;
+	},
+	
+	unsetKey: function(name)
+	{
+		var code;
+		
+		for(code in this.code2name){
+			if(this.code2name[code + ""] == name){
+				delete this.code2name[code + ""];
+			}
+		}
+		delete this.name2code[name];
+		delete this.controlls[name];
+	},
 
 	/**
 	 * キーが押された瞬間の挙動
 	 * @param code
 	 */
-	function stateDown(code)
+	stateDown: function(code)
 	{
-		var controll = this.code2name[code];
-		var state = this.controlls[controll]['state'];
+		var controll = this.code2name[code]
+			, state = this.controlls[controll].state;
 
 		if(state){
-			this.controlls[controll]['trig'] = false;
-			this.controlls[controll]['off'] = false;
+			this.controlls[controll].trig = false;
+			this.controlls[controll].off = false;
 		}else{
-			this.controlls[controll]['trig'] = true;
-			this.controlls[controll]['state'] = true;
-			this.controlls[controll]['off'] = false;
+			this.controlls[controll].trig = true;
+			this.controlls[controll].state = true;
+			this.controlls[controll].off = false;
 		}
 
-	}
-	KeyControll.prototype.stateDown = stateDown;
+	},
 
 	/**
 	 * キーを離した瞬間の挙動
 	 * @param code
 	 */
-	function stateUp(code)
+	stateUp: function(code)
 	{
 		var controll = this.code2name[code];
-		this.controlls[controll]['off'] = true;
-		this.controlls[controll]['state'] = false;
-		this.controlls[controll]['trig'] = false;
+		this.controlls[controll].off = true;
+		this.controlls[controll].state = false;
+		this.controlls[controll].trig = false;
 
-	}
-	KeyControll.prototype.stateUp = stateUp;
+	},
 	
 	/**
 	 * キーのホールドを確認
 	 * @param code
 	 */
-	function holdon(code)
+	holdon: function(code)
 	{
-		var controll = this.code2name[code];
-		var state = this.controlls[controll]['state'];
+		var controll = this.code2name[code]
+			, state = this.controlls[controll].state;
 
 		if(state){
-			if(this.controlls[controll]['time']++ > this.holdTime){
-				this.controlls[controll]['hold'] = true;
+			if(this.controlls[controll].time++ > this.holdTime){
+				this.controlls[controll].hold = true;
 				// dulog("hold" + name);
 			}
 		}else{
 			
-			this.controlls[controll]['hold'] = false;
-			this.controlls[controll]['time'] = 0;
+			this.controlls[controll].hold = false;
+			this.controlls[controll].time = 0;
 		}
 
-	}
-	KeyControll.prototype.holdon = holdon;
+	},
 
 	/**
 	 * キーのトリガを解除
 	 * @param code
 	 */
-	function untrig(code)
+	untrig: function(code)
 	{
 		var name = this.code2name[code];
-		this.controlls[name]['trig'] = false;
-		this.controlls[name]['off'] = false;
-	}
-	KeyControll.prototype.untrig = untrig;
+		this.controlls[name].trig = false;
+		this.controlls[name].off = false;
+	},
 
-	function allReset()
+	allReset: function()
 	{
 		var idnamename, states = {};
 		for(idname in this.code2name){
 			this.stateUp(idname);
 		}
-	}
-	KeyControll.prototype.allReset = allReset;
+	},
 	
-	function allState()
+	allState: function()
 	{
 		var name, states = {};
 		for(name in this.controlls){
 			states[name] = this.controlls[name].state;
 		}
 		return states;
-	}
-	KeyControll.prototype.allState = allState;
+	},
 	/**
 	 * キーの状態を取得
 	 * @param name
 	 * @returns
 	 */
-	function getState(name)
+	getState: function(name)
 	{
 		if(typeof name == "object"){
 			var states = {}, cont = this.controlls, nIndex = Object.keys(name), len = nIndex.length;
@@ -291,15 +297,14 @@ function KeyControll(idname)
 			if(this.controlls[name] == null){return false;}
 			return this.controlls[name].state;
 		}
-	}
-	KeyControll.prototype.getState = getState;
+	},
 
 	/**
 	 * キーの入力した瞬間を取得
 	 * @param name
 	 * @returns
 	 */
-	function getTrig(name)
+	getTrig: function(name)
 	{
 		if(typeof name == "object"){
 			var trigs = {}, cont = this.controlls, nIndex = Object.keys(name), len = nIndex.length;
@@ -315,15 +320,14 @@ function KeyControll(idname)
 		}else{
 			return this.controlls[name].trig;
 		}
-	}
-	KeyControll.prototype.getTrig = getTrig;
+	},
 
 	/**
 	 * キーをはなした瞬間を取得
 	 * @param name
 	 * @returns
 	 */
-	function getUntrig(name)
+	getUntrig: function(name)
 	{
 		if(typeof name == "object"){
 			var unTrigs = {}, cont = this.controlls, nIndex = Object.keys(name), len = nIndex.length;
@@ -339,15 +343,14 @@ function KeyControll(idname)
 		}else{
 			return this.controlls[name].off;
 		}
-	}
-	KeyControll.prototype.getUntrig = getUntrig;
+	},
 
 	/**
 	 * キーの固定判定を取得
 	 * @param name
 	 * @returns
 	 */
-	function getHold(name)
+	getHold: function(name)
 	{
 		if(typeof name == "object"){
 			var holds = {}, cont = this.controlls, nIndex = Object.keys(name), len = nIndex.length;
@@ -363,11 +366,11 @@ function KeyControll(idname)
 		}else{
 			return this.controlls[name].hold;
 		}
-	}
-	KeyControll.prototype.getHold = getHold;
+	},
 
-	function initDefaultKey(type)
+	initDefaultKey: function(type)
 	{
+		this.initCommon();
 		if(type == "left"){
 			this.setKey('left', 65);
 			this.setKey('up', 87);
@@ -386,11 +389,12 @@ function KeyControll(idname)
 		this.setKey('select', 9);
 		this.setKey('space', 32);
 		this.setKey('debug', 16);
-	}
-	KeyControll.prototype.initDefaultKey = initDefaultKey;
+	},
 
-	function initCommonKey()
+	initCommonKey: function()
 	{
+		this.initCommon();
+
 		//LFETCONTROLL
 		this.setKey('left', 65);
 		this.setKey('up', 87);
@@ -409,8 +413,8 @@ function KeyControll(idname)
 		this.setKey('select', 9);
 		this.setKey('space', 32);
 		this.setKey('debug', 16);
-	}
-	KeyControll.prototype.initCommonKey = initCommonKey;
+		
+	},
 
 }
 //TODO 右クリック判定確認
