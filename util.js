@@ -14,7 +14,7 @@ Rect.prototype = {
 		this.h = h;
 		this.ex = x + w;
 		this.ey = y + h;
-		
+		this.toString = this.convertString();
 		this.overlapRect = [];
 		this.appendRect = [];
 	},
@@ -23,15 +23,17 @@ Rect.prototype = {
 	{
 		//OR//
 		var orResult = false, i, len;
+		this.reculc();
+		
 		// if(this.x <= x && this.y <= y && (this.x + this.w) > x && (this.y + this.h) > y){
 		if(this.x <= x && this.y <= y && this.ex > x && this.ey > y){
-			orResult |= true;
+			orResult = orResult || true;
 		}
 		len = this.appendRect.length;
 		if(len > 0){
 			for(i = 0; i < len; i++){
 				if(this.appendRect[i].isContain(x, y)){
-					orResult |= true;
+					orResult = orResult || true;
 					break;
 				}
 			}
@@ -43,6 +45,7 @@ Rect.prototype = {
 	
 	isOverlap: function(r)
 	{
+		this.reculc();
 		var orResult = false, i, len;
 		if(this.isContain(r.x, r.y) || this.isContain(r.x, r.ey - 1) || this.isContain(r.ex - 1, r.y) || this.isContain(r.ex - 1, r.ey - 1)){
 			orResult |= true;
@@ -62,6 +65,7 @@ Rect.prototype = {
 	
 	isFit: function(r)
 	{
+		this.reculc();
 		var orResult = false, i, len;
 		if(r.x == this.x && r.y == this.y && r.ex == this.ex && r.ey == this.ey){
 			orResult |= true;
@@ -79,6 +83,32 @@ Rect.prototype = {
 		return orResult;
 	},
 
+	reculc: function(x, y, w, h)
+	{
+		var mul = 1;
+		if(typeof x == 'string'){
+			x = x.trim();
+			if(x.indexOf('*') >= 0){
+				mul = x.replace('*') | 0;
+			}else if(x.indexOf('/') >= 0){
+				mul = 1 / x.replace('/');
+			}
+		}
+		
+		this.x = (x != null ? x : this.x) * mul;
+		this.y = (y != null ? y : this.y) * mul;
+		this.w = (w != null ? w : this.w) * mul;
+		this.h= (h != null ? h : this.h) * mul;
+		
+		this.ex = this.x + this.w;
+		this.ey = this.y + this.h;
+	},
+	
+	convertString: function()
+	{
+		return [this.x, this.y, this.w, this.h].join(' ');
+	},
+	
 	append: function(add)
 	{
 		this.appendRect.push(add);
@@ -97,7 +127,7 @@ function makeRect(x, y, w, h)
 	var rects, m = 1, ptp = false, opt
 		, reg  = /[x*]([0-9]+)/, c, xf, yf;
 	if(typeof x == 'string'){
-		x = x.split(' ');
+		x = x.split(' ').length > 3 ? x.split(' ') : x;
 	}
 	if(typeof x == 'object'){
 		x = x.map(function(a){
