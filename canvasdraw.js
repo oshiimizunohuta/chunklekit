@@ -493,6 +493,12 @@ CanvasScroll.prototype = {
 		}
 	},
 	
+	debugRect: function(rect, color)
+	{
+		color = COLOR_WHITE;
+		this.clear(color, rect);
+	},
+	
 	clearDrawInfoStack: function()
 	{
 		this.drawInfoStack = [];
@@ -1218,14 +1224,14 @@ function convertChunk(spriteChunk, query){
 			subChunk = null;
 		}
 	}
-	subQuery[0][0] = subQuery[0][0] == null ? query : subQuery[0][0];
+	// subQuery[0][0] = subQuery[0][0] == null ? query : subQuery[0][0];
 	CONVERT_COUNT++;
 	maked = makeSpriteInCanvas(scroll.canvas, 0, 0, w * sprite.w, h * sprite.h);
 	
 	maked.chunkQuery = query;
 	//query|$ のときchunkIdsを参照
 	// if(clen == 1 && slen == 1 && ids[0][0] == 0){
-	if(query.indexOf('$') >= 0){
+	if(query.indexOf(SPQ_REP) >= 0){
 		maked.chunkIds = sprite.chunkIds;
 	}else{
 		maked.chunkIds = ids;
@@ -1234,6 +1240,73 @@ function convertChunk(spriteChunk, query){
 	// console.log(maked, query)
 	return maked;
 }
+
+/**
+ * 低レベルクエリを出力する
+ * HMULTI VMULTI PATは使わない
+ * @param {SpriteChunk} spriteChunk
+ * @return {String} (x,y)blQuery (x,y)blQuery (x,y)blQuery 
+ */
+function outputLowChunkQuery(spriteChunk)
+{
+	var lquery = []
+	, recursive = function(qmap, bx, by){
+		var i, j, chunk, x, y, rect
+		y = by;
+		for(j = 0; j < qmap.length; j++){
+			chunk = qmap[j];
+			x = bx;
+			for(i = 0; i < qmap[j].length; i++){
+				if(typeof chunk[i] == 'array'){
+					rect = recursive(chunk[i], x, y);
+					x +=rect.w;
+					y +=rect.h;
+					continue;
+				}
+				rect = queryToRect(chunk[i]);
+				lquery.push('(' + x + ',' + y + ')' + chunk[i]);
+				x += rect.w;
+			}
+			y += rect.h;
+		}
+		return makeRect(0, 0, x, y);
+	}
+	;
+	
+	recursive(spriteChunk.chunkMap, 0, 0);
+	
+	return lquery.join(' ');
+}
+
+/**
+ * @param {String} blockQuery
+ * @param {Rect} baseRect
+ * @return {Rect} rect 
+ */
+function queryToRect(blockQuery, baseRect){
+	var rect;
+	
+	if(blockQuery.indexOf(' ') >= 0){
+		return false;
+	}
+	
+	if(blockQuery.indexOf('+') >= 0){
+		rect = blockQuery.replace(':','+').split('+');
+		rect = makeRect(rect[0], rect[2], rect[1], rect[3]);
+	}else if(blockQuery.indexOf('-') >= 0){
+		rect = blockQuery.replace(':','-').split('-');
+		rect = makeRect(rect[0], rect[2], rect[1] - rect[0] + 1, rect[3] - rect[2] + 1);
+	}else{
+		if(baseRect != null){
+			rect = makeRect(blockQuery % baseRect.w, (blockQuery / baseRect.w) | 0, 1, 1);
+		}else{
+			rect = makeRect(0, 0, 1, 1);
+		}
+	}
+	
+	return rect;
+}
+
 /**
  * 配列を回転・反転させる
  * caution: make empry element
@@ -1244,7 +1317,7 @@ function directionSortSprites(sprites, dir)
 		return sprites;
 	}
 	var i, j, h = sprites.length, w = sprites[0].length
-		, rsorted = [], sorted = [], len
+		, rsorted = [], sorted = [], len, dstr = directionToDstr(dir)
 	;
 	len = dir.rot == 1 || dir.rot == 3 ? w : h;
 	
@@ -1308,6 +1381,12 @@ function directionSortSprites(sprites, dir)
 			}
 		}
 	}
+	for(j = 0; j < h; j++){
+		for(i = 0; i < w; i++){
+				rsorted[j][i].chunkQuery += dstr;
+		}
+	}
+	
 	return rsorted;
 }
 
@@ -1321,6 +1400,18 @@ function dstrToDirection(dstr)
 	dir.flip_h = dstr.indexOf('fh') >= 0 ? 1 : 0;
 	dir.flip_v = dstr.indexOf('fv') >= 0 ? 1 : 0;
 	return dir;
+}
+
+function directionToDstr(dir, before)
+{
+	var dstr = '';
+	before = before == null ? '' : before;
+	dstr += dir.rot > 0 ? '|r' + dir.rot : '';
+	dstr += dir.flip_h > 0 ? '|fh' : '';
+	dstr += dir.flip_v > 0 ? '|fv' : '';
+	dstr = dstr.length > 0 ? dstr : '';
+	// console.log(dstr)
+	return dstr;
 }
 
 //スプライト生成クエリ
@@ -1368,7 +1459,7 @@ function makeSpriteQuery(name, spq)
 {
 	var mtpat, nstpat = [], sppat = [], sprite = []
 	, spstr, i, j, rw, rh, ofy, s, sst, ilen, jlen, mk, mt, prerect, sprstr
-	, rotq = '', flipq = '', sourceq = spq, dir
+	, sourceq = spq, dir, dirstr, baseMatch = ''
 	;
 	SPQ_RCOUNT++;
 	if(	SPQ_RCOUNT > 200){
@@ -1405,9 +1496,6 @@ function makeSpriteQuery(name, spq)
 			s = sst.split(SPQ_DELIMITER);
 			jlen = s.length;
 			for(j = 0; j < jlen; j++){
-				if(s[j].indexOf('7*16') > -1){
-					// debugger
-				}
 				// console.log("j" + j, s[j]);
 				sprstr = s[j].replace(SPQREG_HMULTI, '').replace(SPQREG_VMULTI, '').replace(SPQREG_BOTTOMLINE, '');
 
@@ -1415,26 +1503,29 @@ function makeSpriteQuery(name, spq)
 				// console.log( s[j] );
 				//rectsight
 				if(mt == null){
-					flipq = '';
-					rotq = '';
 					continue;
 				}else if(mt[2] != null){
 					//.e.g "xx+ww:yy+hh"
-					prerect = mt[2].replace(':','+').split('+').map(function(r){return r | 0;});
+					baseMatch = mt[2];
+					prerect = baseMatch.replace(':','+').split('+').map(function(r){return r | 0;});
 					mk = makeSpriteChunk(name, makeRect(prerect[0], prerect[2], prerect[1], prerect[3]));
 				}else if(mt[3] != null){
 					//.e.g "xx-ccx:yy-ccy"
-					prerect = mt[3].replace(':', '-').split('-').map(function(r){return r | 0;});
+					baseMatch = mt[3];
+					prerect = baseMatch.replace(':', '-').split('-').map(function(r){return r | 0;});
 					mk = makeSpriteChunk(name, makeRect(prerect[0], prerect[2], prerect[1] - prerect[0] + 1, prerect[3] - prerect[2] + 1));
 					// console.log(mk, prerect);
 				}else if(mt[4] != null){
+					baseMatch = mt[4];
 					mk = sppat.shift();
 					// console.log(mt[4], s[j])
 				}else if(mt[5] != null){
+					baseMatch = mt[5];
 					mk = nstpat.shift();
 					// console.log(mt[4], s[j])
 				}else if(mt[1] != null){
 					//.e.g "id"
+					baseMatch = mt[1];
 					mk = makeSprite(name, mt[1]);
 					// console.log(mt[1], mk);
 				}
@@ -1465,9 +1556,19 @@ function makeSpriteQuery(name, spq)
 				if(dir.rot > 0 || dir.flip_v > 0 || dir.flip_h > 0){
 					mk = directionSortSprites(mk, dir);
 				}
+				// if(j == 0 && i == 0){
+					// mk[0][0] = baseMatch;
+				// }
+				if(s[j].indexOf(SPQ_REP) < 0 && s[j].indexOf(SPQ_NSTREP) < 0){
+					// // mk[0][0].chunkQuery = s[j];
+					mk[0][0].chunkQuery = s[j];
+				}else{
+					// mk[0][0].chunkQuery = mk[0][0];
+					// mk[0][0].chunkQuery = '';
+				}
 
 				sprite = concatSprite(sprite, mk, ofy + i);
-	// console.log(sprite, spq, rotq + flipq, dstrToDirection(s[j]));
+	// console.log(sprite, spq, dstrToDirection(s[j]));
 				mt = s[j].match(SPQREG_BOTTOMLINE);
 				if(mt != null){
 					ofy = sprite.length - i - 1;
@@ -1486,9 +1587,9 @@ function makeSpriteQuery(name, spq)
 	if(SPQ_RCOUNT == 0){
 		sprite = convertChunk(sprite, sourceq);
 	}
-	if((rotq + flipq).length > 0){
-		sprite[0][0].chunkQuery = sourceq;
-	}
+	// if((rotq + flipq).length > 0){
+		// sprite[0][0].chunkQuery = sourceq;
+	// }
 	// console.log(sprite, spq, rotq + flipq, dstrToDirection(rotq + flipq));
 	return sprite;
 }
