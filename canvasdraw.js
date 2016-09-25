@@ -1,3 +1,5 @@
+/* global SCROLL_MAX_SPRITES_DRAW, SCROLL_MAX_SPRITES_STACK, UI_SCREEN_ID, VIEWMULTI, DISPLAY_WIDTH */
+
 /**
  * Canvas Draw Library
  * Since 2013-11-19 07:43:37
@@ -38,6 +40,8 @@ dulog = function(){return;};
 
 /**
  * スクロール風canvas
+ * @class
+ * @name CanvasScroll
  */
 function CanvasScroll()
 {
@@ -1179,101 +1183,145 @@ function makeSpriteArrayInCanvas(canvas, w, h, indexes)
  */
 var CONVERT_COUNT = 0;
 function convertChunk(spriteChunk, query){
-	var i, j, chunk, sprite, clen, slen, w, h
+	var x, y, i, j, chunk, sprite, clen, slen, w, h, rect
 		, scroll, dirScroll, sname, maked, ids = [[]], rot, subChunk, subQuery = [[]]
 		, bspriteChunk = spriteChunk
+		, isReplaceQuery
 	;
 	query = query == null ? '' : query;
 	clen = spriteChunk.length;
 	slen = spriteChunk[0].length;
 	sprite = spriteChunk[0][0];
-	
-	// rot = query.replace(/\S*|?r(\d)\S*/, "$1") | 0;
 	h = clen;
 	w = slen;
+	isReplaceQuery = query.indexOf(SPQ_REP) >= 0;
 	
 	sname = 'sprc-' + CONVERT_COUNT + '['+ sprite.name + ',' + w + ':' + h + ',' + sprite.x + ':' + sprite.y+ ']';
 	scroll = makeScroll(sname, false, sprite.w * w, sprite.h * h);
+	//sprite draw New Scroll
 	for(j = 0; j < clen; j++){
 		chunk = spriteChunk[j];
 		slen = chunk.length;
-		ids[j] = [];
-		subQuery[j] = [];
 		for(i = 0; i < slen; i++){
 			sprite = chunk[i];
 			if(sprite == null){
 				continue;
 			}
-			if(sprite.chunkIds != null && (clen > 1 || slen > 1)){
-				//TODO 仮 原理要検証
-				subChunk = sprite.chunkIds == null ? null : sprite.chunkIds;
-				
-			}
-			subQuery[j][i] = sprite.chunkQuery;
 			scroll.drawSpriteInfo({sprite: sprite, x: sprite.w * i, y: sprite.h * j});
-			ids[j][i] = sprite.id;
-		}
-		if(subChunk != null){
-			/**
-			 * pattern 1 
-			 * [
-			 *     [id, id, ...]
-			 * ] 
-			 */
-			ids[j] = subChunk[0];
-			subChunk = null;
 		}
 	}
-	// subQuery[0][0] = subQuery[0][0] == null ? query : subQuery[0][0];
 	CONVERT_COUNT++;
 	maked = makeSpriteInCanvas(scroll.canvas, 0, 0, w * sprite.w, h * sprite.h);
 	
-	maked.chunkQuery = query;
+	//id collect
+	for(j = 0; j < clen; j++){
+		ids[j] = [];
+		chunk = spriteChunk[j];
+		slen = chunk.length;
+		for(i = 0; i < slen; i++){
+			sprite = chunk[i];
+			if(sprite == null){
+				continue;
+			}
+			ids[j][i] = sprite.id;
+			
+		}
+	}
 	//query|$ のときchunkIdsを参照
-	// if(clen == 1 && slen == 1 && ids[0][0] == 0){
-	if(query.indexOf(SPQ_REP) >= 0){
+	if(isReplaceQuery){
 		maked.chunkIds = sprite.chunkIds;
 	}else{
 		maked.chunkIds = ids;
-		maked.chunkMap = subQuery;
 	}
+	//chunkmap collect
+	y = 0;
+	// clen = query.slice(SPQ_NEWLINE);
+	for(j = 0; j < clen; j++){
+		// subQuery[y] = [];
+		chunk = spriteChunk[j];
+		slen = chunk.length;
+		x = 0;
+		for(i = 0; i < slen; i++){
+			sprite = chunk[i];
+			if(sprite == null){
+				continue;
+			}
+		}
+		y += h;
+	}
+	// maked.chunkMap = subQuery;
 	// console.log(maked, query)
 	return maked;
 }
 
 /**
- * 低レベルクエリを出力する
+ * sprite.chunkMapから低レベルクエリを出力する
  * HMULTI VMULTI PATは使わない
  * @param {SpriteChunk} spriteChunk
- * @return {String} (x,y)blQuery (x,y)blQuery (x,y)blQuery 
+ * @return {String} (x,y,dir)blQuery (x,y,dir)blQuery (x,y,dir)blQuery 
  */
 function outputLowChunkQuery(spriteChunk)
 {
 	var lquery = []
 	, recursive = function(qmap, bx, by){
-		var i, j, chunk, x, y, rect
+		var i, j, chunk, x, y, rect, q, match, dir
+			, multi_w, multi_h, mcv, mch, squery
+			, repeatMulti = function(q, rect,  x, y, dstr, mw, mh){
+				var i, j, pos_x, pos_y;
+				for(j = 0; j < mh; j++){
+					pos_y = y + (j * rect.h);
+					for(i = 0; i < mw; i++){
+						pos_x = x + (i * rect.w);
+						lquery.push('(' + pos_x + ',' + pos_y + ',' + dstr + ')' + q);
+					}
+				}
+			}
+		;
 		y = by;
 		for(j = 0; j < qmap.length; j++){
 			chunk = qmap[j];
 			x = bx;
-			for(i = 0; i < qmap[j].length; i++){
-				if(typeof chunk[i] == 'array'){
-					rect = recursive(chunk[i], x, y);
-					x +=rect.w;
-					y +=rect.h;
+			for(i = 0; i < chunk.length; i++){
+				squery = chunk[i];
+				//TODO 未使用
+				if(typeof q == 'array'){
+					rect = recursive(q, i, j);
+					i +=rect.w;
+					j +=rect.h;
 					continue;
 				}
-				rect = queryToRect(chunk[i]);
-				lquery.push('(' + x + ',' + y + ')' + chunk[i]);
-				x += rect.w;
+				
+				match = squery.split(SPQ_CONNECT);
+				
+				q = match[0];
+				
+				//Rectの抽出
+				rect = queryToRect(q);
+				if(!rect){
+					continue;
+				}
+				
+				//繰り返し
+				mch = squery.match(SPQREG_HMULTI);
+				multi_w = mch == null ? 1 : mch[1] | 0;
+				
+				mcv = squery.match(SPQREG_VMULTI);
+				multi_h = mcv == null ? 1 : mcv[1] | 0;
+				
+				q = squery.replace(SPQREG_HMULTI, '').replace(SPQREG_VMULTI, '');
+				rect = queryToRect(q);
+				dir = dstrToDirection(squery);
+				match = q.split(SPQ_CONNECT);
+				
+				repeatMulti(match[0], rect, i, j, directionToDstr(dir), multi_w, multi_h);
 			}
-			y += rect.h;
 		}
-		return makeRect(0, 0, x, y);
+		return makeRect(0, 0, i, j);
 	}
 	;
-	
+	// console.log(spriteChunk.chunkMap);
 	recursive(spriteChunk.chunkMap, 0, 0);
+	console.log(lquery);
 	
 	return lquery.join(' ');
 }
@@ -1282,26 +1330,60 @@ function outputLowChunkQuery(spriteChunk)
  * @param {String} blockQuery
  * @param {Rect} baseRect
  * @return {Rect} rect 
+ * 
+ * [from]x-n:y:m*w^h [to]{Rect}
  */
 function queryToRect(blockQuery, baseRect){
-	var rect;
-	
+	blockQuery += '';
+	var rect, vmul = 1, hmul = 1
+		, regh = blockQuery.match(SPQREG_HMULTI)
+		, regv = blockQuery.match(SPQREG_VMULTI)
+		, make 
+		, singleRect = function(q){
+			q |= 0;
+			if(q < 0){
+				rect = false;
+			}else if(baseRect != null){
+				rect = makeRect(q % baseRect.w, (q / baseRect.w) | 0, hmul, vmul);
+			}else{
+				rect = makeRect(0, 0, hmul, vmul);
+			}
+			
+			return rect;
+		}
+	;
+	blockQuery = blockQuery.split(SPQ_CONNECT)[0];
+
 	if(blockQuery.indexOf(' ') >= 0){
 		return false;
 	}
 	
-	if(blockQuery.indexOf('+') >= 0){
-		rect = blockQuery.replace(':','+').split('+');
-		rect = makeRect(rect[0], rect[2], rect[1], rect[3]);
-	}else if(blockQuery.indexOf('-') >= 0){
-		rect = blockQuery.replace(':','-').split('-');
-		rect = makeRect(rect[0], rect[2], rect[1] - rect[0] + 1, rect[3] - rect[2] + 1);
-	}else{
-		if(baseRect != null){
-			rect = makeRect(blockQuery % baseRect.w, (blockQuery / baseRect.w) | 0, 1, 1);
+	if(regh != null){
+		hmul = regh[1] | 0;
+	}
+	if(regv != null){
+		vmul = regv[1] | 0;
+	}
+	
+	make = blockQuery
+			.replace(SPQREG_HMULTI, '')
+			.replace(SPQREG_VMULTI, '')
+			.match(SPQREG_MAKE);
+	// make = blockQuery.match(SPQREG_MAKE);
+	if(make != null){
+		if(make[1] != null){
+			rect = singleRect(make[1]);
+		}else if(make[2] != null){
+			rect = make[2].replace(':','+').split('+');
+			rect = makeRect(rect[0], rect[2], rect[1] * hmul, rect[3] * vmul);
+		}else if(make[3] != null){
+			rect = make[3].replace(':','-').split('-');
+			rect = makeRect(rect[0], rect[2], (rect[1] - rect[0] + 1) * hmul, (rect[3] - rect[2] + 1) * vmul);
 		}else{
-			rect = makeRect(0, 0, 1, 1);
+			rect = singleRect(blockQuery);
 		}
+	}else{
+		rect = singleRect(blockQuery);
 	}
 	
 	return rect;
@@ -1381,12 +1463,12 @@ function directionSortSprites(sprites, dir)
 			}
 		}
 	}
-	for(j = 0; j < h; j++){
-		for(i = 0; i < w; i++){
-				rsorted[j][i].chunkQuery += dstr;
-		}
-	}
-	
+	// for(j = 0; j < h; j++){
+		// for(i = 0; i < w; i++){
+				// rsorted[j][i].chunkQuery += dstr;
+		// }
+	// }
+// 	
 	return rsorted;
 }
 
@@ -1397,8 +1479,8 @@ function dstrToDirection(dstr)
 		;
 		
 	dir.rot = (dstr.indexOf('r') >= 0 ? dstr.replace(rotexp, "$1") | 0 : 0);
-	dir.flip_h = dstr.indexOf('fh') >= 0 ? 1 : 0;
-	dir.flip_v = dstr.indexOf('fv') >= 0 ? 1 : 0;
+	dir.flip_h = dstr.match(SPQREG_HFLIP) != null ? 1 : 0;
+	dir.flip_v = dstr.match(SPQREG_VFLIP) != null ? 1 : 0;
 	return dir;
 }
 
@@ -1417,6 +1499,8 @@ function directionToDstr(dir, before)
 //スプライト生成クエリ
 var SPQ_DELIMITER = ' ';
 var SPQ_NEWLINE = ';';
+var SPQ_FORCE = '!';
+var SPQ_BOTTOMLINE = SPQ_FORCE + SPQ_NEWLINE;
 var SPQ_RECT_X = 'x';
 var SPQ_RECT_Y = 'y';
 var SPQ_RECT_SEP = ':';
@@ -1427,11 +1511,12 @@ var SPQ_ROT = 'r';
 var SPQ_ALL = 'a';
 var SPQ_REP = '$';
 var SPQ_NSTREP = '@';
+var SPQ_VMULTI = '^';
+var SPQ_HMULTI = '*';
+var SPQ_EMPTY = '-1';
 var SPQREG_BOTTOMLINE = new RegExp('\\!');
 var SPQREG_CHROW = new RegExp('\\?[0-9]+$');
-var SPQREG_ROT = new RegExp('\\|r[0-4]');
-var SPQREG_VFLIP = new RegExp('\\|fv');
-var SPQREG_HFLIP = new RegExp('\\|fh');
+var SPQREG_FLIPALL = new RegExp('\\[|fh]+', 'g');
 var SPQREG_RECTC = new RegExp('^[0-9]+\\+[0-9]+:[0-9]+\\+[0-9]+');
 var SPQREG_RECTR = new RegExp('^[0-9]+\\-[0-9]+:[0-9]+\\-[0-9]+');
 var SPQREG_MAKE = new RegExp(''
@@ -1443,6 +1528,8 @@ var SPQREG_MAKE = new RegExp(''
 	);
 	
 var SPQREG_FLIP = new RegExp('\\|[fhv|]{2,}');
+var SPQREG_VFLIP = new RegExp('\\|f[hv]?v');
+var SPQREG_HFLIP = new RegExp('\\|f[hv]?h');
 var SPQREG_ROT = new RegExp('\\|r([0-3])');
 var SPQREG_HMULTI = new RegExp('\\*([0-9]+)');
 var SPQREG_VMULTI = new RegExp('\\^([0-9]+)');
@@ -1454,12 +1541,39 @@ var SPQ_RCOUNT = 0;
 
 /**
  * クエリからスプライト(結合)を生成 
+ * @param {string} name
+ * @param {string} spq
  */
 function makeSpriteQuery(name, spq)
 {
-	var mtpat, nstpat = [], sppat = [], sprite = []
-	, spstr, i, j, rw, rh, ofy, s, sst, ilen, jlen, mk, mt, prerect, sprstr
+	var mtpat, nstpat = [], sppat = [], sprite = [], chunkMap = [], rect
+	, spstr, i, j, rw, rh, ofy, chunkMapOfy, s, sst, ilen, jlen, mk, mt, prerect, sprstr
 	, sourceq = spq, dir, dirstr, baseMatch = ''
+	, rectFillSub = function(chunk, query, rect){
+		var x, y, r = rect.convertArray(SPQ_EMPTY)
+		;
+		query = query.push == null ? [query] : query;
+		query = query[0].push == null ? [query] : query;
+		for(y = 0; y < query.length; y++){
+			for(x = 0; x < query[0].length; x++){
+				r[y][x] = query[y][x];
+			}
+		}
+		chunk = concatSprite(chunk, r, rect.y);
+		return chunk;
+	}
+	, rectFillMulti = function(chunk, w, h){
+		var x, y
+		;
+		w = w > 1 ? '*'  + w : '';
+		h = h > 1 ? '^'  + h : '';
+		for(y = 0; y < chunk.length; y++){
+			for(x = 0; x < chunk[0].length; x++){
+				chunk[y][x] += chunk[y][x] == SPQ_EMPTY ? '' : w + h;
+			}
+		}
+		return chunk;
+	}
 	;
 	SPQ_RCOUNT++;
 	if(	SPQ_RCOUNT > 200){
@@ -1491,6 +1605,7 @@ function makeSpriteQuery(name, spq)
 
 		ilen = spstr.length;
 		ofy = 0;
+		chunkMapOfy = 0;
 		for(i = 0; i < ilen; i++){
 			sst = spstr[i];
 			s = sst.split(SPQ_DELIMITER);
@@ -1536,9 +1651,24 @@ function makeSpriteQuery(name, spq)
 				
 				mt = s[j].match(SPQREG_VMULTI);
 				rh = mt == null ? 1 : mt[1] | 0;
-				
 				mk = repeatSprite(mk, rw, rh);
 
+				// if(s[j].indexOf(SPQ_REP) < 0 && s[j].indexOf(SPQ_NSTREP) < 0){
+					if(s[j].indexOf(SPQ_REP) >= 0 || s[j].indexOf(SPQ_NSTREP) >= 0){
+						//*^MULTIは考慮されてない
+						sprstr = s[j].replace(SPQ_REP, mk[0][0].chunkMap[0][0]).replace(SPQ_FORCE, '');
+						rect = makeRect(0, chunkMapOfy + i, mk[0][0].chunkMap[0].length * rw, mk[0][0].chunkMap.length * rh);
+						mk[0][0].chunkMap = rectFillMulti(mk[0][0].chunkMap, rw, rh);
+						rectFillSub(chunkMap, mk[0][0].chunkMap, rect);
+					}else{
+						//*^MULTIは考慮されている
+						rect = queryToRect(s[j].replace(SPQ_FORCE, ''));
+						rect.x = 0;
+						rect.y = chunkMapOfy + i;
+						rectFillSub(chunkMap, s[j].replace(SPQ_FORCE, ''), rect);
+					}
+				// }
+				
 				//direction
 				mt = s[j].match(SPQREG_FLIP);
 				if(mt != null){
@@ -1556,22 +1686,12 @@ function makeSpriteQuery(name, spq)
 				if(dir.rot > 0 || dir.flip_v > 0 || dir.flip_h > 0){
 					mk = directionSortSprites(mk, dir);
 				}
-				// if(j == 0 && i == 0){
-					// mk[0][0] = baseMatch;
-				// }
-				if(s[j].indexOf(SPQ_REP) < 0 && s[j].indexOf(SPQ_NSTREP) < 0){
-					// // mk[0][0].chunkQuery = s[j];
-					mk[0][0].chunkQuery = s[j];
-				}else{
-					// mk[0][0].chunkQuery = mk[0][0];
-					// mk[0][0].chunkQuery = '';
-				}
 
 				sprite = concatSprite(sprite, mk, ofy + i);
-	// console.log(sprite, spq, dstrToDirection(s[j]));
-				mt = s[j].match(SPQREG_BOTTOMLINE);
+				mt = s[j].match(SPQ_FORCE);
 				if(mt != null){
 					ofy = sprite.length - i - 1;
+					chunkMapOfy = chunkMap.length - i - 1;
 					sprite.push([]);
 					// console.log(sprite , mt, ofy, i);
 				}
@@ -1586,10 +1706,10 @@ function makeSpriteQuery(name, spq)
 	SPQ_RCOUNT--;
 	if(SPQ_RCOUNT == 0){
 		sprite = convertChunk(sprite, sourceq);
+		sprite.chunkMap = chunkMap;
+	}else{
+		sprite[0][0].chunkMap = chunkMap;
 	}
-	// if((rotq + flipq).length > 0){
-		// sprite[0][0].chunkQuery = sourceq;
-	// }
 	// console.log(sprite, spq, rotq + flipq, dstrToDirection(rotq + flipq));
 	return sprite;
 }
