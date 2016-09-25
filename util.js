@@ -15,6 +15,7 @@ Rect.prototype = {
 		this.ex = x + w;
 		this.ey = y + h;
 		this.toString = this.convertString();
+		this.toArray = this.convertArray();
 		this.overlapRect = [];
 		this.appendRect = [];
 	},
@@ -102,11 +103,25 @@ Rect.prototype = {
 		
 		this.ex = this.x + this.w;
 		this.ey = this.y + this.h;
+		return this;
 	},
 	
 	convertString: function()
 	{
 		return [this.x, this.y, this.w, this.h].join(' ');
+	},
+	
+	convertArray: function(fillValue)
+	{
+		var x, y, r = [];
+		fillValue = fillValue == null ? undefined : fillValue;
+		for(y = 0; y < this.h; y++){
+			r[y] = [];
+			for(x = 0; x < this.w; x++){
+				r[y][x] = fillValue;
+			}
+		}
+		return r;
 	},
 	
 	append: function(add)
@@ -119,15 +134,25 @@ Rect.prototype = {
  * Make Rect 
  * x, y, w, h
  * OR
- * x: [String] space delimiter & *x (startX startY endX endY)
- * x: [Array]
+ * @param {string} x space delimiter & *x (startX startY endX endY)
+ * @param {array} x
+ * @param {int} x
+ * @param {int} y
+ * @param {int} w
+ * @param {int} h
  */
 function makeRect(x, y, w, h)
 {
 	var rects, m = 1, ptp = false, opt
-		, reg  = /[x*]([0-9]+)/, c, xf, yf;
-	if(typeof x == 'string'){
+		, reg  = /[x*]([0-9]+)/, c, xf, yf
+		, type = typeof x;
+	if(type == 'string'){
 		x = x.split(' ').length > 3 ? x.split(' ') : x;
+	}
+	if(type == 'object'){
+		if(x.length != null && x[0].length != null){
+			return makeRect(0, 0, x[0].length, x.length);
+		}
 	}
 	if(typeof x == 'object'){
 		x = x.map(function(a){
