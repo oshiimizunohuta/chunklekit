@@ -442,14 +442,16 @@ PointingControll.prototype ={
 		
 		this.button = 'common';
 		this.state = {
-			l: false,
-			m: false,
-			r: false,
+			common: false,
+			left: false,
+			middle: false,
+			right: false,
 		};
 		this.trig = {
-			l: false,
-			m: false,
-			r: false,
+			common: false,
+			left: false,
+			middle: false,
+			right: false,
 		};
 		
 		this.screenScroll = screenScroll;
@@ -469,14 +471,22 @@ PointingControll.prototype ={
 		var self = this
 			, tsfunc = function(e){
 				var pos = self.getClientPos(e);
-				self.button = 'common';
+				
 				switch(e.which){
-					case 1: self.state.l = true; self.button = 'left'; break;
-					case 2: self.state.m = true; self.button = 'middle'; break;
-					case 3: self.state.r = true; self.button = 'right'; break;
+					case 1: self.button = 'left'; break;
+					case 2: self.button = 'middle'; break;
+					case 3: self.button = 'right'; break;
+					default: self.button = 'common';
 				}
+				self.state[self.button] = true; 
+				
 				self.tapStartEvent(pos.x, pos.y, e);
-				self.button = null;
+				if(self.button != 'common'){
+					self.button = 'common';
+					self.tapStartEvent(pos.x, pos.y, e);
+				}
+				
+//				self.button = null;
 				e.preventDefault();
 				return false;
 			}
@@ -484,12 +494,18 @@ PointingControll.prototype ={
 				var pos = self.getClientPos(e);
 				self.button = 'common';
 				switch(e.which){
-					case 1: self.state.l = false; self.button = 'left'; break;
-					case 2: self.state.m = false; self.button = 'middle'; break;
-					case 3: self.state.r = false; self.button = 'right'; break;
+					case 1: self.button = 'left'; break;
+					case 2: self.button = 'middle'; break;
+					case 3: self.button = 'right'; break;
+					default: self.button = 'common';
 				}
+				self.state[self.button] = false; 
 				self.tapEndEvent(pos.x, pos.y, e);
-				self.button = null;
+				if(self.button != 'common'){
+					self.button = 'common';
+					self.tapEndEvent(pos.x, pos.y, e);
+				}
+//				self.button = null;
 				e.preventDefault();
 				return false;
 			}
@@ -522,9 +538,14 @@ PointingControll.prototype ={
 					case 1: self.button = 'left'; break;
 					case 2: self.button = 'middle'; break;
 					case 3: self.button = 'right'; break;
+					default: self.button = 'common';
 				}
 				self.tapMoveEvent(pos.x, pos.y, e);
-				self.button = null;
+				if(self.button != 'common'){
+					self.button = 'common';
+					self.tapMoveEvent(pos.x, pos.y, e);
+				}
+//				self.button = null;
 				e.preventDefault();
 				return false;
 			}
@@ -533,6 +554,18 @@ PointingControll.prototype ={
 		
 		scr.canvas.addEventListener('mousemove', mvfunc, false);
 		scr.canvas.addEventListener('touchmove', mvfunc, false);
+	},
+	
+	getState: function(button)
+	{
+		button = button == null ? 'common' : button;
+		return this.state[button];
+	},
+	
+	getTrig: function(button)
+	{
+		button = button == null ? 'common' : button;
+		return this.trig[button];
 	},
 	
 	getMovePos: function(button)
@@ -640,11 +673,10 @@ PointingControll.prototype ={
 	{
 		var i, item, pos, items, b = this.button
 		;
+		this.setStartPos(x, y, b);
+		this.setMovePos(x, y, b);
+		
 		pos = this.tapStartPos[b];
-		pos.x = x;
-		pos.y = y;
-		this.tapMovePos[b].x = x;
-		this.tapMovePos[b].y = y;
 		items = this.tappableItems;
 		for(i = 0; i < items.length; i++){
 			item = items[i];
@@ -682,10 +714,8 @@ PointingControll.prototype ={
 			}
 			
 		}
-		pos.x = -1;
-		pos.y = -1;
-		this.tapMovePos[b].x = x;
-		this.tapMovePos[b].y = y;
+		this.setStartPos(-1, -1, b);
+		this.setMovePos(x, y, b);
 	},
 	
 	tapMoveEvent: function(x, y, e)
@@ -719,8 +749,6 @@ PointingControll.prototype ={
 				};
 			}
 		}
-		mpos.x = x;
-		mpos.y = y;
-		
+		this.setMovePos(x, y, b);
 	},
 };
