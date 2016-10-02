@@ -24,6 +24,10 @@ Rect.prototype = {
 	{
 		//OR//
 		var orResult = false, i, len;
+		if(typeof x == 'object'){
+			return  this.isContainRect(x);
+		}
+		
 		this.reculc();
 		
 		// if(this.x <= x && this.y <= y && (this.x + this.w) > x && (this.y + this.h) > y){
@@ -42,6 +46,27 @@ Rect.prototype = {
 		//OR//
 
 		return orResult;
+	},
+	
+	// r in this
+	isContainRect: function(r)
+	{
+		this.reculc();
+		var orResult = false, i, len;
+		if(this.isContain(r.x, r.y) && this.isContain(r.x, r.ey - 1) && this.isContain(r.ex - 1, r.y) && this.isContain(r.ex - 1, r.ey - 1)){
+			orResult |= true;
+		}
+		len = this.appendRect.length;
+		if(len > 0){
+			for(i = 0; i < len; i++){
+				if(this.appendRect[i].isContainRect(r)){
+					orResult |= true;
+					break;
+				}
+			}
+		}
+
+		return orResult;		
 	},
 	
 	isOverlap: function(r)
@@ -103,6 +128,9 @@ Rect.prototype = {
 		
 		this.ex = this.x + this.w;
 		this.ey = this.y + this.h;
+		this.toString = this.convertString();
+		this.toArray = this.convertArray();
+
 		return this;
 	},
 	
