@@ -1,7 +1,8 @@
 /**
- * Properties
- * Since 2013-11-19 07:43:37
- * @author しふたろう
+ * @name Properties
+ * @since 2013-11-19 07:43:37
+ * @author bitchunk
+ * @version 0.1.0
  */
 
 //canvas

@@ -1,4 +1,11 @@
 /**
+ * @name Utilities Class Library
+ * @since 2013-11-19 07:43:37
+ * @author bitchunk
+ * @version 0.2.0
+ */
+
+/**
  * 矩形クラス 
  */
 
