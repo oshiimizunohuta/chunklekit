@@ -1,10 +1,10 @@
 /* global SCROLL_MAX_SPRITES_DRAW, SCROLL_MAX_SPRITES_STACK, UI_SCREEN_ID, VIEWMULTI, DISPLAY_WIDTH */
 
 /**
- * Canvas Draw Library
- * Since 2013-11-19 07:43:37
+ * @name Canvas Draw Library
+ * @since 2013-11-19 07:43:37
  * @author bitchunk
- * chunklekit_v0.3.0
+ * @version 0.4.0
  */
 //キャンバスことスクロール
 var canvasScrollBundle = {};
@@ -214,7 +214,6 @@ CanvasScroll.prototype = {
 		;
 		while(stack.length){
 			if(cnt++ > this.maxSprites){
-				// if(this.name == 'bg1'){console.log(this.name);}
 				return false;
 			}
 			drawInfo = stack.shift();
@@ -468,18 +467,6 @@ CanvasScroll.prototype = {
 			this.ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
 		}
 		this.drawInfoStack.push({color: color == null ? null : color, fillrect: rect == null ? null : rect});
-		// console.log(color, rect);
-		// if(rect == null){
-			// rect = {x: 0, y: 0, w: (0 | this.canvas.width), h: (0 | this.canvas.height)};
-// 			
-		// }
-		// if(color != null){
-			// //this.canvas.style.backgroundColor = color;
-			// this.ctx.fillStyle = makeRGB(color);
-			// this.ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
-		// }else{		
-			// this.ctx.clearRect(rect.x, rect.y, rect.w, rect.h);
-		// }
 	},
 	
 	drawFillRectInfo: function(rectInfo)
@@ -859,7 +846,6 @@ imageResource.makeSprite = function(name, index)
  */
 imageResource.makeSpriteArray = function(name, indexes)
 {
-// console.log(name, indexes)
 	var img = this.data[name]
 		, cellsX = 0 | (img.width / this.separateWidth[name])
 		, cellsY = 0 | (img.height / this.separateHeight[name])
@@ -1122,7 +1108,6 @@ function makeSpriteInCanvas(canvas, x, y, w, h)
 {
 	var s = new CanvasSprite();
 	s.initInCanvas(canvas, x, y, w, h);
-			// console.log(s);
 	return s;
 }
 
@@ -1174,7 +1159,6 @@ function makeSpriteArrayInCanvas(canvas, w, h, indexes)
 				spriteArray.push(makeSpriteInCanvas(img, x, y, w, h));
 			}
 		}
-		// console.log(spriteArray);
 	return spriteArray;
 }
 
@@ -1235,7 +1219,6 @@ function convertChunk(spriteChunk, query){
 	}
 	//chunkmap collect
 	y = 0;
-	// clen = query.slice(SPQ_NEWLINE);
 	for(j = 0; j < clen; j++){
 		// subQuery[y] = [];
 		chunk = spriteChunk[j];
@@ -1249,8 +1232,6 @@ function convertChunk(spriteChunk, query){
 		}
 		y += h;
 	}
-	// maked.chunkMap = subQuery;
-	// console.log(maked, query)
 	return maked;
 }
 
@@ -1319,9 +1300,7 @@ function outputLowChunkQuery(spriteChunk)
 		return makeRect(0, 0, i, j);
 	}
 	;
-	// console.log(spriteChunk.chunkMap);
 	recursive(spriteChunk.chunkMap, 0, 0);
-	console.log(lquery);
 	
 	return lquery.join(' ');
 }
@@ -1338,6 +1317,7 @@ function queryToRect(blockQuery, baseRect){
 	var rect, vmul = 1, hmul = 1
 		, regh = blockQuery.match(SPQREG_HMULTI)
 		, regv = blockQuery.match(SPQREG_VMULTI)
+		, dir = dstrToDirection(blockQuery)
 		, make 
 		, singleRect = function(q){
 			q |= 0;
@@ -1375,10 +1355,18 @@ function queryToRect(blockQuery, baseRect){
 			rect = singleRect(make[1]);
 		}else if(make[2] != null){
 			rect = make[2].replace(':','+').split('+');
-			rect = makeRect(rect[0], rect[2], rect[1] * hmul, rect[3] * vmul);
+			if(dir.rot == 1 || dir.rot == 3){
+				rect = makeRect(rect[0], rect[2], rect[3] * hmul, rect[1] * vmul);
+			}else{
+				rect = makeRect(rect[0], rect[2], rect[1] * hmul, rect[3] * vmul);
+			}
 		}else if(make[3] != null){
 			rect = make[3].replace(':','-').split('-');
-			rect = makeRect(rect[0], rect[2], (rect[1] - rect[0] + 1) * hmul, (rect[3] - rect[2] + 1) * vmul);
+			if(dir.rot == 1 || dir.rot == 3){
+				rect = makeRect(rect[0], rect[2], (rect[1] - rect[0] + 1) * hmul, (rect[3] - rect[2] + 1) * vmul);
+			}else{
+				rect = makeRect(rect[0], rect[2], (rect[1] - rect[0] + 1) * hmul, (rect[3] - rect[2] + 1) * vmul);
+			}
 		}else{
 			rect = singleRect(blockQuery);
 		}
@@ -1492,7 +1480,6 @@ function directionToDstr(dir, before)
 	dstr += dir.flip_h > 0 ? '|fh' : '';
 	dstr += dir.flip_v > 0 ? '|fv' : '';
 	dstr = dstr.length > 0 ? dstr : '';
-	// console.log(dstr)
 	return dstr;
 }
 
@@ -1563,7 +1550,7 @@ function makeSpriteQuery(name, spq, nstpat)
 		query = query.push == null ? [query] : query;
 		query = query[0].push == null ? [query] : query;
 		for(y = 0; y < query.length; y++){
-			for(x = 0; x < query[0].length; x++){
+			for(x = 0; x < query[y].length; x++){
 				r[y][x] = query[y][x];
 			}
 		}
@@ -1571,16 +1558,7 @@ function makeSpriteQuery(name, spq, nstpat)
 		return chunk;
 	}
 	, rectFillMulti = function(chunk, w, h){
-		var x, y
-		;
-		w = w > 1 ? '*'  + w : '';
-		h = h > 1 ? '^'  + h : '';
-		for(y = 0; y < chunk.length; y++){
-			for(x = 0; x < chunk[0].length; x++){
-				chunk[y][x] += chunk[y][x] == SPQ_EMPTY ? '' : w + h;
-			}
-		}
-		return chunk;
+		return repeatSprite(chunk, w, h);
 	}
 	;
 	SPQ_RCOUNT = SPQ_RCOUNT < 0 ? 0 : SPQ_RCOUNT;
@@ -1594,7 +1572,6 @@ function makeSpriteQuery(name, spq, nstpat)
 		return makeSpriteImage(name);
 	}
 	try{
-		// console.log(spq.match(SPQREG_INPAT));
 		//Nest Groups
 		do{
 			nstpat = nstpat == null ? [] : nstpat;
@@ -1607,7 +1584,7 @@ function makeSpriteQuery(name, spq, nstpat)
 				spq = spq.replace(/[\(\)]/g, '');
 				break;
 			}
-debugger
+
 			// $の数だけ取り出す
 			mt = [];
 			j = nstMatch[0].split(SPQ_REP).length - 1;
@@ -1623,8 +1600,6 @@ debugger
 			spq = spq.replace(SPQREG_INPAT, SPQ_REP);
 		}while(spq);
 
-			// console.log(s, nstpat);
-
 		spstr = spq.split(SPQ_NEWLINE);
 
 		ilen = spstr.length;
@@ -1634,15 +1609,11 @@ debugger
 			sst = spstr[i];
 			s = sst.split(SPQ_DELIMITER);
 			jlen = s.length;
-//			debugger
 			for(j = 0; j < jlen; j++){
-				// console.log("j" + j, s[j]);
-//				s[j] = s[j].replace(SPQ_FORCE, '');
 				sprstr = s[j].replace(SPQREG_HMULTI, '').replace(SPQREG_VMULTI, '').replace(SPQREG_BOTTOMLINE, '');
 
 				mt = sprstr.split(SPQ_CONNECT)[0].match(SPQREG_MAKE);
 				SPQ_MESSAGE.push('CQuery:' + s[j]);
-				// console.log( s[j] );
 				//rectsight
 				if(mt == null){
 					continue;
@@ -1686,23 +1657,21 @@ debugger
 				SPQ_MESSAGE.push('Repeat:' + rw + ':' + rh);
 				mk = repeatSprite(mk, rw, rh);
 
-				// if(s[j].indexOf(SPQ_REP) < 0 && s[j].indexOf(SPQ_NSTREP) < 0){
-					if(s[j].indexOf(SPQ_REP) >= 0 || s[j].indexOf(SPQ_NSTREP) >= 0){
-						//*^MULTIは考慮されてない
-						sprstr = s[j].replace(SPQ_REP, mk[0][0].chunkMap[0][0]).replace(SPQ_FORCE, '');
-						rect = makeRect(0, chunkMapOfy + i, mk[0][0].chunkMap[0].length * rw, mk[0][0].chunkMap.length * rh);
-						mk[0][0].chunkMap = rectFillMulti(mk[0][0].chunkMap, rw, rh);
-						SPQ_MESSAGE.push('RectFill($):' + rect.toString);
-						rectFillSub(chunkMap, mk[0][0].chunkMap, rect);
-					}else{
-						//*^MULTIは考慮されている
-						rect = queryToRect(s[j].replace(SPQ_FORCE, ''));
-						rect.x = 0;
-						rect.y = chunkMapOfy + i;
-						SPQ_MESSAGE.push('RectFill:' + rect.toString);
-						rectFillSub(chunkMap, s[j].replace(SPQ_FORCE, ''), rect);
-					}
-				// }
+				if(s[j].indexOf(SPQ_REP) >= 0 || s[j].indexOf(SPQ_NSTREP) >= 0){
+					//*^MULTIは考慮されてない
+					sprstr = s[j].replace(SPQ_REP, mk[0][0].chunkMap[0][0]).replace(SPQ_FORCE, '');
+					rect = makeRect(0, chunkMapOfy + i, mk[0][0].chunkMap[0].length * rw, mk[0][0].chunkMap.length * rh);
+					mk[0][0].chunkMap = rectFillMulti(mk[0][0].chunkMap, rw, rh);
+					SPQ_MESSAGE.push('RectFill($):' + rect.toString);
+					rectFillSub(chunkMap, mk[0][0].chunkMap, rect);
+				}else{
+					//*^MULTIは考慮されている
+					rect = queryToRect(s[j].replace(SPQ_FORCE, ''));
+					rect.x = 0;
+					rect.y = chunkMapOfy + i;
+					SPQ_MESSAGE.push('RectFill:' + rect.toString);
+					rectFillSub(chunkMap, s[j].replace(SPQ_FORCE, ''), rect);
+				}
 				
 				//direction
 				mt = s[j].match(SPQREG_FLIP);
@@ -1750,7 +1719,6 @@ debugger
 	}else{
 		sprite[0][0].chunkMap = chunkMap;
 	}
-	// console.log(sprite, spq, rotq + flipq, dstrToDirection(rotq + flipq));
 	return sprite;
 }
 
@@ -2251,7 +2219,6 @@ SpriteHandle.prototype = {
 		//スプライトをつくる
 		if(this.id != null && this.scroll != null){
 			this.sprite = imageResource.makeSprite(this.imageName, this.id);
-	// console.log(111)
 		}
 	},
 	
@@ -2641,7 +2608,6 @@ SpriteHandleBundle.init = function()
 
 	this.stack = function(spriteh)
 	{
-		// console.log(111);
 		var scroll, returnKey;
 		// if(this.spriteStacks == null){return;}
 		if(spriteh.scroll == null){return;}
