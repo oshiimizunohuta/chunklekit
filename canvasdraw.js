@@ -4,7 +4,7 @@
  * @name Canvas Draw Library
  * @since 2013-11-19 07:43:37
  * @author bitchunk
- * @version 0.4.0
+ * @version 0.4.1
  */
 //キャンバスことスクロール
 var canvasScrollBundle = {};
@@ -19,7 +19,7 @@ function makeScroll(name, mainFlag, width, height){
 };
 function makeCanvasScroll(scrollName, insertID){
 	var scr = new CanvasScroll();
-	scr.init(name, insertID == UI_SCREEN_ID, null, null, insertID);
+	scr.init(scrollName, scrollName == UI_SCREEN_ID, null, null, insertID);
 	return scr;
 };
 
@@ -53,12 +53,14 @@ CanvasScroll.prototype = {
 			, scrsize = getScrollSize()
 			;
 		
-		insertID = insertID == null ? 'display' : insertID;
+//		insertID = insertID == null ? 'display' : insertID;
 		this.canvas = document.getElementById(name);
 		if(this.canvas == null){
 			this.canvas = document.createElement('canvas');
 			this.canvas.setAttribute('id', name);
-			document.getElementById(insertID).appendChild(this.canvas);
+			if(insertID != null){
+				document.getElementById(insertID).appendChild(this.canvas);
+			}
 		}
 	//	this.autoClear = true;//no actiove
 	//	this.clearTrig = false;//no clear trigger
@@ -1050,7 +1052,7 @@ function resourceSizeByName(name)
 }
 function resourceByName(name)
 {
-	return imageResource.workSpace[name];
+	return imageResource.workSpace[name] != null ? imageResource.workSpace[name] : null;
 }
 
 function appendImageOnload(name, func)
@@ -1060,11 +1062,15 @@ function appendImageOnload(name, func)
 	});
 }
 
+function appendImage(name, img, sepw, seph)
+{
+	imageResource.appendImage(name, img, sepw, seph);
+}
+
 function setResourceFromCanvas(canvasScroll, sepw, seph){
 	var cv = canvasScroll, r = imageResource;
 	r.appendImage(cv.name, cv.canvas, sepw, seph);
 	r.workSpace[cv.name] = r.makeWorkSpace(cv.canvas, sepw, seph);
-	
 }
 
 /**
@@ -1183,19 +1189,43 @@ function convertChunk(spriteChunk, query){
 	sname = 'sprc-' + CONVERT_COUNT + '['+ sprite.name + ',' + w + ':' + h + ',' + sprite.x + ':' + sprite.y+ ']';
 	scroll = makeScroll(sname, false, sprite.w * w, sprite.h * h);
 	//sprite draw New Scroll
+	//スクロールサイズを算出
+	y = 0;
 	for(j = 0; j < clen; j++){
 		chunk = spriteChunk[j];
 		slen = chunk.length;
+		x = 0;
 		for(i = 0; i < slen; i++){
 			sprite = chunk[i];
 			if(sprite == null){
 				continue;
 			}
-			scroll.drawSpriteInfo({sprite: sprite, x: sprite.w * i, y: sprite.h * j});
+			x += sprite.w;
 		}
+		y += sprite.h;
 	}
+	scroll = makeScroll(sname, false, x, y);
+	
+	//スプライト貼付け
+	y = 0;
+	for(j = 0; j < clen; j++){
+		chunk = spriteChunk[j];
+		slen = chunk.length;
+		x = 0;
+		for(i = 0; i < slen; i++){
+			sprite = chunk[i];
+			if(sprite == null){
+				continue;
+			}
+			scroll.drawSpriteInfo({sprite: sprite, x: x, y: y});
+			x += sprite.w;
+		}
+		y += sprite.h;
+	}
+
 	CONVERT_COUNT++;
-	maked = makeSpriteInCanvas(scroll.canvas, 0, 0, w * sprite.w, h * sprite.h);
+	maked = makeSpriteInCanvas(scroll.canvas, 0, 0, x, y);
+//	maked = makeSpriteInCanvas(scroll.canvas, 0, 0, w * sprite.w, h * sprite.h);
 	
 	//id collect
 	for(j = 0; j < clen; j++){
@@ -1897,6 +1927,17 @@ CanvasSprite.prototype = {
 		this.image = imageResource.data[name];
 		this.ctx = imageResource.ctx[name];
 		this.workSpace = imageResource.workSpace[name];
+		this.initCommon(name, x, y, w, h);
+	},
+	
+	initInCanvas: function(canvas, x, y, w, h)
+	{
+		var name = canvas.name != null ? canvas.name :  'incanvas_' + Object.keys(imageResource.data).length;
+		this.image = canvas;
+		this.ctx = canvas.getContext('2d');
+		// this.workSpace = imageResource.makeWorkSpace(this.image, sprite.w, sprite.h);
+		imageResource.appendImage(name, this.image, w, h);
+		this.workSpace = {canvas: this.image, ctx: this.ctx, data: this.image};
 		this.initCommon(name, x, y, w, h);
 	},
 	

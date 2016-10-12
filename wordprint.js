@@ -2,7 +2,7 @@
  * @name Word Print Library
  * @since 2013-11-19 07:43:37
  * @author bitchunk
- * @version 0.5.0
+ * @version 0.6.0
  */
 // function wordPrint(scrolls, sizetype)
 function WordPrint(){return;};
@@ -40,6 +40,7 @@ WordPrint.prototype ={
 		};
 		this.soundmarkAlign = 'horizon'; // vertical:horizon
 		this.soundmarkPos = []; // {line:line, pos:pos}
+		this.soundmarkEnable = true;
 	
 		this.color;
 		this.bgcolor;
@@ -48,6 +49,8 @@ WordPrint.prototype ={
 	//	this.newLineWord = "\n";
 		this.newLineWord = "n";
 		this.escapeWord = "$";
+		this.NEWLINE_WORD = this.escapeWord + this.newLineWord;
+		this.NOTFOUND_WORD = "？";
 		this.cols = 0; //自動改行までの文字数
 		this.rows = 0; //文字表示行数
 		this.rowSpace = 2; //改行幅
@@ -66,21 +69,23 @@ WordPrint.prototype ={
 		this.vChipSize = 8;
 		this.fontSize = '8px';
 		sizetype = sizetype != null ? sizetype : '8px';
-		this.imageName = this.imageNames[sizetype];
+		this.sourceCanvasName = this.imageNames[sizetype];
 		
 		
+		this.allWordSprites = {};
 		this.DEFAULT_COLOR = COLOR_FONT8;
+		this.DEFAULT_BGCOLOR = COLOR_TRANSPARENT;
 		// this.canvas = null;
 		// this.context = null;
-		this.canvasSpriteSource = null;
+		this.canvasSpriteSource = {};
 		// this.canvasSprite = null;
 		this.coloredCanvasSprite = {};
 		this.scroll;
 		
+//		this.initSourceCanvas();
 		this.setFontSize(sizetype);
 		
 		this.wordIds;// = new Array();
-		this.DEFAULT_BGCOLOR = COLOR_TRANSPARENT;
 	
 		// this.targetScroll;
 		this.position_x = 0;
@@ -93,34 +98,134 @@ WordPrint.prototype ={
 		this.disp = true;
 	},
 	
-	initCanvas: function()
+	initSourceCanvas: function()
 	{
 		var w, h, res
-		, img = this.imageName
+		, img = this.sourceCanvasName
 		, cs = new CanvasSprite()
 		, self = this
 		;
 		res = resourceSizeByName(img);
-		this.canvasSpriteSource = cs;
+		this.canvasSpriteSource[img] = cs;
 		if(res == null){
-			//TODO まだ使いたくない使わない
-			appendImageOnload(img, function(res){
-				// var cs = self.canvasSpriteSource;
-				cs.init(img, 0, 0, res.w, res.h);
-			});
+			console.worn('resource image not found in initSourceCanvas');
 		}else{
-			//スワップ済みはクリーン
-			//TODO デフォルトはいらないかもしれない
+			this.setColor(this.DEFAULT_COLOR, this.DEFAULT_BGCOLOR);
 			cs.init(img, 0, 0, res.w, res.h);
-			this.coloredCanvasSprite = [];
-			this.coloredCanvasSprite.def = cs;
-			this.swapColor();
 		}
+	},
+	
+	/**
+	 * 全ての文字をスプライト格納
+	 * @returns {undefined}
+	 */
+	makeAllSprites: function()
+	{
+		var all = this.allWordSprites
+			, w = this.moji_hira + this.moji_kata + this.moji_alph + this.moji_suji
+			, spr = {}, i, len = w.length
+			, cq = this.colorQuery()
+			, imageName = this.getImageName()
+			, q, space = this.soundmarkEnable ? this.SPACE_CODE + ';' : ''
+			, smark = this.soundmarkEnable ? this.soundmarks : {}
+			, opt
+			, font = this.fontSize
+		;
+		
+		if(this.coloredCanvasSprite[imageName] == null){
+			this.makeCustomCanvasSprite();
+		}
+		
+		if(all[imageName] == null){
+			all[imageName] = {vertical: {}, horizon: {}};
+		}else{
+			return;
+		}
+			
+		spr = {};
+		for(i = 0; i < len; i++){
+			q = i in smark == false ? space + i : i + ';' + smark[i];
+			spr[w.substr(i, 1)] = makeSpriteQuery(imageName, q);
+		}
+		all[imageName].vertical = spr;
+		
+		spr = {};
+		for(i = 0; i < len; i++){
+			q = i in smark == false ? i + '': smark[i] + ' ' + i + '|r2';
+			spr[w.substr(i, 1)] = makeSpriteQuery(imageName, q);
+		}
+		all[imageName].horizon = spr;
+		
+	},
+	
+	/**
+	 * カラースワップ開始
+	 * スワップパレットに格納
+	 */
+	makeCustomCanvasSprite: function()
+	{
+		var cs = this.canvasSpriteSource
+			, c
+			, name = this.getImageName()
+			, sourceName = this.sourceCanvasName
+		;
+		// console.log(this.color, this.bgcolor);
+//		if(resourceByName(name) == null){
+//			name = this.sourceCanvasName;
+//		}
+		if(this.coloredCanvasSprite[name] == null){
+//			c = copyCanvasSprite(cs);
+			c = cs[sourceName];
+			c.pushSwapColor(this.getColor(), this.DEFAULT_COLOR);
+			c.pushSwapColor(this.getBGColor(), this.DEFAULT_BGCOLOR);
+			c.swapStart();
+			c.swapImage.name = this.getImageName();
+//			this.coloredCanvasSprite[colorQuery] = makeSpriteInCanvas(c.swapImage, 0, 0, c.swapImage.width, c.swapImage.height);
+			this.coloredCanvasSprite[name] = c;
+			appendImage(c.swapImage.name, c.swapImage, this.chipSize, this.vChipSize);
+			
+			this.makeAllSprites();
+			// console.log(c);
+			cs.swapImage = null;
+		}
+		
 	},
 
 	setScroll: function(scrollStr)
 	{
 		this.scroll  = scrollStr;
+	},
+	
+	/**
+	 * カラースワップアクセス用連想キー取得
+	 */
+	colorQuery: function()
+	{
+		var colorQuery = [];
+		colorQuery.push(this.color != null ? this.color.join(',') : '');
+		colorQuery.push(this.bgcolor != null ? this.bgcolor.join(',') : '');
+		return colorQuery.join(':');
+	},
+	
+	getImageName: function()
+	{
+		return this.fontSize + ':' + this.colorQuery();
+	},
+	
+	getWordSprites: function(imageName, align)
+	{
+		imageName = imageName == null ? this.getImageName() : imageName;
+		align = align == null ? (this.isHorizon() ? 'horizon' : 'vertical') : align;
+		if(this.allWordSprites[imageName] == null){
+			console.warn('notFound ColorQuery: ' + imageName);
+			return null;
+		}
+		if(this.allWordSprites[imageName][align] == null){
+			console.warn('notFound align: ' + align);
+			return null;
+		}
+		
+		return this.allWordSprites[imageName][align];
 	},
 	
 	getScroll: function()
@@ -328,27 +433,33 @@ WordPrint.prototype ={
 	{
 		if(sizetype == "8px"){
 			// this.imageName = "font8p";
-			this.imageName = this.imageNames[sizetype];
+			this.sourceCanvasName = this.imageNames[sizetype];
 			this.DEFAULT_COLOR = COLOR_FONT8;
 			this.chipSize = 8;
 			this.vChipSize = 8;
+			this.soundmarkEnable = true;
 		}else if(sizetype == "4v6px"){
 			// this.imageName = "font4v6p";
-			this.imageName = this.imageNames[sizetype];
+			this.sourceCanvasName = this.imageNames[sizetype];
 			this.DEFAULT_COLOR = COLOR_FONT8;
 			this.chipSize = 4;
 			this.vChipSize = 6;
+			this.soundmarkEnable = true;
 		}else if(sizetype == "12px"){
 			// this.imageName = "font12p";
-			this.imageName = this.imageNames[sizetype];
-			this.DEFAULT_COLOR = COLOR_FONT12;
+			this.sourceCanvasName = this.imageNames[sizetype];
+			this.DEFAULT_COLOR = COLOR_FONT8;
 			this.chipSize = 12;
 			this.vChipSize = 12;
+			this.soundmarkEnable = false;
 		}else{
 			console.log('font no select!!');
 			return;
 		}
-		this.initCanvas();
+		this.initSourceCanvas();
+		this.fontSize = sizetype;
+//		this.initCanvas();
+		this.makeAllSprites();
 		this.setColor(this.DEFAULT_COLOR, this.DEFAULT_BGCOLOR);
 	},
 	
@@ -368,7 +479,7 @@ WordPrint.prototype ={
 		var len = words.length, sprites = [], i, spr;
 		for(i = 0; i < len; i++){
 			if(this.rows > 0 && i >= this.rows){break;}
-			spr = imageResource.makeSpriteArray(this.imageName, words[i]);
+			spr = imageResource.makeSpriteArray(this.sourceCanvasName, words[i]);
 			sprites.push(spr);
 		}
 		this.spriteArray = sprites;
@@ -381,18 +492,18 @@ WordPrint.prototype ={
 	getColoredSprite: function()
 	{
 		var q = this.colorQuery();
-		if(q.length == 0){
-			return this.coloredCanvasSprite.def;
-		}else{
+//		if(q == ':' || q.length == 0){
+//			return this.coloredCanvasSprite.def;
+////			return this.coloredCanvasSprite.def;
+//		}else{
 			return this.coloredCanvasSprite[q];
-		}
+//		}
 	},
 	
 	spriteWordIds: function(words)
 	{
 		var len = words.length, sprites = [], i, spr
-			// , cv = this.canvasSprite.swapImage == null ? this.canvasSprite.image : this.canvasSprite.swapImage
-			, cv = this.getColoredSprite().swapImage
+			, cv = this.getColoredSprite().image
 			, rows = this.rows + (this.isVertical() * this.rows)
 
 		;
@@ -446,6 +557,77 @@ WordPrint.prototype ={
 				// this.spriteArray = this.spriteMarkRot(this.spriteArray, mark);
 			}, this);
 		}
+	},
+	
+	drawWord: function(str)
+	{
+		var i, len, s, sprite
+			, isHorizon =  this.isHorizon(), isVertical = this.isVertical(), isSoundmark
+			, sprites = []
+			, all = this.getWordSprites()
+			, posx = this.position_x
+			, posy = isVertical && this.soundmarkEnable ? this.position_y - this.vChipSize : this.position_y, x, y
+			, newLines = [] , newWord = this.NEWLINE_WORD
+			, newLinePos = (this.chipSize * this.cols) + posx
+			, scr = this.scroll
+			, enableNewLine = this.cols > 0
+			, enableMaxRow = this.rows > 0
+			, maxRowPos = ((this.rowSpace + this.vChipSize) * this.rows * (isVertical ? 2 : 1)) + posy
+			, sp_alph = this.sp_alph, sp_hira = this.sp_hira, sp_kata = this.sp_kata
+			, newline = function(){
+				y += s.h;
+				x = posx;
+			}
+			, inSP = function(w){
+				if(w in sp_alph){
+					return sp_alph[w];
+				}else if(w in sp_kata){
+					return sp_kata[w];
+				}else if(w in sp_hira){
+					return sp_hira[w];
+				}
+				
+				return w;
+			}
+		;
+		if(!this.disp){
+			return;
+		}
+		if(typeof scr == "string"){
+			scr = layerScroll[scr];
+		}
+		str += '';
+		while(str.indexOf(newWord) >= 0){
+			newLines.push(str.indexOf(newWord));
+			str = str.replace(newWord, '');
+		}
+		len = str.length;
+		sprites = [];
+		for(i = 0; i < len; i++){
+			s = str.substr(i, 1);
+			s = inSP(s);
+			sprites.push(all[s]);
+		}
+		
+		len = sprites.length;
+		x = posx;
+		y = posy;
+		for(i = 0; i < len; i++){
+			s = sprites[i];
+			if(enableNewLine && x + s.w > newLinePos){
+				newline();
+			}
+			if(newLines.length > 0 && newLines[0] == i){
+				newline();
+				newLines.shift();
+			}
+			if(enableMaxRow && y + s.h > maxRowPos){
+				break;
+			}
+			scr.drawSpriteChunk(s, x, y);
+			x += s.w;
+		}
+		
 	},
 
 	escCommand: function(words, index, lineWords){
@@ -534,7 +716,6 @@ WordPrint.prototype ={
 		if(typeof scr == "string"){
 			scr = layerScroll[scr];
 		}
-		// this.swapColor();
 		for(i = 0; i < this.spriteArray.length; i++){
 			// line = isVertical ? (i * 0.5) | 0 : i;
 			if(rows > 0 && i >= rows){break;}
@@ -561,6 +742,11 @@ WordPrint.prototype ={
 		this.bgcolor = bgColor == null ? this.bgcolor : bgColor;
 //		this.swapColor();
 	},
+	
+	getColor: function()
+	{
+		return this.color == null ? this.DEFAULT_COLOR : this.color;
+	},
 
 	setBGColor: function(color)
 	{
@@ -568,6 +754,11 @@ WordPrint.prototype ={
 //		this.swapColor();
 	},
 
+	getBGColor: function()
+	{
+		return this.bgcolor == null ? this.DEFAULT_BGCOLOR : this.bgcolor;
+	},
+	
 	swapColor_o: function()
 	{
 		// for(var j in this.spriteArray){
@@ -585,56 +776,25 @@ WordPrint.prototype ={
 		}
 
 	},
+
 	
-	/**
-	 * カラースワップアクセス用連想キー取得
-	 */
-	colorQuery: function()
-	{
-		var colorQuery = [];
-		colorQuery.push(this.color != null ? this.color.join(',') : '');
-		colorQuery.push(this.bgcolor != null ? this.bgcolor.join(',') : '');
-		return colorQuery.join(':');
+	swapColor: function(){
+		this.makeCustomCanvasSprite();
 	},
 	
-	/**
-	 * カラースワップ開始
-	 * スワップパレットに格納
-	 */
-	swapColor: function()
-	{
-		var cs = this.canvasSpriteSource
-			, c
-			, colorQuery = this.colorQuery()
-		;
-		c = copyCanvasSprite(cs);
-		// console.log(this.color, this.bgcolor);
-		
-		if(this.coloredCanvasSprite[colorQuery] == null){
-			if(this.color != null){
-				c.pushSwapColor(this.color, this.DEFAULT_COLOR);
-			}
-			if(this.bgcolor != null){
-				c.pushSwapColor(this.bgcolor, this.DEFAULT_BGCOLOR);
-			}
-			c.swapStart();
-			this.coloredCanvasSprite[colorQuery] = c;
-			// console.log(c);
-		}
-		
-	},
+
 
 	print: function(str, x, y, color, bgcolor)
 	{
 		// var startTime = performance.now();
-
 		if(x != null){this.position_x = x;}
 		if(y != null){this.position_y = y;}
 		if(color != null){this.color = color;}
 		if(bgcolor != null){this.bgcolor = bgcolor;}
 		this.swapColor();
-		this.parse(str);
-		this.draw();
+		this.drawWord(str);
+//		this.parse(str);
+//		this.draw();
 		// var endTime = performance.now();
 		// console.log(str, endTime - startTime);
 	},
