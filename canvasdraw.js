@@ -4,7 +4,7 @@
  * @name Canvas Draw Library
  * @since 2013-11-19 07:43:37
  * @author bitchunk
- * @version 0.4.1
+ * @version 0.4.2
  */
 //キャンバスことスクロール
 var canvasScrollBundle = {};
@@ -19,6 +19,7 @@ function makeScroll(name, mainFlag, width, height){
 };
 function makeCanvasScroll(scrollName, insertID){
 	var scr = new CanvasScroll();
+	insertID = insertID == null ? 'display' : insertID;
 	scr.init(scrollName, scrollName == UI_SCREEN_ID, null, null, insertID);
 	return scr;
 };
@@ -53,11 +54,11 @@ CanvasScroll.prototype = {
 			, scrsize = getScrollSize()
 			;
 		
-//		insertID = insertID == null ? 'display' : insertID;
 		this.canvas = document.getElementById(name);
 		if(this.canvas == null){
 			this.canvas = document.createElement('canvas');
 			this.canvas.setAttribute('id', name);
+			//makeScrollによるエレメントをhtmlに追加しない処理もある
 			if(insertID != null){
 				document.getElementById(insertID).appendChild(this.canvas);
 			}
@@ -1927,17 +1928,6 @@ CanvasSprite.prototype = {
 		this.image = imageResource.data[name];
 		this.ctx = imageResource.ctx[name];
 		this.workSpace = imageResource.workSpace[name];
-		this.initCommon(name, x, y, w, h);
-	},
-	
-	initInCanvas: function(canvas, x, y, w, h)
-	{
-		var name = canvas.name != null ? canvas.name :  'incanvas_' + Object.keys(imageResource.data).length;
-		this.image = canvas;
-		this.ctx = canvas.getContext('2d');
-		// this.workSpace = imageResource.makeWorkSpace(this.image, sprite.w, sprite.h);
-		imageResource.appendImage(name, this.image, w, h);
-		this.workSpace = {canvas: this.image, ctx: this.ctx, data: this.image};
 		this.initCommon(name, x, y, w, h);
 	},
 	
