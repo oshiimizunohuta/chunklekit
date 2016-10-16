@@ -4,7 +4,7 @@
  * @name Canvas Draw Library
  * @since 2013-11-19 07:43:37
  * @author bitchunk
- * @version 0.4.2
+ * @version 0.4.4
  */
 //キャンバスことスクロール
 var canvasScrollBundle = {};
@@ -65,6 +65,7 @@ CanvasScroll.prototype = {
 		}
 	//	this.autoClear = true;//no actiove
 	//	this.clearTrig = false;//no clear trigger
+		mainFlag = mainFlag == null ? false : mainFlag;
 		if(mainFlag != null && mainFlag){
 			width = size.w;
 			height =size.h;
@@ -86,6 +87,7 @@ CanvasScroll.prototype = {
 		this.canvas.style.display = display;
 		this.canvas.hidden = display == 'none' ? false : true;
 		this.canvas.style.backgroundColor = "transparent";
+		this.mainFlag = mainFlag;
 		
 		this.ctx = contextInit(this.canvas);
 		this.x = 0;
@@ -249,7 +251,7 @@ CanvasScroll.prototype = {
 	{
 		var sprite, x, y
 				, image
-				, vf = 1, hf = 1, r, rox = 0, roy = 0, w = 0, h = 0
+				, vf = 1, hf = 1, r, rox = 0, roy = 0, w = 0, h = 0, t
 				;
 		sprite = spriteInfo.sprite;
 		x = spriteInfo.x;
@@ -281,6 +283,11 @@ CanvasScroll.prototype = {
 		}
 		//回転
 		if(sprite.rotFlag > 0){
+			if(sprite.rotFlag % 2 == 1){
+				t = w;
+				w = h;
+				h = t;
+			}
 			r = sprite.rotFlag;
 
 			r = (((1 == r) * 90) + ((2 == r) * 180) + ((3 == r) * 270)) * Math.PI / 180;
@@ -676,6 +683,17 @@ function scrollByName(name)
 	return (scr[name] != null) ? scr[name] : null;
 }
 
+function getMainScroll()
+{
+	var a, scr = getScrolls(), res = [];
+	for(a in scr){
+		if(scr[a].mainFlag){
+			return scr[a];
+		}
+	}
+	return null;
+}
+
 function getScrolls()
 {
 	var scr = canvasScrollBundle == null ? layerScroll : canvasScrollBundle;
@@ -946,7 +964,8 @@ imageResource.makeWorkSpace = function(img, w, h)
 	canvas.width = w;
 	canvas.height = h;
 	ctx = contextInit(canvas);
-	return {canvas:canvas, ctx:ctx, data: canvas};
+	return {canvas:canvas, ctx:ctx, data: img};
+//	return {canvas:canvas, ctx:ctx, data: canvas};
 };
 /**
  * ロードされた
@@ -1074,6 +1093,12 @@ function setResourceFromCanvas(canvasScroll, sepw, seph){
 	r.workSpace[cv.name] = r.makeWorkSpace(cv.canvas, sepw, seph);
 }
 
+function resourceDraw(image, scr, x, y){
+	var m = 1;
+	image = (typeof image == 'string') ? resourceByName(name).data : image;
+	scr.ctx.drawImage(image, 0, 0, 0 | image.width, 0 | image.height, 0 | x * m, 0 | y * m, 0 | image.width * m, 0 | image.height * m);
+}
+
 /**
  * 短縮系関数
  * 
@@ -1091,7 +1116,10 @@ function makeSpriteChunk(name, sprect)
 		}else{
 			c = imageResource.makeSpriteChunkFromRect(name, sprect);
 		}
-		return convertChunk(c, '');
+		
+		//TODO makeSpriteQueryではconvertしたくない
+		return c;
+//		return convertChunk(c, '');
 	}catch(e){
 		dulog(name + ": error makeSpriteChunk");
 		dulog(sprect);
@@ -1677,7 +1705,26 @@ function makeSpriteQuery(name, spq, nstpat)
 					SPQ_MESSAGE.push('type:id');
 					// console.log(mt[1], mk);
 				}
-				// console.log(mt);
+				
+				//direction
+				mt = s[j].match(SPQREG_FLIP);
+				if(mt != null){
+					// console.log("flip", mt);
+					mk = flipSprite(mk, mt[0].indexOf('h') >= 0, mt[0].indexOf('v') >= 0);
+				}
+				
+				mt = s[j].match(SPQREG_ROT);
+				if(mt != null){
+					// console.log("rot", mt);
+					mk = rotSprite(mk, mt[1]);
+				}
+				dir = dstrToDirection(s[j]);
+				//配列の回転
+				if(dir.rot > 0 || dir.flip_v > 0 || dir.flip_h > 0){
+					mk = directionSortSprites(mk, dir);
+				}
+				// 
+// console.log(mt);
 				//repeat
 				mt = s[j].match(SPQREG_HMULTI);
 				rw = mt == null ? 1 : mt[1] | 0;
@@ -1698,30 +1745,13 @@ function makeSpriteQuery(name, spq, nstpat)
 				}else{
 					//*^MULTIは考慮されている
 					rect = queryToRect(s[j].replace(SPQ_FORCE, ''));
+//					rect = queryToRect(sprstr.replace(SPQ_FORCE, ''));
 					rect.x = 0;
 					rect.y = chunkMapOfy + i;
 					SPQ_MESSAGE.push('RectFill:' + rect.toString);
 					rectFillSub(chunkMap, s[j].replace(SPQ_FORCE, ''), rect);
 				}
 				
-				//direction
-				mt = s[j].match(SPQREG_FLIP);
-				if(mt != null){
-					// console.log("flip", mt);
-					mk = flipSprite(mk, mt[0].indexOf('h') >= 0, mt[0].indexOf('v') >= 0);
-				}
-				
-				mt = s[j].match(SPQREG_ROT);
-				if(mt != null){
-					// console.log("rot", mt);
-					mk = rotSprite(mk, mt[1]);
-				}
-				dir = dstrToDirection(s[j]);
-				//配列の回転
-				if(dir.rot > 0 || dir.flip_v > 0 || dir.flip_h > 0){
-					mk = directionSortSprites(mk, dir);
-				}
-
 				SPQ_MESSAGE.push('Concat:' + (ofy + i));
 				sprite = concatSprite(sprite, mk, ofy + i);
 				mt = s[j].match(SPQ_FORCE);
@@ -2022,9 +2052,10 @@ CanvasSprite.prototype = {
 		this.rotFlag = trbl == null ? (trbl + 1) % 4 : trbl;
 
 		if(this.rotFlag != pr && (this.rotFlag - pr + 4) % 2 == 1){
+			//描画の直前はモトに戻す
 			ph = this.h;
 			this.h = this.w;
-			// this.w = ph;
+			this.w = ph;
 		}
 		
 		return this;
