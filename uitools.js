@@ -115,3 +115,98 @@ CUCursor.prototype = {
 	
 	
 };
+
+
+function SceneTransition(){return;}
+SceneTransition.prototype = {
+	init: function(){
+		this.transitionClock = 0;
+		this.sceneOrder = [];
+		this.scenePrevious = null;
+		 this.sceneCurrent = null;
+	},
+	
+	current: function(){
+		return this.sceneCurrent;
+	},
+	
+//	pushOrder: function(funcName, duration, params){
+	pushOrder: function(funcName, duration, params){
+		this.sceneOrder.push({name: funcName, duration: duration, count: 0, params: params});
+	},
+	
+	pushOrderFunc: function(func, duration, params){
+		this.sceneOrder.push({func: func, duration: duration, count: 0, params: params});
+	},
+	
+	unshiftOrder: function(funcName, duration, params){
+		this.sceneOrder.unshift({name: funcName, duration: duration, count: 0, params: params});
+	},
+	
+	removeOrder: function(name){
+		var res;
+		if(name == null){
+			res = {order: this.sceneOrder.slice(), current: this.sceneCurrent};
+			this.sceneOrder = [];
+			this.sceneCurrent = null;
+			return res;
+		}
+		this.sceneOrder = this.sceneOrder.filter(function(a){
+			if(a.name == name){
+				res = {order: [a], current: null};
+			}
+			return a.name != name;
+		});
+		if(this.sceneCurrent != null && this.sceneCurrent.name == name){
+			res = {order: [], current: this.sceneCurrent};
+			this.sceneCurrent = null;
+			return res;
+		}
+		return {order: [], current: null};
+	},
+	
+	transition: function(caller){
+		var order = this.sceneOrder
+			, current = this.sceneCurrent
+		;
+		if(current == null && order.length == 0){
+			return;
+		}
+		
+		current = current == null ? order.shift() : current;
+		this.sceneCurrent = current;
+		
+		if(caller[current.name](current)){
+			this.scenePrevious = this.sceneCurrent;
+			this.sceneCurrent = null;
+		}
+		current.count++;
+		if(current.duration > 0 && current.duration <= current.count){
+			this.sceneCurrent = null;
+		}
+		
+	},
+};
+
+function drawDebugCell(scroll, pointControll, wordprint, color){
+	var bg = SCROLL.sprite
+		, pos = pointControll.getMovePos()
+		, cto = cellhto, toc = tocellh
+		, x, y, w = cto(1)
+		, str
+		, backScroll = wordprint.getScroll()
+	;
+	
+	color = color == null ? COLOR_WHITE : color;
+	
+	pos = {x: toc(pos.x), y: toc(pos.y)};
+	x = pos.x - (pos.x < 1 ? 0 : 1);
+	y = pos.y - (pos.y < 2 ? -1 : 2);
+	str = (pos.x < 10 ? 'x:0' : 'x:') + pos.x + '$n' + (pos.y < 10 ? 'y:0' : 'y:') + pos.y + '';
+	wordprint.setScroll(scroll);
+	wordprint.print(str, cto(x), cto(y));
+	scroll.debugRect(makeRect(cto(pos.x), cto(pos.y), w, w), color);
+	
+	//戻す
+	wordprint.setScroll(backScroll);
+}
