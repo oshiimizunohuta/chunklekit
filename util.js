@@ -194,7 +194,7 @@ function makeRect(x, y, w, h)
 			return a.search(/^\d+$/) > -1 ? a | 0 : a;
 		});
 		opt = x[4] != null ? x[4] : '';
-		m = opt != '' && opt.search(reg) > -1 ? opt.replace(reg, '$1') | 0 : m;
+		m = opt != '' && opt.search(reg) > -1 ? opt.match(reg)[1] | 0 : m;
 		ptp = opt != '' ? opt.search(/:pos/, '') > -1 : ptp;
 		if(ptp){
 			yf = x[1] > x[3];
@@ -349,6 +349,15 @@ function initAPIServer(apiUrl)
 	APIServer.url = apiUrl;
 };
 
+/**
+ * API送信
+ * @param {string} method
+ * @param {string} api
+ * @param {object} params
+ * @param {function} func
+ * @param {function} errorFunc
+ * @returns {undefined}
+ */
 function sendToAPIServer(method, api, params, func, errorFunc)
 {
 	var query = [], key, x = new XMLHttpRequest();
