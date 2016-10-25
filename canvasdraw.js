@@ -21,6 +21,7 @@ function makeCanvasScroll(scrollName, insertID){
 	var scr = new CanvasScroll();
 	insertID = insertID == null ? 'display' : insertID;
 	scr.init(scrollName, scrollName == UI_SCREEN_ID, null, null, insertID);
+	canvasScrollBundle[scrollName] = scr;
 	return scr;
 };
 
@@ -92,7 +93,7 @@ CanvasScroll.prototype = {
 		this.ctx = contextInit(this.canvas);
 		this.x = 0;
 		this.y = 0;
-		canvasScrollBundle[name] = this;
+//		canvasScrollBundle[name] = this;
 		this.maxSprites = SCROLL_MAX_SPRITES_DRAW;
 		this.maxSpritesStack = SCROLL_MAX_SPRITES_STACK;
 		this.drawInfoStack = [];
@@ -120,7 +121,68 @@ CanvasScroll.prototype = {
 	},
 
 	//拡大しない
+	//対象のスクロール基準の走査
 	rasterto: function(targetScroll, dx, dy, dw, dh)
+	{
+		if(!this.is_visible()){return;}
+		if(dw == null){dw = this.canvas.width;}
+		if(dh == null){dh = this.canvas.height;}
+		if(dx == null){dx = this.x;}
+		if(dy == null){dy = this.y;}
+		var sw = dw, sh = targetScroll.canvas.height, sx = 0, sy = 0
+			, i, raster, pos = {x: 0, y: 0}, fixpos = {x: dx, y: dy}, currentLine = 0
+			, raster = this.rasterLines.horizon
+			, h = 0
+			;
+			
+		if(raster.length > 0){
+			for(i = 0; i < sh; i++){
+				if(raster[i] != null){
+					h = i - currentLine;
+					if(h > 0){
+						targetScroll.ctx.drawImage(this.canvas, 0, 0 | (currentLine - pos.y + fixpos.y) % (dh * 2), 0 | sw, h
+						, 0 | (pos.x + fixpos.x) % (dw * 2), currentLine, 0 | dw, h);
+
+						currentLine = i;
+					}
+//					raster = horizon[i];
+					pos.x = raster[i].x;
+					pos.y = raster[i].y;
+					//%(dw*2) 球面スクロール考慮
+				}
+			}
+			targetScroll.ctx.drawImage(this.canvas, 0, 0 | (currentLine - pos.y + fixpos.y), 0 | sw, i - currentLine, 0 | pos.x + fixpos.x, currentLine, 0 | dw, i - currentLine);
+		}else if(this.rasterLines.vertical.length > 0){
+			raster = this.rasterLines.vertical;
+			for(i = 0; i < sw; i++){
+				if(raster[i] != null){
+					if(currentLine < i){
+						targetScroll.ctx.drawImage(this.canvas, currentLine, 0, 0 | i - currentLine, 0 | sh, 0 | pos.x + fixpos.x, 0 | pos.y + fixpos.y, i - currentLine, 0 | dh);
+					}
+					pos.x = raster[i].x;
+					pos.y = raster[i].y;
+					targetScroll.ctx.drawImage(this.canvas, i, 0, 1, 0 | sh, 0 | pos.x + fixpos.x, 0 | pos.y + fixpos.y, 1, 0 | dh);
+					currentLine = i + 1;
+					pos.y++;
+				}
+			}
+			targetScroll.ctx.drawImage(this.canvas, currentLine, 0, 0 | i - currentLine, 0 | sh, 0 | pos.x + fixpos.x, 0 | pos.y + fixpos.y, i - currentLine, 0 | dh);
+			
+		}else{
+			if(this.rasterFunc == null){
+				targetScroll.ctx.drawImage(this.canvas, 0 | sx, 0 | sy, 0 | sw, 0 | sh, 0 | dx, 0 | dy, 0 | dw, 0 | dh);
+			}else{
+				this.rasterFunc(targetScroll, {sx: 0 | sx, sy: 0 | sy, sw: 0 | sw, sh: 0 | sh, dx: 0 | dx, dy: 0 | dy, dw: 0 | dw, dh: 0 | dh});
+			}
+		}
+		
+		if(this.rasterVolatile){
+			this.resetRaster();
+		}
+	},
+	
+	//元のスクロール基準の走査
+	rasterfrom: function(targetScroll, dx, dy, dw, dh)
 	{
 		if(!this.is_visible()){return;}
 		if(dw == null){dw = this.canvas.width;}
@@ -152,8 +214,8 @@ CanvasScroll.prototype = {
 					if(line < i){
 						targetScroll.ctx.drawImage(this.canvas, line, 0, 0 | i - line, 0 | sh, 0 | pos.x + fixpos.x, 0 | pos.y + fixpos.y, i - line, 0 | dh);
 					}
-					rpos.x = raster[i].x;
-					rpos.y = raster[i].y;
+					pos.x = raster[i].x;
+					pos.y = raster[i].y;
 					targetScroll.ctx.drawImage(this.canvas, i, 0, 1, 0 | sh, 0 | pos.x + fixpos.x, 0 | pos.y + fixpos.y, 1, 0 | dh);
 					line = i + 1;
 					pos.y++;
@@ -172,9 +234,9 @@ CanvasScroll.prototype = {
 		if(this.rasterVolatile){
 			this.resetRaster();
 		}
-
-//		alert();
 	},
+	
+	
 	/**
 	 * ニアレストネイバー
 	 * @param targetScroll
@@ -1031,6 +1093,7 @@ function loadImages(imageInfo, func)
 
 /**
  * コールバック付き画像ロード
+ * 追加で画像を読み込む場合
  */
 function preLoadImage(name, sepWidth, sepHeight,  func)
 {
@@ -1044,6 +1107,31 @@ function preLoadImage(name, sepWidth, sepHeight,  func)
 		r.appendImage(this.name, this, this.sepWidth == null ? this.width | 0 : this.sepWidth, this.sepHeight == null ? this.height | 0 : this.sepHeight);
 		func();
 	};
+}
+
+function preLoadImages(imageInfo, func)
+{
+	var callback = function(){
+		var t = new Image(), info, r = imageResource;
+		if(imageInfo.length == 0){
+			func();
+			return;
+		}
+		info = imageInfo.shift();
+		t.onload = function(){
+			r.appendImage(this.name, this, this.sepWidth == null ? this.width | 0 : this.sepWidth, this.sepHeight == null ? this.height | 0 : this.sepHeight);
+			callback();
+		};
+		t.src = r.dirpath + info[0] + r.extention + '?lrt=' + r.loadRefreshTime;
+		t.name = info[0];
+		t.sepWidth = info[1] == null ? null : info[1];
+		t.sepHeight = info[2] == null ? null : info[2];
+			
+	}
+	;
+	imageInfo = imageInfo.length != null ? imageInfo : [imageInfo];
+	callback();
+	
 }
 
 function setImageLoadRefreshTime(time){
@@ -2160,13 +2248,23 @@ CanvasSprite.prototype = {
 	swapColor: function(to, from)
 	{
 		if(this.swaps == null){this.swaps = [];}
+		
 		this.swaps.push([from, to]);
 		return this;
 	},
 
 	setSwapColor: function(to, from)
 	{
+		var self = this;
 		this.swaps = [];
+		//to from 両方同じ要素数であること
+		to = to.colors != null ? to.colors : to;
+		from = from.colors != null ? from.colors : from;
+		if(to[0].length != null){
+			to.map(function(a, i){
+				self.swapColor(a, from[i]);
+			});
+		}
 		this.swaps.push([from, to]);
 		this.swapStart();
 		return this;
@@ -2203,6 +2301,27 @@ CanvasSprite.prototype = {
 	},
 
 };
+
+function canvasPalette(){return;}
+canvasPalette.prototype = {
+	init: function(colors, name){
+		this.size = colors.length;
+		this.colors = typeof colors[0].length == null ? [colors] : colors;
+//		this.brightLevel = level == null ? 0 : level;
+		this.name = name == null ? colors.map(function(a){return '[' + a.join(',') + ']';}).join(':') : name;
+	},
+	
+	color: function(id){
+		return this.colors[id] == null ? COLOR_BLACK : this.colors[id];
+	},
+};
+
+function makeCanvasPalette(color, name){
+	var a = new canvasPalette();
+	a.init(color, name);
+	
+	return a;
+}
 
 //サイズ変換
 function cellto(cell, size, side)
