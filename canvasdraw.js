@@ -115,8 +115,8 @@ CanvasScroll.prototype = {
 		if(targetScroll == null){return;}
 		if(w == null){w = this.canvas.width;}
 		if(h == null){h = this.canvas.height;}
-		if(x == null){x = 0;}
-		if(y == null){y = 0;}
+		if(x == null){x = this.x;}
+		if(y == null){y = this.y;}
 		targetScroll.ctx.drawImage(this.canvas, 0 | -x, 0 | -y);
 	},
 
