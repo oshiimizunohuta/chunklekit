@@ -217,14 +217,14 @@ function makeRect(x, y, w, h)
 
 
 function Ease(){
-		this.count;
-		this.range;
-		this.start = 0;
-		this.division;
-		this.time;
-		this.func;
-	return;
+	this.count;
+	this.range;
+	this.start = 0;
+	this.division;
+	this.time;
+	this.func;
 }
+
 Ease.prototype = {
 	init: function(s, e, t){
 		this.count = 0;
@@ -251,6 +251,16 @@ Ease.prototype = {
 			return 0.5 - Math.cos(self.count * (Math.PI / self.division)) / 2;
 		};
 	},
+	
+	inout: function(s, e, t){
+		var self = this;
+		this.init(s, e, t);
+		this.division = t;
+		this.func = function(){
+			return 1 - Math.exp(-8 * Math.pow(self.count / self.division, 3));
+		};
+	},
+	
 	
 	next: function(){
 		if(this.func == null){
