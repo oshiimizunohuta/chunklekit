@@ -23,8 +23,10 @@ CUCursor.prototype = {
 		this.pos_pre = {x: 0, y:0, z: 0};
 		this.cells = {x: 0, y: 0, z: 0};
 		this.looped = {x: 0, y: 0, z: 0};
+		this.disablePos = [];
 		this.cellReturn = true;
 		this.name = 'cursor';
+		this.index = 0;
 	},
 	
 	right: function(num)
@@ -40,12 +42,12 @@ CUCursor.prototype = {
 	up: function(num)
 	{
 		num = num == null ? 1 : num;
-		this.move(0, num, 0);
+		this.move(0, -num, 0);
 	},
 	down: function(num)
 	{
 		num = num == null ? 1 : num;
-		this.move(0, -num, 0);
+		this.move(0, num, 0);
 	},
 	front: function(num)
 	{
@@ -57,15 +59,78 @@ CUCursor.prototype = {
 		num = num == null ? 1 : num;
 		this.move(0, 0, -num);
 	},
+	
+	disable: function(x, y, z){
+		var pos = this.disablePos;
+		if(this.isEnable(x, y, z)){
+			return;
+		}
+		pos.push(this.makePositionStr(x, y, z).join(' '));
+	},
+	
+	enable: function(x, y, z){
+		var pos = this.disablePos, i, str = this.makePositionStr(x, y, z);;
+		for(i = 0; i < pos.length; i++){
+			if(pos[i] == str){
+				pos.splice(i, 1);
+			}
+		}
+	},
+	
+	isEnable: function(x, y, z){
+		var pos = this.dsablePos, i, str = this.makePositionStr(x, y, z);
+		for(i = 0; i < pos.length; i++){
+			if(pos[i] == str){
+				return false;
+			}
+		}
+		return true; 
+	},
+	
+	valueOf: function(valueArray){
+		var i = this.index
+			, vala = []
+			, func = function(a){
+				if(a instanceof Array){
+					a.forEach(func);
+					return;
+				}
+				vala.push(a);
+				return;
+			}
+		;
+		
+		if(!(valueArray instanceof Array)){
+			return null;
+		}
+		valueArray.forEach(func);
+		
+		return vala[i];
+	},
+	
+	makePositionStr: function(x, y, z){
+		var a = [];
+		if(x != null){
+			a.push(x);
+		}
+		if(y != null){
+			a.push(y);
+		}
+		if(z != null){
+			a.push(z);
+		}
+		return a.join(' ');
+	},
 
 	move: function(x, y, z)
 	{
 		var pos = this.pos, pre = this.pos_pre, cells = this.cells
 		, loop = this.looped
-		, keys = Object.keys(pos), a
+//		, keys = Object.keys(pos), a
+		, a, id
 		, nums = {x: (x == null ? 0 : x), y: (y == null ? 0 : y), z: (z == null ? 0 : z)};
 		
-		for(a in keys){
+		for(a in pos){
 			pre[a] = pos[a];
 			pos[a] += nums[a];
 			if(pos[a] >= cells[a]){
@@ -73,32 +138,37 @@ CUCursor.prototype = {
 				pos[a] = pos[a] % cells[a];
 			}else if(pos[a] < 0){
 				loop[a]--;
-				pos[a] = cells[a] + ((-pos[a]) % cells[a]);
+				//-pos
+				pos[a] = (cells[a] + pos[a]) % cells[a];
 			}else{
 				loop[a] = 0;
 			}
 		}
+		
+		this.index = pos.x + (pos.y * cells.x) + (pos.z * cells.x * cells.y);
 	},
 	
 	moveTo: function(x, y, z)
 	{
 		var pos = this.pos, pre = this.pos_pre, cells = this.cells
 		, loop = this.looped
-		, keys = Object.keys(pos), a
+		, a
 		, nums = {x: (x == null ? 0 : x), y: (y == null ? 0 : y), z: (z == null ? 0 : z)};
 		
-		for(a in keys){
-			pos[a] += nums[a];
+		for(a in pos){
+			pre[a] = pos[a];
+			pos[a] = nums[a];
 			if(pos[a] >= cells[a]){
 				loop[a]++;
 				pos[a] = pos[a] % cells[a];
 			}else if(pos[a] < 0){
 				loop[a]--;
-				pos[a] = cells[a] + ((-pos[a]) % cells[a]);
+				pos[a] = (cells[a] + pos[a]) % cells[a];
 			}else{
 				loop[a] = 0;
 			}
 		}
+		this.index = pos.x + (pos.y * cells.x) + (pos.z * cells.x * cells.y);
 		
 	},
 	
