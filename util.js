@@ -10,7 +10,7 @@
  */
 
 function Rect(){
-	return;
+	return null;
 }
 Rect.prototype = {
 	init: function (x, y, w, h)
@@ -19,12 +19,18 @@ Rect.prototype = {
 		this.y = y;
 		this.w = w;
 		this.h = h;
+		this.d = 1;
+		this.z = 0;
 		this.ex = x + w;
 		this.ey = y + h;
 		this.toString = this.convertString();
 		this.toArray = this.convertArray();
 		this.overlapRect = [];
 		this.appendRect = [];
+		this.SORTAXIS = ['x', 'y', 'z'];
+		this.SORTSOLID = ['w', 'h', 'd'];
+//		this.SORTAXIS = ['x', 'y'];
+//		this.SORTSOLID = ['w', 'h'];
 	},
 
 	isContain: function(x, y)
@@ -114,6 +120,35 @@ Rect.prototype = {
 		}
 		
 		return orResult;
+	},
+	
+	//align(outer): lower higher
+	//align(inner): low middle high
+	//align(keep): keep
+	//'x y z'
+	adjoin: function(rect, align)
+	{
+		var self = this, axis = this.SORTAXIS, solid = this.SORTSOLID;
+		align = typeof align == 'string' ? align.split(' ') : align;
+		
+		align.forEach(function(a, i){
+			var p, s = axis[i], d = solid[i];
+			if(a == 'lower'){
+				p = rect[s] - self[d];
+			}else if(a == 'higher'){
+				p = rect[s] + rect[d];
+			}else if(a == 'low'){
+				p = rect[s];
+			}else if(a == 'middle'){
+				p = rect[s] + (rect[d] / 2) - (self[d] / 2);
+			}else if(a == 'high'){
+				p = rect[s] + rect[d] - self[d];
+			}else{
+				p = self[s];
+			}
+			self[axis[i]] = p;
+		});
+		return this;
 	},
 
 	reculc: function(x, y, w, h)
@@ -272,6 +307,238 @@ Ease.prototype = {
 	}
 };
 
+function Position(){return null;}
+Position.prototype = {
+	init: function(x, y, z){
+		var p
+		;
+		if((x + '').indexOf(' ') >= 0){
+			p = x.split(' ');
+			this.x = p[0] == null ? 0 : p[0];
+			this.y = p[1] == null ? 0 : p[1];
+			this.z = p[2] == null ? 0 : p[2];
+		}else{
+			this.x = x == null ? 0 : x;
+			this.y = y == null ? 0 : y;
+			this.z = z == null ? 0 : z;
+		}
+		
+		this.arrayTo = [this.x, this.y, this.z];
+	},
+	
+};
+function makePosition(x, y, z){
+	var p = new Position();
+	p.init(x, y, z);
+	return p;
+}
+
+function makeSpritePart(resourceName, params){
+	var part = new SpritePart();
+	if(params.query != null){
+		part.initQueries(resourceName, params.query);
+	}else{
+		part.init();
+	}
+	
+	return part;
+}
+function SpritePart(){return null;}
+SpritePart.prototype = {
+	init: function(){
+		this.global = makePosition();
+		this.local = makePosition();
+		this.sprites = [];
+		this.visible = true;
+		this.spriteNum = 0;
+	},
+	
+	initQueries: function(resourceName, queries){
+		if(this.global == null){
+			this.init();
+		}
+		this.appendSprite(resourceName, queries);
+	},
+	
+	getRect: function(global){
+		var sp = this.sprites[this.spriteNum]
+			, pos, rect
+		;
+		global = global == null ? true : global;
+		pos = global ? this.global : this.local;
+		rect = makeRect(pos.x, pos.y, sp.w, sp.h);
+		rect.z = pos.z;
+//		rect.d = sp.d;
+		return rect;
+	},
+	
+	appendSprite: function(resourceName, queries){
+		var sprites = this.sprites;
+		queries = queries instanceof Array ? queries : [queries];
+		
+		queries.forEach(function(q){
+			sprites.push(makeSpriteQuery(resourceName, q));
+		});
+		return this;
+	},
+	
+	setParams: function(params){
+		var k;
+		for(k in params){
+			this[k] = params[k];
+		}
+		return this;
+	},
+	
+	refreshGlobal: function(from, to){
+		var gl = this.global
+			, diff = {
+				x: to.x - from.x,
+				y: to.x - from.y,
+				z: to.x - from.z
+			}
+		;
+		this.global.x += diff.x;
+		this.global.y += diff.y;
+		this.global.z += diff.z;
+		return this;
+	},
+	
+	show: function(){
+		this.visible = true;
+		return this;
+	},
+	
+	hide: function(){
+		this.visible = false;
+		return this;
+	},
+	
+	pattern: function(p){
+		this.spriteNum = p;
+		return this;
+	},
+	
+	setnum: function(num){
+		this.spriteNum = num;
+		return this;
+	},
+	
+	move: function(posArray){
+		var pos = this.local
+			, back = makePosition(pos.x, pos.y, pos.z)
+		;
+		pos.x += posArray[0] == null ? 0 : posArray[0];
+		pos.y += posArray[1] == null ? 0 : posArray[1];
+		pos.z += posArray[2] == null ? 0 : posArray[2];
+		this.refreshGlobal(back, pos);
+		return this;
+	},
+	
+	setpos: function(posArray){
+		var pos = this.local
+			, back = makePosition(pos.x, pos.y, pos.z)
+		;
+		pos.x = posArray[0] == null ? pos.x : posArray[0];
+		pos.y = posArray[1] == null ? pos.y : posArray[1];
+		pos.z = posArray[2] == null ? pos.z : posArray[2];
+		this.refreshGlobal(back, pos);
+		return this;
+	},
+	
+	adjoin: function(rect, align){
+		var r, global = false;
+		r = this.getRect(global).adjoin(rect, align);
+		this.setpos([r.x, r.y, r.z]);
+		return this;
+	},
+	
+	drawTo: function(scroll, global){
+		if(!this.visible){
+			return this;
+		}
+		scroll.drawSprite(this.sprites[this.spriteNum], global.x + this.local.x, global.y + this.local.y);
+		return this;
+	},
+};
+
+function makeSpriteBone(resourceName, patsParams){
+	var b = new SpriteBone();
+	b.init();
+	b.addPartsBySpriteQuery(resourceName, patsParams);
+	return b;
+}
+function SpriteBone(){return null;}
+SpriteBone.prototype = {
+	init: function(){
+		this.parts = {};
+		this.partsArray = [];
+		this.local = makePosition();
+		this.global = makePosition();
+	},
+	//{name: spriteQuery}
+	addPartsBySpriteQuery: function(resourceName, parts){
+		var k, sp;
+		
+		for(k in parts){
+//			sp = makeSpriteQuery(resourceName, parts[k]);
+			this.parts[k] = makeSpritePart(resourceName, parts[k]);
+			this.partsArray.push(this.parts[k]);
+		}
+	},
+	
+	setParams: function(params){
+		var name, k, p, part = this.parts;
+		for(name in params){
+			parts[name].setParams(params[name]);
+		}
+	},
+	
+	partRect: function(part, global){
+		var r = this.parts[part].getRect(global);
+		return r;
+	},
+	
+	adjoinPart: function(a, b, align){
+		var global = false;
+		this.parts[a].adjoin(this.partRect(b, global), align);
+		return this.parts[a];
+	},
+	
+	//com: space delimiter, 0: partName, 1: method
+	com: function(com, value){
+		var q = com.split(' ')
+		;
+		if(q.length < 2){
+			return this.parts[q[0]];
+		}
+		if(this.parts[q[0]] == null || this.parts[q[0]][q[1]] == null){
+			console.worn('notfound ' + q[0] + ' ' + q[1]);
+			return false;
+		}
+		this.parts[q[0]][q[1]](value);
+		return this.parts[q[0]];
+	},
+	
+	drawTo: function(scroll){
+		var parts = this.partsArray
+			, sortparts = []
+			, bonepos = this.global
+			;
+			sortparts = parts.slice().sort(function(a, b){
+				var c = a.local.z - b.local.z;
+				return c;
+//				return c == 0 ? -1 : c;
+			});
+			
+			sortparts.forEach(function(a){
+				a.drawTo(scroll, bonepos);
+			})
+		;
+	},
+
+};
+
 /**
  * 0で桁埋め
  * @param keta
@@ -310,8 +577,10 @@ function str_pad(input, pad_length, pad_string, pad_type)
 	if(input.length == 0){
 		return "";
 	}
+	pad_type = pad_type == null || pad_type == 'left' || pad_type == "STR_PAD_LEFT";
+	//true = left (001)
 	if(pad_length != null && input.length >= pad_length){
-		if(pad_type == "STR_PAD_LEFT"){
+		if(pad_type){
 			input = input.slice(input.length - pad_length);
 		}else{
 			input = input.slice(0, pad_length);
@@ -319,14 +588,14 @@ function str_pad(input, pad_length, pad_string, pad_type)
 		return input;
 	}
 
-	var addcount = pad_length - input.length;
-	var addstr = "";
+	var addcount = pad_length - input.length
+		,addstr = "";
 
 	for(var i = 0; i < addcount; i++){
 		addstr += pad_string;
 	}
 
-	if(pad_type == "STR_PAD_LEFT"){
+	if(pad_type){
 		input = addstr + input;
 	}else{
 		input = input + addstr;
@@ -348,6 +617,33 @@ function clone(src){
 		dst[k] = typeof src[k] == 'object' && (k != 'prototype' || k != '__proto__') ? clone(src[k]) : src[k];
 	}
 	return dst;
+}
+
+/**
+ * 
+ * @param {object} obj
+ * @param {array} keys
+ * @returns {object}
+ */
+function objectForKeys(obj, keys){
+	var i, res = {}, k;
+	for(i = 0; i < keys.length; i++){
+		k = keys[i];
+		res[k] = k in obj ? obj[k] : null;
+	}
+	
+	return res;
+}
+
+function arrayToObject(a){
+	var i, o = {};
+	for(i = 0; i < a.length; i++){
+		if(a[i] == undefined){
+			continue;
+		}
+		o[i] = a[i];
+	}
+	return o;
 }
 
 /**
@@ -415,4 +711,13 @@ function sendToAPIServer(method, api, params, func, errorFunc)
 	x.send(str);
 };
 
-
+function checkAPIReceive(data){
+	if(data == null){
+		console.error('server error');
+		return false;
+	}else if(data instanceof String){
+		console.error(data);
+		return false;
+	}
+	return true;
+}
