@@ -11,6 +11,7 @@ function makeCursor(name, x, y, z){
 	c.cells.x = x;
 	c.cells.y = y;
 	c.cells.z = z;
+	c.range(x, y, z);
 	c.name = name;
 	return c;
 }
@@ -27,6 +28,9 @@ CUCursor.prototype = {
 		this.cellReturn = true;
 		this.name = 'cursor';
 		this.index = 0;
+		this.ranged = {x: 0, y: 0, z: 0};
+		this.offsetted = {x: 0, y: 0, z: 0};
+		this.rangeovered = {x: 0, y: 0, z: 0};
 	},
 	
 	right: function(num)
@@ -75,6 +79,14 @@ CUCursor.prototype = {
 				pos.splice(i, 1);
 			}
 		}
+	},
+	
+	range: function(x, y, z){
+		x = x == null ? 1 : x;
+		y = y == null ? 1 : y;
+		z = z == null ? 1 : z;
+		
+		this.ranged = {x: x, y: y, z: z};
 	},
 	
 	isEnable: function(x, y, z){
@@ -146,6 +158,7 @@ CUCursor.prototype = {
 		}
 		
 		this.index = pos.x + (pos.y * cells.x) + (pos.z * cells.x * cells.y);
+		this.rangeOverCheck();
 	},
 	
 	moveTo: function(x, y, z)
@@ -169,7 +182,34 @@ CUCursor.prototype = {
 			}
 		}
 		this.index = pos.x + (pos.y * cells.x) + (pos.z * cells.x * cells.y);
-		
+		this.rangeOverCheck();
+	},
+	
+	rangeOverCheck: function()
+	{
+		var r = this.ranged, o = this.offsetted
+			, p = this.pos, over = this.rangeovered, a
+		;
+		for(a in p){
+			over[a] = p[a] - o[a];
+			if(over[a] >= r[a]){
+				o[a] = 1 + p[a] - r[a];
+			}else if(over[a] < 0){
+				o[a] = p[a];
+			}
+		}
+	},
+	
+	isRangeOver: function(axis)
+	{
+		var over = this.rangeovered;
+		if(axis != null){
+			return over.x == 0 && over.y == 0 && over.z == 0;
+		}
+		if(over[axis] != false){
+			return over[axis] != 0;
+		}
+		return null;
 	},
 	
 	isLooped: function(axis)
