@@ -86,7 +86,9 @@ WordPrint.prototype ={
 		this.setFontSize(sizetype);
 		
 		this.wordIds;// = new Array();
-	
+		this.readMode = false; //外部から弄らない
+		this.readChars = 0;
+		
 		// this.targetScroll;
 		this.position_x = 0;
 		this.position_y = 0;
@@ -561,7 +563,7 @@ WordPrint.prototype ={
 	
 	drawWord: function(str)
 	{
-		var i, len, s, sprite
+		var i, len, s, sprite, offset
 			, isHorizon =  this.isHorizon(), isVertical = this.isVertical(), isSoundmark
 			, sprites = []
 			, all = this.getWordSprites()
@@ -591,12 +593,13 @@ WordPrint.prototype ={
 			}
 		;
 		if(!this.disp){
-			return;
+			return 0;
 		}
 		if(typeof scr == "string"){
 			scr = layerScroll[scr];
 		}
 		str += '';
+		
 		while(str.indexOf(newWord) >= 0){
 			newLines.push(str.indexOf(newWord));
 			str = str.replace(newWord, '');
@@ -606,13 +609,15 @@ WordPrint.prototype ={
 		for(i = 0; i < len; i++){
 			s = str.substr(i, 1);
 			s = inSP(s);
-			sprites.push(all[s]);
+			sprites.push(all[s] != null ? all[s] : all[this.NOTFOUND_WORD]);
 		}
 		
 		len = sprites.length;
 		x = posx;
 		y = posy;
-		for(i = 0; i < len; i++){
+		offset = this.readMode ? this.readChars : 0;
+		
+		for(i = offset; i < len; i++){
 			s = sprites[i];
 			if(enableNewLine && x + s.w > newLinePos){
 				newline();
@@ -621,12 +626,15 @@ WordPrint.prototype ={
 				newline();
 				newLines.shift();
 			}
-			if(enableMaxRow && y + s.h > maxRowPos){
-				break;
+			if(enableMaxRow && y + s.h >= maxRowPos){
+				return i;
+//				break;
 			}
 			scr.drawSpriteChunk(s, x, y);
 			x += s.w;
 		}
+		
+		return -1;
 		
 	},
 
@@ -782,21 +790,35 @@ WordPrint.prototype ={
 		this.makeCustomCanvasSprite();
 	},
 	
-
+	resetRead: function(){
+		this.readChars = 0;
+	},
+	
+	read: function(str, x, y, color, bgcolor)
+	{
+		var cnt, isEnd = false;
+		
+		this.readMode = true;
+		cnt = this.print(str, x, y, color, bgcolor);
+		this.readMode = false;
+		
+		this.readChars = cnt;
+		if(cnt < 0){
+			isEnd = true;
+			this.readChars = 0;
+		}
+		
+		return isEnd;
+	},
 
 	print: function(str, x, y, color, bgcolor)
 	{
-		// var startTime = performance.now();
 		if(x != null){this.position_x = x;}
 		if(y != null){this.position_y = y;}
 		if(color != null){this.color = color;}
 		if(bgcolor != null){this.bgcolor = bgcolor;}
 		this.swapColor();
-		this.drawWord(str);
-//		this.parse(str);
-//		this.draw();
-		// var endTime = performance.now();
-		// console.log(str, endTime - startTime);
+		return this.drawWord(str);
 	},
 	
 	hide: function(){
