@@ -236,7 +236,21 @@ SceneTransition.prototype = {
 		 this.sceneCurrent = null;
 	},
 	
-	current: function(){
+
+	current: function(name){
+		var rem, current;
+		if(name){
+			rem = this.removeOrder(name);
+			if(rem != null){
+				this.scenePrevious = this.sceneCurrent;
+				current = this.sceneCurrent;
+				if(current == null){
+					return rem;
+				}
+				this.sceneOrder.unshift({name: current.name, duration: current.duration, count: current.count, params: current.params});
+				this.sceneCurrent = rem;
+			}
+		}
 		return this.sceneCurrent;
 	},
 	
@@ -250,29 +264,39 @@ SceneTransition.prototype = {
 	},
 	
 	unshiftOrder: function(funcName, duration, params){
+		var current = this.sceneCurrent;
+		if(current != null){
+			this.sceneCurrent = null;
+			this.sceneOrder.unshift({name: current.name, duration: current.duration, count: current.count, params: current.params});
+		}
 		this.sceneOrder.unshift({name: funcName, duration: duration, count: 0, params: params});
 	},
 	
 	removeOrder: function(name){
 		var res;
 		if(name == null){
-			res = {order: this.sceneOrder.slice(), current: this.sceneCurrent};
+			res = this.sceneOrder.slice();
 			this.sceneOrder = [];
 			this.sceneCurrent = null;
 			return res;
 		}
+		
+		//TODO 重複対応するか
 		this.sceneOrder = this.sceneOrder.filter(function(a){
 			if(a.name == name){
-				res = {order: [a], current: null};
+				res = a;
 			}
 			return a.name != name;
 		});
+		
 		if(this.sceneCurrent != null && this.sceneCurrent.name == name){
-			res = {order: [], current: this.sceneCurrent};
+			res = this.sceneCurrent;
 			this.sceneCurrent = null;
 			return res;
 		}
-		return {order: [], current: null};
+
+		return res;
+//		return {order: [], current: null};
 	},
 	
 	transition: function(caller){
@@ -320,3 +344,12 @@ function drawDebugCell(scroll, pointControll, wordprint, color){
 	//戻す
 	wordprint.setScroll(backScroll);
 }
+
+var COLOR_BLACK = [0, 0, 1, 255];
+var COLOR_GRAY = [124, 124, 124, 255];
+var COLOR_LGRAY = [188, 188, 188, 255];
+var COLOR_WHITE = [252, 252, 252, 255];
+var COLOR_HLGREEN = [184, 248, 184, 255];
+var COLOR_OCEAN = [0, 64, 88, 255];
+var COLOR_LBLUE = [164, 228, 252, 255];
+var COLOR_RED = [247, 49, 0, 255];
