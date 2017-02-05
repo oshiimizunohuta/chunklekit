@@ -157,7 +157,7 @@ Rect.prototype = {
 		if(typeof x == 'string'){
 			x = x.trim();
 			if(x.indexOf('*') >= 0){
-				mul = x.replace('*') | 0;
+				mul = x.replace('*') * 1;
 			}else if(x.indexOf('/') >= 0){
 				mul = 1 / x.replace('/');
 			}
@@ -250,50 +250,140 @@ function makeRect(x, y, w, h)
 	return rects;
 }
 
-
+/**
+ * イージング
+ * @param {value} s Start value
+ * @param {value} e End value 
+ * @param {value} t Duration frame count
+ * @returns {Ease}
+ */
 function Ease(){
 	this.count;
 	this.range;
 	this.start = 0;
 	this.division;
-	this.time;
+	this.duration;
 	this.func;
 }
 
 Ease.prototype = {
-	init: function(s, e, t){
+	init: function(s, e, d){
 		this.count = 0;
 		this.start = s;
 		this.end = e;
 		this.range = e - s;
-		this.time = t;
+		this.duration = d;
 	},
 	
-	exp: function(s, e, t){
+	linear: function(e_in, e_out){
 		var self = this;
-		this.init(s, e, t);
-		this.division = t * 0.1;
+//		this.division = t * 0.01;
+		func = function(){
+			return self.count / self.duration;
+		};
+		
+		return func;
+		
+	},
+	
+	exp: function(s, e, d){
+		var self = this;
+		this.init(s, e, d);
+		this.division = d * 0.01;
 		this.func = function(){
-			return 1 / Math.exp(self.division / (self.count + 1));
+			return 1 / Math.exp(self.division / (self.count + 0.001));
 		};
 	},
 	
-	swing: function(s, e, t){
+	swing: function(s, e, d){
 		var self = this;
-		this.init(s, e, t);
-		this.division = t;
+		this.init(s, e, d);
+		this.division = d;
 		this.func = function(){
 			return 0.5 - Math.cos(self.count * (Math.PI / self.division)) / 2;
 		};
 	},
 	
-	inout: function(s, e, t){
+	cubic: function(e_in, e_out){
+		var func, self = this;
+		if(e_in && !e_out){
+			func = function(){
+				var t = self.count / self.duration;
+				return t * t * t;
+			};
+		}else if(!e_in && e_out){
+			func = function(){
+				var t = (self.count / self.duration) - 1;
+				return (t * t * t) + 1;
+			};
+		}else{
+			func = function(){
+				var t = self.count / (self.duration / 2), t2 = t - 2;
+				return t < 1 ? t * t * t / 2 : ((t2 * t2 * t2) + 2) / 2;
+			};
+		}
+		return func;
+	},
+	
+	quartic: function(e_in, e_out){
+		var func, self = this;
+		if(e_in && !e_out){
+			func = function(){
+				var t = self.count / self.duration;
+				return t * t * t * t;
+			};
+		}else if(!e_in && e_out){
+			func = function(){
+				var t = (self.count / self.duration) - 1;
+				return -((t * t * t * t) - 1);
+			};
+		}else{
+			func = function(){
+				var t = self.count / (self.duration / 2), t2 = t - 2;
+				return t < 1 ? t * t * t * t / 2 : -((t2 * t2 * t2 * t2) - 2) / 2;
+			};
+		}
+		return func;
+	},
+	
+	in: function(s, e, d, type){
 		var self = this;
-		this.init(s, e, t);
-		this.division = t;
-		this.func = function(){
-			return 1 - Math.exp(-8 * Math.pow(self.count / self.division, 3));
-		};
+		this.init(s, e, d);
+		this.division = d;
+		if(type && this[type]){
+			this.func = this[type](true, false);
+		}else{
+			this.func = this.cubic(true, false);
+		}
+		
+	},
+	
+	out: function(s, e, d, type){
+		var self = this;
+		this.init(s, e, d);
+		this.division = d;
+		if(type && this[type]){
+			this.func = this[type](false, true);
+		}else{
+			this.func = this.cubic(false, true);
+//			this.func = function(){
+//				return 0.5 - Math.cos(self.count * (Math.PI / self.division)) / 2;
+//			};
+		}
+		
+	},
+	
+	inout: function(s, e, d, type){
+		var self = this;
+		this.init(s, e, d);
+		this.division = d;
+		if(type && this[type]){
+			this.func = this[type](true, true);
+		}else{
+			this.func = function(){
+				return 1 - Math.exp(-8 * Math.pow(self.count / self.division, 3));
+			};
+		}
 	},
 	
 	
@@ -301,9 +391,12 @@ Ease.prototype = {
 		if(this.func == null){
 			return this.start;
 		}
-		var p = this.func();
-		this.count = this.count < this.time ? this.count + 1 : this.time;
-		return p * this.range + this.start;
+		if(this.count < this.duration){
+			this.count++;
+			return (this.func() * this.range) + this.start;
+		}else{
+			return this.range + this.start;
+		}
 	}
 };
 
@@ -475,6 +568,7 @@ SpriteBone.prototype = {
 		this.partsArray = [];
 		this.local = makePosition();
 		this.global = makePosition();
+		this.visible = true;
 	},
 	//{name: spriteQuery}
 	addPartsBySpriteQuery: function(resourceName, parts){
@@ -524,17 +618,20 @@ SpriteBone.prototype = {
 		var parts = this.partsArray
 			, sortparts = []
 			, bonepos = this.global
-			;
-			sortparts = parts.slice().sort(function(a, b){
-				var c = a.local.z - b.local.z;
-				return c;
-//				return c == 0 ? -1 : c;
-			});
-			
-			sortparts.forEach(function(a){
-				a.drawTo(scroll, bonepos);
-			})
 		;
+		if(this.visible == false){
+			return;
+		}
+			
+		sortparts = parts.slice().sort(function(a, b){
+			var c = a.local.z - b.local.z;
+			return c;
+//				return c == 0 ? -1 : c;
+		});
+
+		sortparts.forEach(function(a){
+			a.drawTo(scroll, bonepos);
+		});
 	},
 
 };
@@ -606,6 +703,18 @@ function str_pad(input, pad_length, pad_string, pad_type)
 //	dulog(charArray);
 }
 
+function numFormat(num, length)
+{
+	var addcount, i;
+	num = parseInt(num) + '';
+	addcount = length - num.length;
+	for(i = 0; i < addcount; i++){
+		num = '0' + num;
+	}
+	
+	return num.slice(num.length - length);
+}
+
 function clone(src){
 	var dst, k
 	;
@@ -668,33 +777,71 @@ function sendToAPIServer(method, api, params, func, errorFunc)
 {
 	var query = [], key, x = new XMLHttpRequest();
 	if(APIServer.url == null){console.error('not initialize api server'); return;}
-	if(func != null){
-		x.onreadystatechange = function(){
-			var j;
-			switch(x.readyState){
-				case 0:break;//オブジェクト生成
-				case 1:break;//オープン
-				case 2:break;//ヘッダ受信
-				case 3:break;//ボディ受信
-				case 4:
-							if((200 <= x.status && x.status < 300) || (x.status == 304)){
-								j = x.responseText;
-								try{
-									j = typeof j == 'string' ? JSON.parse(j) : '';
-								}catch(e){
-									j = null;
-								}
-								func(j);
-								x.abort();
-							}else{
-								errorFunc();
-								x.abort();
-							}
-							 break;//send()完了
+//	if(func != null){
+//		x.onreadystatechange = function(){
+//			var j;
+//			switch(x.readyState){
+//				case 0:break;//オブジェクト生成
+//				case 1:break;//オープン
+//				case 2:break;//ヘッダ受信
+//				case 3:break;//ボディ受信
+//				case 4:
+//							if((200 <= x.status && x.status < 300) || (x.status == 304)){
+//								j = x.responseText;
+//								try{
+//									j = typeof j == 'string' ? JSON.parse(j) : '';
+//								}catch(e){
+//									j = null;
+//								}
+//								func(j);
+//								x.abort();
+//							}else{
+////								x.ontimeout();
+//								x.abort();
+//							}
+//							 break;//send()完了
+//			}
+//		//	func;
+//		};
+//	}
+
+	x.timeout = 5000;
+	
+	x.onload = func != null ? function () {
+		var j;
+		if (x.readyState === 4) {
+			if (x.status === 200) {
+				try{
+					j = x.responseText;
+					j = typeof j == 'string' ? JSON.parse(j) : '';
+				}catch(e){
+					j = null;
+				}
+				func(j);
+			} else {
+				console.error(x.statusText);
 			}
-		//	func;
+		}
+	} : function () {
+		return false;
+	};
+	
+	if(errorFunc != null){
+		x.ontimeout = function(e){
+			errorFunc(e);
+			return false;
+		};
+		x.onerror = function(e){
+			errorFunc(e);
+			return false;
+		};
+		x.onabort = function(e){
+			errorFunc(e);
+			return false;
 		};
 	}
+		
+	
 	for(key in params){
 		query.push(key + '=' + params[key]);
 	}
@@ -707,6 +854,7 @@ function sendToAPIServer(method, api, params, func, errorFunc)
 	}
 	x.withCredentials = true;
 	x.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded;charset=UTF-8');
+
 	// Set-Cookie:LITROSOUND=8lr6fpmr30focapfnejn807mo5;
 	x.send(str);
 };
