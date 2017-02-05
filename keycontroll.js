@@ -95,7 +95,7 @@ function keyStateCheck()
 }
 
 function setKeySetCheck(func){
-	KEYSTATE_CHECKFUNC = func;
+	KEYSTATE_CHECKFUNC = func != null ? func : function(){return;};
 }
 
 /**
