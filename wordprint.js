@@ -82,7 +82,7 @@ WordPrint.prototype ={
 		this.coloredCanvasSprite = {};
 		this.scroll;
 		
-//		this.initSourceCanvas();
+		this.setColor(this.DEFAULT_COLOR, this.DEFAULT_BGCOLOR)
 		this.setFontSize(sizetype);
 		
 		this.wordIds;// = new Array();
@@ -100,50 +100,55 @@ WordPrint.prototype ={
 		this.disp = true;
 	},
 	
-	initSourceCanvas: function()
+	//スプライトの元になるスクロールを生成
+	initSourceCanvasScroll: function(imageName)
 	{
-		var w, h, res
-		, img = this.sourceCanvasName
+		var w, h
 		, cs = new CanvasSprite()
 		, self = this
+		, resName = this.sourceCanvasName
+		, res = resourceSizeByName(resName)
+		, scroll = makeScroll(imageName, false, res.w, res.h)
+		, spr = makeSpriteRect(resName, scroll.getRect())
 		;
-		res = resourceSizeByName(img);
-		this.canvasSpriteSource[img] = cs;
-		if(res == null){
-			console.worn('resource image not found in initSourceCanvas');
-		}else{
-			this.setColor(this.DEFAULT_COLOR, this.DEFAULT_BGCOLOR);
-			cs.init(img, 0, 0, res.w, res.h);
-		}
+		
+		//白紙のスクロールに画像を貼付け
+		scroll.drawSpriteInfo(spr.makeSpriteInfo(0, 0));
+		//デフォルトソース
+		this.canvasSpriteSource[imageName] = scroll;
+		
+		return scroll;
 	},
 	
 	/**
 	 * 全ての文字をスプライト格納
 	 * @returns {undefined}
 	 */
-	makeAllSprites: function()
+	initAllSprites: function()
 	{
 		var all = this.allWordSprites
 			, w = this.moji_hira + this.moji_kata + this.moji_alph + this.moji_suji
 			, spr = {}, i, len = w.length
-			, cq = this.colorQuery()
 			, imageName = this.getImageName()
 			, q, space = this.soundmarkEnable ? this.SPACE_CODE + ';' : ''
 			, smark = this.soundmarkEnable ? this.soundmarks : {}
-			, opt
-			, font = this.fontSize
+			, scroll, scrollRect
 		;
 		
-		if(this.coloredCanvasSprite[imageName] == null){
-			this.makeCustomCanvasSprite();
-		}
-		
 		if(all[imageName] == null){
+			scroll = this.initSourceCanvasScroll(imageName);
+			scrollRect = scroll.getRect();
+			appendImage(imageName, scroll.canvas, this.chipSize, this.vChipSize);
+			swapColorImageData(scroll.ctx
+				, [[this.DEFAULT_COLOR, this.getColor()]
+				, [this.DEFAULT_BGCOLOR, this.getBGColor()]]
+				, scroll.getRect()
+			);
 			all[imageName] = {vertical: {}, horizon: {}};
 		}else{
 			return;
 		}
-			
+		
 		spr = {};
 		for(i = 0; i < len; i++){
 			q = i in smark == false ? space + i : i + ';' + smark[i];
@@ -159,39 +164,6 @@ WordPrint.prototype ={
 		all[imageName].horizon = spr;
 		
 	},
-	
-	/**
-	 * カラースワップ開始
-	 * スワップパレットに格納
-	 */
-	makeCustomCanvasSprite: function()
-	{
-		var cs = this.canvasSpriteSource
-			, c
-			, name = this.getImageName()
-			, sourceName = this.sourceCanvasName
-		;
-		// console.log(this.color, this.bgcolor);
-//		if(resourceByName(name) == null){
-//			name = this.sourceCanvasName;
-//		}
-		if(this.coloredCanvasSprite[name] == null){
-//			c = copyCanvasSprite(cs);
-			c = cs[sourceName];
-			c.pushSwapColor(this.getColor(), this.DEFAULT_COLOR);
-			c.pushSwapColor(this.getBGColor(), this.DEFAULT_BGCOLOR);
-			c.swapStart();
-			c.swapImage.name = this.getImageName();
-//			this.coloredCanvasSprite[colorQuery] = makeSpriteInCanvas(c.swapImage, 0, 0, c.swapImage.width, c.swapImage.height);
-			this.coloredCanvasSprite[name] = c;
-			appendImage(c.swapImage.name, c.swapImage, this.chipSize, this.vChipSize);
-			
-			this.makeAllSprites();
-			// console.log(c);
-			cs.swapImage = null;
-		}
-		
-	},
 
 	setScroll: function(scrollStr)
 	{
@@ -204,14 +176,22 @@ WordPrint.prototype ={
 	colorQuery: function()
 	{
 		var colorQuery = [];
-		colorQuery.push(this.color != null ? this.color.join(',') : '');
-		colorQuery.push(this.bgcolor != null ? this.bgcolor.join(',') : '');
+		if(this.color != null){
+			colorQuery.push(this.color != null ? this.color.join(',') : '');
+		}
+		if(this.bgcolor != null){
+			colorQuery.push(this.bgcolor != null ? this.bgcolor.join(',') : '');
+		}
 		return colorQuery.join(':');
 	},
 	
 	getImageName: function()
 	{
-		return this.fontSize + ':' + this.colorQuery();
+		var name = this.fontSize
+			, cq = this.colorQuery()
+		;
+		name +=  cq.length > 0 ?  ':' + this.colorQuery() :  '';
+		return name;
 	},
 	
 	getWordSprites: function(imageName, align)
@@ -458,11 +438,8 @@ WordPrint.prototype ={
 			console.log('font no select!!');
 			return;
 		}
-		this.initSourceCanvas();
 		this.fontSize = sizetype;
-//		this.initCanvas();
-		this.makeAllSprites();
-		this.setColor(this.DEFAULT_COLOR, this.DEFAULT_BGCOLOR);
+		this.initAllSprites();
 	},
 	
 	setMarkAlign: function(align)
@@ -787,7 +764,8 @@ WordPrint.prototype ={
 
 	
 	swapColor: function(){
-		this.makeCustomCanvasSprite();
+//		this.makeCustomCanvasSprite();
+		this.initAllSprites();
 	},
 	
 	resetRead: function(){

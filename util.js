@@ -23,8 +23,8 @@ Rect.prototype = {
 		this.z = 0;
 		this.ex = x + w;
 		this.ey = y + h;
-		this.toString = this.convertString();
-		this.toArray = this.convertArray();
+//		this.toString = this.convertString();
+//		this.toArray = this.convertArray();
 		this.overlapRect = [];
 		this.appendRect = [];
 		this.SORTAXIS = ['x', 'y', 'z'];
@@ -37,12 +37,10 @@ Rect.prototype = {
 	{
 		//OR//
 		var orResult = false, i, len;
+		this.reculc();
 		if(typeof x == 'object'){
 			return  this.isContainRect(x);
 		}
-		
-		this.reculc();
-		
 		// if(this.x <= x && this.y <= y && (this.x + this.w) > x && (this.y + this.h) > y){
 		if(this.x <= x && this.y <= y && this.ex > x && this.ey > y){
 			orResult = orResult || true;
@@ -64,7 +62,7 @@ Rect.prototype = {
 	// r in this
 	isContainRect: function(r)
 	{
-		this.reculc();
+//		this.reculc();
 		var orResult = false, i, len;
 		if(this.isContain(r.x, r.y) && this.isContain(r.x, r.ey - 1) && this.isContain(r.ex - 1, r.y) && this.isContain(r.ex - 1, r.ey - 1)){
 			orResult |= true;
@@ -84,7 +82,7 @@ Rect.prototype = {
 	
 	isOverlap: function(r)
 	{
-		this.reculc();
+//		this.reculc();
 		var orResult = false, i, len;
 		if(this.isContain(r.x, r.y) || this.isContain(r.x, r.ey - 1) || this.isContain(r.ex - 1, r.y) || this.isContain(r.ex - 1, r.ey - 1)){
 			orResult |= true;
@@ -170,15 +168,24 @@ Rect.prototype = {
 		
 		this.ex = this.x + this.w;
 		this.ey = this.y + this.h;
-		this.toString = this.convertString();
-		this.toArray = this.convertArray();
+//		this.toString = this.convertString();
+//		this.toArray = this.convertArray();
 
 		return this;
 	},
 	
+	toString: function(){
+		return this.convertString();
+	},
+	
 	convertString: function()
 	{
-		return [this.x, this.y, this.w, this.h].join(' ');
+		var s = ' ';
+		return this.x + s + this.y + s +  this.w + s + this.h;
+	},
+	
+	toArray: function(){
+		return this.convertArray(null);
 	},
 	
 	convertArray: function(fillValue)

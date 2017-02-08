@@ -418,7 +418,7 @@ function drawDebugCell(scroll, pointControll, wordprint, color){
 	start = {x: toc(start.x), y: toc(start.y)};
 	if(left){
 		r = makeRect([start.x, start.y, pos.x, pos.y].join(' ') + ' :pos' );
-		scroll.debugRect(makeRect(r.toString + ' *8'), color);
+		scroll.debugRect(makeRect(r.toString() + ' *8'), color);
 		
 		str = numFormat(r.x, 2) + ':' + numFormat(r.y, 2) + '$n' 
 			+ numFormat(r.w, 2) + ':' + numFormat(r.h, 2);
@@ -446,6 +446,8 @@ function drawDebugCell(scroll, pointControll, wordprint, color){
 	}
 	wordprint.setScroll(scroll);
 	wordprint.print(str, cto(x), cto(y), color, bgcolor);
+	
+	wordprint.print('IMAGE RESOURCES: ' + Object.keys(imageResource.data).length, cto(0), cto(29), color, bgcolor);
 	
 	//戻す
 	wordprint.setScroll(backScroll);

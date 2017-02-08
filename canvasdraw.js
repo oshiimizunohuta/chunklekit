@@ -25,6 +25,7 @@ function makeCanvasScroll(scrollName, insertID){
 	return scr;
 };
 
+
 /**
  * 描画リピート
  */
@@ -53,6 +54,7 @@ CanvasScroll.prototype = {
 	init: function(name, mainFlag, width, height, insertID){
 		var size = getDisplaySize()
 			, scrsize = getScrollSize()
+			, display
 			;
 		
 		this.canvas = document.getElementById(name);
@@ -81,6 +83,7 @@ CanvasScroll.prototype = {
 			display = 'inline';///////////////////////
 		}
 		this.name = name;
+		this.canvas.name = name;
 		this.canvas.width = width;
 		this.canvas.height = height;
 		this.canvas.style.width = width;
@@ -90,7 +93,7 @@ CanvasScroll.prototype = {
 		this.canvas.style.backgroundColor = "transparent";
 		this.mainFlag = mainFlag;
 		
-		this.ctx = contextInit(this.canvas);
+		this.ctx = initContext(this.canvas);
 		this.x = 0;
 		this.y = 0;
 //		canvasScrollBundle[name] = this;
@@ -117,7 +120,8 @@ CanvasScroll.prototype = {
 		if(h == null){h = this.canvas.height;}
 		if(x == null){x = this.x;}
 		if(y == null){y = this.y;}
-		targetScroll.ctx.drawImage(this.canvas, 0 | -x, 0 | -y);
+		targetScroll.ctx.drawImage(this.canvas, 0 | x, 0 | y, w, h);
+//		targetScroll.ctx.drawImage(this.canvas, 0 | -x, 0 | -y, w, h);
 	},
 
 	//拡大しない
@@ -678,6 +682,16 @@ CanvasScroll.prototype = {
 		this.canvas.style.left = x + "px";
 		this.canvas.style.top = y + "px";
 	},
+	
+	//※内容は削除される
+	resizeCanvas: function(w, h){
+		var c = this.canvas
+		;
+		c.width = w;
+		c.height = h;
+		c.style.width = w;
+		c.style.height = h;
+	},
 
 	getSize: function() {
 		var size = {}
@@ -688,7 +702,7 @@ CanvasScroll.prototype = {
 	},
 
 	getRect: function() {
-		return makeRect(this.x, this.y, this.canvas.width, this.canvas.width);
+		return makeRect(this.x, this.y, this.canvas.width, this.canvas.height);
 	},
 
 	screenShot: function()
@@ -724,6 +738,44 @@ CanvasScroll.prototype = {
 	},
 
 };
+
+function swapColorImageData(ctx, swaps, rect){
+	var tmp = ctx.getImageData(rect.x, rect.y, rect.w, rect.h)
+		, index1 = 0, index2 = 1, index3 = 2, index4 = 3
+		, data, swap, slen, from, to, p, i
+		, pixels = rect.w * rect.h
+	;
+	if(swaps.length == 0){
+		// no swqp empty swapcolors
+		return tmp;
+	}
+
+	data = tmp.data;
+	slen = swaps.length;
+	for(p = 0; p < pixels; p++){
+		for(i = 0; i < slen; i++){
+			swap = swaps[i];
+			from = swap[0];
+			to = swap[1];
+			if(data[index1] == from[0] && data[index2] == from[1] && data[index3] == from[2] && data[index4] == from[3]){
+				data[index1] = to[0];
+				data[index2] = to[1];
+				data[index3] = to[2];
+				data[index4] = to[3];
+				break;
+			}
+		}
+
+		index1 += 4;
+		index2 += 4;
+		index3 += 4;
+		index4 += 4;
+	}
+	
+	ctx.putImageData(tmp, rect.x, rect.y);	
+	return tmp;
+
+}
 
 function SSImgRemove(obj)
 {
@@ -798,7 +850,7 @@ function createCanvas(w, h)
 	}
 	return c;
 }
-function initContext(canvas)
+function initContext(canvas, clear)
 {
 	var ctx
 	;
@@ -807,7 +859,9 @@ function initContext(canvas)
 	ctx.webkitImageSmoothingEnabled = false;
 	ctx.mozImageSmoothingEnabled = false;
 	ctx.oImageSmoothingEnabled = false;
-	ctx.clearRect(0, 0, canvas.width, canvas.height);
+	if(clear == null || clear){
+		ctx.clearRect(0, 0, canvas.width, canvas.height);
+	}
 	// ctx.scale(-1, 1);
 	// ctx.translate(-canvas.width, 0);
 	return ctx;
@@ -825,14 +879,14 @@ function contextInit(canvas)
 var imageResource = function(){return;};
 
 imageResource.init = function(){
-	this.data = [];
+	this.data = {};
 	this.dirpath =  "./images/spritechips/";
 	this.extention =  ".png";
 	this.isLoadNum = 0;//ロードする数
 	this.loadcount = 0;//ロードした数
-	this.separateWidth = [];
-	this.separateHeight = [];
-	this.workSpace = [];
+	this.separateWidth = {};
+	this.separateHeight = {};
+	this.workSpace = {};
 	this.stack= [];
 	this.ctx = {};
 	this.loadRefreshTime = Date.now();
@@ -840,6 +894,8 @@ imageResource.init = function(){
 	this.multi = window.VIEWMULTI == null ? 1 : window.VIEWMULTI;
 };	
 imageResource.init();
+imageResource.onload = [];
+
 
 //imageResource.create = function(nameArray, sepWidth, sepHeight)
 imageResource.create = function(name, sepWidth, sepHeight, callbackEnable)
@@ -860,15 +916,64 @@ imageResource.create = function(name, sepWidth, sepHeight, callbackEnable)
 	img.name = name; //無理やりプロパティ
 	this.data[name] = img;
 };
+
+/**
+ * ロードされた
+ * イベントより呼び出されたものなのでthisはImageオブジェクト？
+ */
+imageResource.loaded = function (img){
+	var canvas, ctx, workSpace, i, data
+		, r = imageResource
+	;
+	r.loadcount++;	
+	
+	img = img.src == null ? this : img;
+	//make canvas & context
+	r.appendImage(img.name, img, null, null);
+	
+	//make workspace
+	r.workSpace[img.name] = r.makeWorkSpace(img, r.separateWidth[img.name], r.separateHeight[img.name]);
+	delete img;
+	if(imageResource.isload()){
+		console.log('Onload ImageResource.');
+		if(imageResource.onload.length == null){
+			imageResource.onload();
+		}else{
+			for(i = 0; i < imageResource.onload.length; i++){
+				imageResource.onload[i]();
+			}
+		}
+	}
+};
+
+imageResource.isload = function()
+{
+	if(this.loadcount == this.isLoadNum){
+		return true;
+	}
+	return false;
+};
+
 /**
  * プリロード用
  */
 imageResource.appendImage = function(name, img, sepWidth, sepHeight)
 {
-	this.separateWidth[name] = sepWidth;
-	this.separateHeight[name] = sepHeight;
+	var cv, ctx;
+	this.separateWidth[name] = sepWidth == null ? this.separateWidth[name] : sepWidth;
+	this.separateHeight[name] = sepHeight == null ? this.separateHeight[name] : sepHeight;
 
-	this.data[name] = img;
+	if(img.src != null){
+		cv = createCanvas(img.width, img.height);
+		ctx = initContext(cv);
+		ctx.drawImage(img, 0, 0);
+	}else{
+		cv = img;
+		ctx = initContext(cv, false);
+	}
+	
+	this.data[name] = cv;
+	this.ctx[name] = ctx;
 };
 
 
@@ -917,6 +1022,15 @@ imageResource.makeSprite = function(name, index)
 		, spr = new CanvasSprite()
 		;
 	spr.init(name, x, y, this.separateWidth[name], this.separateHeight[name]);
+	return  spr;
+};
+
+imageResource.makeSpriteRect = function(name, rect)
+{
+	var img = this.data[name]
+		, spr = new CanvasSprite()
+		;
+	spr.init(name, rect.x, rect.y, rect.w, rect.h);
 	return  spr;
 };
 
@@ -1022,58 +1136,13 @@ imageResource.height = function(name)
 };
 imageResource.makeWorkSpace = function(img, w, h)
 {
-	var canvas = document.createElement('canvas');
+	var canvas = document.createElement('canvas'), ctx;
 	canvas.width = w;
 	canvas.height = h;
-	ctx = contextInit(canvas);
+	ctx = initContext(canvas);
 	return {canvas:canvas, ctx:ctx, data: img};
 //	return {canvas:canvas, ctx:ctx, data: canvas};
 };
-/**
- * ロードされた
- * イベントより呼び出されたものなのでthisはImageオブジェクト？
- */
-imageResource.loaded = function (img){
-	var canvas, ctx, workSpace, i, data
-		, r = imageResource
-	;
-	r.loadcount++;	
-	
-	img = img.src == null ? this : img;
-	//make canvas & context
-	canvas = document.createElement('canvas');
-	canvas.width = img.width;
-	canvas.height = img.height;
-	ctx = contextInit(canvas);
-	ctx.drawImage(img, 0, 0);
-	imageResource.data[img.name] = canvas;
-	data = canvas;
-	imageResource.ctx[img.name] = ctx;
-	
-	//make workspace
-	r.workSpace[img.name] = r.makeWorkSpace(img, r.separateWidth[img.name], r.separateHeight[img.name]);
-	delete img;
-	if(imageResource.isload()){
-		console.log('Onload ImageResource.');
-		if(imageResource.onload.length == null){
-			imageResource.onload();
-		}else{
-			for(i = 0; i < imageResource.onload.length; i++){
-				imageResource.onload[i]();
-			}
-		}
-	}
-};
-
-imageResource.isload = function()
-{
-	if(this.loadcount == this.isLoadNum){
-		return true;
-	}
-	return false;
-};
-
-imageResource.onload = [];
 
 // [name, cellsize_x, cellsize_y]
 function loadImages(imageInfo, func)
@@ -1154,6 +1223,10 @@ function makeSprite(name, sprite)
 {
 	return imageResource.makeSprite(name, sprite);
 };
+function makeSpriteRect(name, rect)
+{
+	return imageResource.makeSpriteRect(name, rect);
+};
 function resourceSizeByName(name)
 {
 	return {w: imageResource.data[name].width, h: imageResource.data[name].height};
@@ -1185,6 +1258,146 @@ function resourceDraw(image, scr, x, y){
 	var m = 1;
 	image = (typeof image == 'string') ? resourceByName(name).data : image;
 	scr.ctx.drawImage(image, 0, 0, 0 | image.width, 0 | image.height, 0 | x * m, 0 | y * m, 0 | image.width * m, 0 | image.height * m);
+}
+
+/**
+ * @class SpriteQueryCanvas
+ * sprite query用スクロールの管理
+ */
+var SpriteQueryCanvas = {};
+SpriteQueryCanvas.imageName = 'spriteQuery';
+SpriteQueryCanvas.tmpImageName = 'tmpSpriteQuery';
+//SpriteQueryCanvas.prototype = {
+SpriteQueryCanvas.init = function(){
+	var name = SpriteQueryCanvas.imageName
+		, tname = SpriteQueryCanvas.tmpImageName;
+	this.scroll = makeScroll(name, false);
+	appendImage(name, this.scroll.canvas, CHIPCELL_SIZE, CHIPCELL_SIZE);
+	this.tmpScroll = makeScroll(tname, false);
+	appendImage(tname, this.tmpScroll.canvas, CHIPCELL_SIZE, CHIPCELL_SIZE);
+	
+	this.queries = {};
+	this.rects = {};
+	this.rowRects = [];
+	this.position = {x: 0, y: 0};
+	this.nullRect = makeRect(0, 0, 0, 0);
+};
+SpriteQueryCanvas.getBlankRect = function(rect){
+	var scrRect = this.scroll.getRect()
+	, rows = this.rowRects
+	, rowRect, x, y
+	, ex, ey = rows.length
+	;
+	for(y = 0; y < ey; y++){
+		rowRect = rows[y][0];
+		rowRect = rows[y].pop();
+		rows[y].push(rowRect);
+		ex = rows[y].length;
+		rect.reculc(rowRect.ex, rowRect.y);
+		if(rowRect.h != rect.h){
+			continue;
+		}
+		
+		if(scrRect.isContain(rect)){
+			this.position.x = ex;
+			this.position.y = y;
+			return rect;
+		}
+	}
+	if(rowRect != null){
+		rect.reculc(0, rowRect.y + rowRect.h);
+	}else{
+		rect.reculc(0, rect.y);
+	}
+	this.position.x = 0;
+	this.position.y = y;
+	this.resizeScroll(scrRect.w, rect.y + rect.h);
+	return rect;
+};
+	
+SpriteQueryCanvas.resizeScroll = function(w, h){
+	var s = this.scroll
+		, t = this.tmpScroll
+	;
+	if(s.canvas.width == w && s.canvas.height == h){
+		return;
+	}
+	s.drawto(t);
+	s.resizeCanvas(w, h);
+	t.drawto(s);
+	t.resizeCanvas(w, h);
+};
+	
+SpriteQueryCanvas.registQuery = function(name, rect)
+{
+	this.rects[name] = rect;
+	this.queries[rect.toString()] = name;
+};
+	
+SpriteQueryCanvas.registRowRect = function(x, y, size)
+{
+	var s = this.rowRects
+	;
+	s[y] = s[y] != null ? s[y] : s[y] = [];
+	s[y][x] = size;
+};
+	
+SpriteQueryCanvas.makeSpriteFromScroll = function(scroll){
+	var rect, find = this.rects[scroll.name] != null
+	;
+	rect = find ? this.rects[scroll.name] : this.getBlankRect(scroll.getRect());
+
+	scroll.drawto(this.scroll, rect.x, rect.y, rect.w, rect.h);
+	
+	if(!find){
+		this.registQuery(scroll.name, rect);
+		this.registRowRect(this.position.x, this.position.y, rect);
+	}
+	
+	return makeSpriteRect(SpriteQueryCanvas.imageName, rect);
+};
+
+SpriteQueryCanvas.copySprite = function(sprite, indexkey){
+	var rect, name = this.convertSpriteName(sprite, indexkey == null ? '' : indexkey)
+	;
+	if(indexkey != null && (name in this.rects)){
+		return makeSpriteRect(SpriteQueryCanvas.imageName, this.rects[name]);
+	}
+	//新しい領域を探す
+	rect = this.getBlankRect(sprite.getRect());
+	//領域に描画
+	this.scroll.drawSpriteInfo(sprite.makeSpriteInfo(rect.x, rect.y));
+	
+	//領域を登録
+	this.registQuery(name, rect);
+	this.registRowRect(this.position.x, this.position.y, rect);
+	
+	//領域からスプライトを作成
+	return makeSpriteRect(SpriteQueryCanvas.imageName, rect);
+};
+
+SpriteQueryCanvas.exists = function(sprite, indexkey){
+	var name = this.convertSpriteName(sprite, indexkey == null ? '' : indexkey)	
+	;
+	if(name in this.rects){
+		return this.rects[name];
+	}
+	return false;
+};
+
+SpriteQueryCanvas.convertSpriteName = function(sprite, key){
+	return sprite.name + '[' + sprite.getRect().toString() + ']' + key;
+};
+
+
+function getSQCSprite(name){
+	var c = SpriteQueryCanvas
+		, rect
+	;
+	if(c.rects[name] == null){
+		return false;
+	}
+	return makespriteRect(c.imageName, c.rects[name]);
 }
 
 /**
@@ -1294,6 +1507,7 @@ function convertChunk(spriteChunk, query){
 		, scroll, dirScroll, sname, maked, ids = [[]], rot, subChunk, subQuery = [[]]
 		, bspriteChunk = spriteChunk
 		, isReplaceQuery
+		, sqCanvas = SpriteQueryCanvas
 	;
 	query = query == null ? '' : query;
 	clen = spriteChunk.length;
@@ -1303,8 +1517,10 @@ function convertChunk(spriteChunk, query){
 	w = slen;
 	isReplaceQuery = query.indexOf(SPQ_REP) >= 0;
 	
-	sname = 'sprc-' + CONVERT_COUNT + '['+ sprite.name + ',' + w + ':' + h + ',' + sprite.x + ':' + sprite.y+ ']';
-	scroll = makeScroll(sname, false, sprite.w * w, sprite.h * h);
+//	sname = 'sprc-' + CONVERT_COUNT + '['+ sprite.name + ',' + w + ':' + h + ',' + sprite.x + ':' + sprite.y+ ']';
+	sname = 'sprc' + '['+ sprite.name + ',' + w + ':' + h + ',' + sprite.x + ':' + sprite.y+ ']';
+//	console.log(query);
+//	scroll = makeScroll(sname, false, sprite.w * w, sprite.h * h);
 	//sprite draw New Scroll
 	//スクロールサイズを算出
 	y = 0;
@@ -1321,6 +1537,8 @@ function convertChunk(spriteChunk, query){
 		}
 		y += sprite.h;
 	}
+//	scroll = makeScroll(sname, false, x, y);
+	sname = sprite.name + '['+ query + ']';
 	scroll = makeScroll(sname, false, x, y);
 	
 	//スプライト貼付け
@@ -1341,8 +1559,9 @@ function convertChunk(spriteChunk, query){
 	}
 
 	CONVERT_COUNT++;
-	maked = makeSpriteInCanvas(scroll.canvas, 0, 0, x, y);
-//	maked = makeSpriteInCanvas(scroll.canvas, 0, 0, w * sprite.w, h * sprite.h);
+//	maked = makeSpriteInCanvas(scroll.canvas, 0, 0, x, y);
+	
+	maked = sqCanvas.makeSpriteFromScroll(scroll);
 	
 	//id collect
 	for(j = 0; j < clen; j++){
@@ -1686,10 +1905,10 @@ var SPQ_RCOUNT = 0;
  */
 function makeSpriteQuery(name, spq, nstpat)
 {
-	var mtpat, nstMatch, sppat = [], sprite = [], chunkMap = [], rect
+	var nstMatch, sprite = [], chunkMap = [], rect
 	, spstr, i, j, rw, rh, ofy, chunkMapOfy, s, sst, ilen, jlen, mk, mt, prerect, sprstr
-	, sourceq = spq, dir, dirstr, baseMatch = ''
-	, SPQ_MESSAGE = []
+	, sourceq = spq, dir, baseMatch = ''
+	, SPQ_MESSAGE = [], image, cvs
 
 	, rectFillSub = function(chunk, query, rect){
 		var x, y, r = rect.convertArray(SPQ_EMPTY)
@@ -1708,6 +1927,14 @@ function makeSpriteQuery(name, spq, nstpat)
 		return repeatSprite(chunk, w, h);
 	}
 	;
+	if(getImage(SpriteQueryCanvas.imageName) == false){
+		SpriteQueryCanvas.init();
+	}
+	image = getImage(name + '[' + spq + ']');
+	if(image != false){
+//		return makeSprite(name + '[' + spq + ']', 0);
+	}
+	
 	SPQ_RCOUNT = SPQ_RCOUNT < 0 ? 0 : SPQ_RCOUNT;
 	SPQ_RCOUNT++;
 	if(	SPQ_RCOUNT > 200){
@@ -1828,7 +2055,7 @@ function makeSpriteQuery(name, spq, nstpat)
 					sprstr = s[j].replace(SPQ_REP, mk[0][0].chunkMap[0][0]).replace(SPQ_FORCE, '');
 					rect = makeRect(0, chunkMapOfy + i, mk[0][0].chunkMap[0].length * rw, mk[0][0].chunkMap.length * rh);
 					mk[0][0].chunkMap = rectFillMulti(mk[0][0].chunkMap, rw, rh);
-					SPQ_MESSAGE.push('RectFill($):' + rect.toString);
+					SPQ_MESSAGE.push('RectFill($):' + rect.toString());
 					rectFillSub(chunkMap, mk[0][0].chunkMap, rect);
 				}else{
 					//*^MULTIは考慮されている
@@ -1836,7 +2063,7 @@ function makeSpriteQuery(name, spq, nstpat)
 //					rect = queryToRect(sprstr.replace(SPQ_FORCE, ''));
 					rect.x = 0;
 					rect.y = chunkMapOfy + i;
-					SPQ_MESSAGE.push('RectFill:' + rect.toString);
+					SPQ_MESSAGE.push('RectFill:' + rect.toString());
 					rectFillSub(chunkMap, s[j].replace(SPQ_FORCE, ''), rect);
 				}
 				
@@ -1942,6 +2169,50 @@ function flipSprite(sprite, h, v)
 	if(h){sprite.hflip(h);}
 	return sprite;
 }
+
+function makeSpriteSwapColor(sprite, to, from, type)
+{
+	var sqc = SpriteQueryCanvas
+		, resSprites, key, q
+		;
+	
+	if(sprite instanceof Array){
+		resSprites = [];
+		sprite.forEach(function(s, i){
+			resSprites.push(makeSpriteSwapColor(s, to, from, type));
+		});
+		return resSprites;
+	}else if(sprite instanceof CanvasSprite === false && sprite instanceof Object){
+		resSprites = {};
+		for(key in sprite){
+			resSprites[key] = makeSpriteSwapColor(sprite[key], to, from, type);
+		}
+		return resSprites;
+	}
+//	sprite.name = resourceColorQuery();
+	q = swapColorQuery([to, from]);
+	if(sqc.exists(sprite, q)){
+		return sqc.copySprite(sprite, q);
+	}
+	sprite = sqc.copySprite(sprite, q);
+
+	if(type == null || type == 'set'){
+		sprite.setSwapColor(to, from);
+	}else if(type == 'push'){
+		sprite.pushSwapColor(to, from);
+	}else if(type == 'start'){
+		sprite.swapStart();
+	}else if(type == 'reset'){
+		sprite.resetSwapColor();
+	}
+	return sprite;
+}
+//
+//function makeSwapColor(toColors, fromColors){
+//	
+//}
+
+
 function swapColorSpriteRecursive(sprite, type, to, from)
 {
 	// try{
@@ -2025,22 +2296,38 @@ function spriteFromImage(name, index)
 	var sp = imageResource.makeSprite(name, index);
 	return sp;
 }
-////////
-////////
-////////
+
+function getImage(imageName)
+{
+	return imageResource.data[imageName] != null ? imageResource.data[imageName] : false;
+}
+
 /**
- * キャンバススプライト
- * @param img
- * @param x
- * @param y
- * @param w
- * @param h
- * @returns
+ * @param {colorArray} swaps - カラー配列
+ * @return {stirng} - カラー文字列
+ * カラースワップアクセス用連想キー取得
  */
+function swapColorQuery(swaps)
+{
+	return JSON.stringify(swaps);
+}
+////////
+////////
+////////
+
 function CanvasSprite(){return;}
 CanvasSprite.prototype = {
 
 	// init: function(img, x, y, w, h)
+/**
+ * キャンバススプライト
+ * @param img
+ * @param x imageのX座標
+ * @param y imageのY座標
+ * @param w spriteの幅
+ * @param h spriteの高さ
+ * @returns
+ */
 	init: function(name, x, y, w, h)
 	{
 		this.image = imageResource.data[name];
@@ -2060,6 +2347,7 @@ CanvasSprite.prototype = {
 		this.initCommon(name, x, y, w, h);
 	},
 	
+	// TODO 使用しなくなるかも
 	copySprite: function(sprite)
 	{
 		var name = 'copySprite_' + Object.keys(imageResource.data).length;
@@ -2106,6 +2394,18 @@ CanvasSprite.prototype = {
 		rects.init(x, y, this.w, this.h);
 		return rects;
 	},
+	
+	makeSpriteInfo: function(x, y)
+	{
+		return {sprite: this, x: x, y: y};
+	},
+
+	getRect: function()
+	{
+		var rects = new Rect();
+		rects.init(this.x, this.y, this.w, this.h);
+		return rects;
+	},
 
 	vflip: function(toggle)
 	{
@@ -2125,12 +2425,7 @@ CanvasSprite.prototype = {
 		var h = (-sprite.hFlipFlag + !sprite.hFlipFlag) | 0, v = (-sprite.hFlipFlag + !sprite.hFlipFlag) | 0;
 		this.ctx.translate(this.x, 0);
 		this.ctx.scale(-1, 1);
-		// this.x = this.image.width - this.x - this.w;
 		this.ctx.drawImage(this.image, this.x, 0);
-		// this.ctx.translate(this.image.width, this.image.height);
-		// this.x = this.x * -sprite.hFlipFlag;
-		// this.y = this.y * -sprite.vFlipFlag;
-		// this.x = this.image.width - this.x ;
 	},
 	
 	//回転非対応
@@ -2151,93 +2446,28 @@ CanvasSprite.prototype = {
 
 	/**
 	 * スクロール側で実行
-	 */
-	swapStart_o: function(bg)
-	{
-		var tmp, data, bgdata, index = 0
-			, from , to, pixels = this.w * this.h, p, slen, i, swaps = this.swaps, swap
-			, index1 = 0, index2 = 1, index3 = 2, index4 = 3
-		;
-		if(swaps == null){swaps = [];}
-		slen = swaps.length;
-		tmp = this.ctx.getImageData(this.x, this.y, this.w, this.h);
-		data = tmp.data; bgdata = bg.data;
-		for(p = 0; p < pixels; p++){
-			for(i = 0; i < slen; i++){
-				swap = swaps[i];
-				from = swap[0];
-				to = swap[1];
-				if(data[index1] == from[0] && data[index2] == from[1] && data[index3] == from[2] && data[index4] == from[3]){
-					data[index1] = to[0];
-					data[index2] = to[1];
-					data[index3] = to[2];
-					data[index4] = to[3];
-					break;
-				}
-			}
-			if(data[index4] == 0){
-				//アルファ描画補正
-				data[index1] = bgdata[index1];
-				data[index2] = bgdata[index2];
-				data[index3] = bgdata[index3];
-				data[index4] = bgdata[index4];
-			}
-			// index += 4;
-			index1 += 4;
-			index2 += 4;
-			index3 += 4;
-			index4 += 4;
-		}
-		this.swapImage = tmp;
-		return tmp;
-	},
-	/**
-	 * スクロール側で実行
+	 * カラーを変更を実行する
 	 */
 	swapStart: function()
 	{
 		var tmp, data, bgdata, index = 0
 			, from , to, pixels = this.w * this.h, p, slen, i, swaps = this.swaps, swap
 			, index1 = 0, index2 = 1, index3 = 2, index4 = 3
+			, query = swapColorQuery(this.name, swaps)
+//			, image = getImage(query)
+//			, getSprite = getSQCSprite(query)
+			, ctx
 		;
 		if(swaps == null){
 			swaps = [];
 		}
-		slen = swaps.length;
-		tmp = this.ctx.getImageData(this.x, this.y, this.w, this.h);
-		if(swaps.length == 0){
-			// no swqp empty swapcolors
-			return tmp;
-		}
 		
-		data = tmp.data;
-		// bgdata = bg.data;
-		for(p = 0; p < pixels; p++){
-			for(i = 0; i < slen; i++){
-				swap = swaps[i];
-				from = swap[0];
-				to = swap[1];
-				if(data[index1] == from[0] && data[index2] == from[1] && data[index3] == from[2] && data[index4] == from[3]){
-					data[index1] = to[0];
-					data[index2] = to[1];
-					data[index3] = to[2];
-					data[index4] = to[3];
-					break;
-				}
-			}
-
-			index1 += 4;
-			index2 += 4;
-			index3 += 4;
-			index4 += 4;
-		}
-		this.swapCanvas = createCanvas(this.w, this.h);
-		this.swapContext = initContext(this.swapCanvas);
-		this.swapContext.putImageData(tmp, 0, 0);
-		this.swapImage = this.swapCanvas;
-		this.swaps = [];
-
-		return tmp;
+//		if(getSprite != false){
+//			return getSprite;
+//		}
+		
+		return swapColorImageData(this.ctx, swaps, this.getRect());
+		
 	},
 	/**
 	 * 色を交換
