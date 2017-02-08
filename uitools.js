@@ -2,7 +2,7 @@
  * @name InterFaceTools Library
  * @since 2013-11-19 07:43:37
  * @author bitchunk
- * @version 0.1.0
+ * @version 0.1.1
  */
 
 function makeCursor(name, x, y, z){

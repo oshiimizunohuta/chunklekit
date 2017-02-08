@@ -2,7 +2,7 @@
  * @name Word Print Library
  * @since 2013-11-19 07:43:37
  * @author bitchunk
- * @version 0.6.0
+ * @version 0.7.0
  */
 // function wordPrint(scrolls, sizetype)
 function WordPrint(){return;};

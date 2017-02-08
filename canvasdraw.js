@@ -4,7 +4,7 @@
  * @name Canvas Draw Library
  * @since 2013-11-19 07:43:37
  * @author bitchunk
- * @version 0.4.4
+ * @version 0.4.5
  */
 //キャンバスことスクロール
 var canvasScrollBundle = {};
