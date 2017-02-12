@@ -254,6 +254,7 @@ SceneTransition.prototype = {
 		this.sceneOrder = [];
 		this.scenePrevious = null;
 		 this.sceneCurrent = null;
+		 this.triggerScene = null;
 		 
 		 this.nullFunc = function(info){
 			 return false;
@@ -270,7 +271,7 @@ SceneTransition.prototype = {
 	find: function(name, inIndex){
 		var f;
 //		inIndex = inIndex == null ? 0 : inIndex;
-		if(this.sceneCurrent.name == name){
+		if(this.sceneCurrent != null && this.sceneCurrent.name == name){
 			return this.sceneCurrent;
 		}
 		f = this.sceneOrder.find(function(a){
@@ -336,9 +337,11 @@ SceneTransition.prototype = {
 	},
 	
 	removeCurrentOrder: function(){
-		if(this.sceneCurrent != null){
+		var current = this.sceneCurrent;
+		if(current != null){
 			//即消し
-			this.scenePrevious = this.sceneCurrent;
+			current.remove = true;
+			this.scenePrevious = current;
 			this.sceneCurrent = null;
 		}else if(this.sceneOrder.length > 0){
 			//予約する
@@ -374,6 +377,11 @@ SceneTransition.prototype = {
 //		return {order: [], current: null};
 	},
 	
+	setTrigger: function(scene)
+	{
+		this.triggerScene = scene;
+	},
+	
 	transition: function(caller){
 		var order = this.sceneOrder
 			, current = this.sceneCurrent
@@ -381,17 +389,28 @@ SceneTransition.prototype = {
 		if(current == null && order.length == 0){
 			return;
 		}
+//		if(this.triggerScene != null && this.triggerScene.remove){
+//			this.triggerScene = null;
+//			return;
+//		}
 		
 		current = current == null ? order.shift() : current;
 		this.sceneCurrent = current;
 		
 		if((current.name != null && caller[current.name](current)) || current.remove){
-			this.scenePrevious = this.sceneCurrent;
-			this.sceneCurrent = null;
+//			this.scenePrevious = this.sceneCurrent;
+//			current.remove = true;
+//			this.sceneCurrent = null;
+			this.removeCurrentOrder();
+//			return;
 		}
 		current.count++;
 		if(current.duration > 0 && current.duration <= current.count){
-			this.sceneCurrent = null;
+//			this.scenePrevious = this.sceneCurrent;
+//			current.remove = true;
+//			this.sceneCurrent = null;
+			this.removeCurrentOrder();
+			return;
 		}
 		
 	},
