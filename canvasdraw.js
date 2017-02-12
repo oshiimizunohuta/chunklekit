@@ -100,6 +100,8 @@ CanvasScroll.prototype = {
 		this.maxSprites = SCROLL_MAX_SPRITES_DRAW;
 		this.maxSpritesStack = SCROLL_MAX_SPRITES_STACK;
 		this.drawInfoStack = [];
+		this.drawPrimary = true; //draw reliably even overdraw
+		this.blinkContinues = 0; 
 		
 		this.pointImage = this.ctx.createImageData(1, 1);
 		
@@ -110,6 +112,7 @@ CanvasScroll.prototype = {
 		this.mirrorMode = null;
 		this.mirrorH = false;
 		this.mirrorV = false;
+		
 	},
 
 	drawto: function(targetScroll, x, y, w, h)
@@ -282,13 +285,21 @@ CanvasScroll.prototype = {
 	drawDrawInfoStack: function()
 	{
 		var stack = this.drawInfoStack, drawInfo, cnt = 0
+			, overnum = stack.length - this.maxSprites
+			, blinkStart = this.maxSprites - overnum
+			, blinkRate = overnum < 0 ? 0 : overnum / this.maxSprites
+			, blinked = 0, primal = this.drawPrimary, tinue = this.blinkContinues
 		;
 		while(stack.length){
-			if(cnt++ > this.maxSprites){
-				return false;
-			}
 			drawInfo = stack.shift();
+
 			if(drawInfo.sprite != null){
+				if(!primal && blinkRate > 0){
+					if((blinkRate * cnt++) + tinue >= blinked){
+						blinked++;
+						continue;
+					}
+				}
 				this.drawSpriteInfo(drawInfo);
 			}else if(drawInfo.fillrect != null){
 				this.drawFillRectInfo(drawInfo);
@@ -296,6 +307,8 @@ CanvasScroll.prototype = {
 				this.drawSpriteLineInfo(drawInfo);
 			}
 		}
+		
+		this.blinkContinues = (blinkRate * cnt) + tinue - blinked;
 		return true;
 	},
 
@@ -2381,6 +2394,8 @@ CanvasSprite.prototype = {
 		this.chunkQuery = ''; //CurrentQuery
 		this.chunkIds = null; //CurrentSpriteId
 		this.chunkMap = [[]]; //ChunkQuery-Position
+		this.chunkIds = null; //CurrentSpriteId
+		this.primary = true; //draw reliably even overdraw
 	},
 	
 	drawScroll: function(scroll, x, y)
@@ -2490,7 +2505,7 @@ CanvasSprite.prototype = {
 		//to from 両方同じ要素数であること
 		to = to.colors != null ? to.colors : to;
 		from = from.colors != null ? from.colors : from;
-		if(to[0].length != null){
+		if(to[0] != null && to[0].length != null){
 			to.map(function(a, i){
 				self.swapColor(a, from[i]);
 			});
