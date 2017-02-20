@@ -557,6 +557,9 @@ SpritePart.prototype = {
 		if(!this.visible){
 			return this;
 		}
+		if(this.sprites[this.spriteNum] == null){
+			return this;
+		}
 		scroll.drawSprite(this.sprites[this.spriteNum], global.x + this.local.x, global.y + this.local.y);
 		return this;
 	},
