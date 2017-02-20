@@ -158,7 +158,7 @@ CanvasScroll.prototype = {
 					//%(dw*2) 球面スクロール考慮
 				}
 			}
-			targetScroll.ctx.drawImage(this.canvas, 0, 0 | (currentLine - pos.y + fixpos.y), 0 | sw, i - currentLine, 0 | pos.x + fixpos.x, currentLine, 0 | dw, i - currentLine);
+			targetScroll.ctx.drawImage(this.canvas, 0, 0 | (currentLine - pos.y + fixpos.y) % (dh * 2), 0 | sw, i - currentLine, 0 | pos.x + fixpos.x, currentLine, 0 | dw, i - currentLine);
 		}else if(this.rasterLines.vertical.length > 0){
 			raster = this.rasterLines.vertical;
 			for(i = 0; i < sw; i++){
@@ -320,7 +320,7 @@ CanvasScroll.prototype = {
 	   */
 	drawSprite: function(sprite, x, y)
 	{
-		this.drawInfoStack.push({sprite: sprite, x: x, y: y});
+		this.drawInfoStack.push(sprite.makeSpriteInfo(x, y));
 		if(this.maxSpritesStack < this.drawInfoStack.length){
 			this.drawInfoStack.shift();
 		}
@@ -331,12 +331,15 @@ CanvasScroll.prototype = {
 		var sprite, x, y
 				, image
 				, vf = 1, hf = 1, r, rox = 0, roy = 0, w = 0, h = 0, t
+				, vflip, hflip
 				;
 		sprite = spriteInfo.sprite;
 		x = spriteInfo.x;
 		y = spriteInfo.y;
 		w = sprite.w;
 		h = sprite.h;
+		vflip = spriteInfo.vflip;
+		hflip = spriteInfo.hflip;
 			
 		;
 		if(sprite.swapImage !== null){
@@ -351,12 +354,12 @@ CanvasScroll.prototype = {
 			image = sprite.image;
 		}
 		//反転
-		if(sprite.vFlipFlag || sprite.hFlipFlag){
-			hf = (-sprite.hFlipFlag + !sprite.hFlipFlag) | 0;
-			vf = (-sprite.vFlipFlag + !sprite.vFlipFlag) | 0;
+		if(vflip || hflip){
+			hf = (-hflip + !hflip) | 0;
+			vf = (-vflip + !vflip) | 0;
 			this.ctx.scale(hf, vf);
-			x = (x * hf) - (sprite.hFlipFlag * w);
-			y = (y * vf) - (sprite.vFlipFlag * h);
+			x = (x * hf) - (hflip * w);
+			y = (y * vf) - (vflip * h);
 			
 			// sprite.flip();
 		}
@@ -370,7 +373,7 @@ CanvasScroll.prototype = {
 			r = sprite.rotFlag;
 
 			r = (((1 == r) * 90) + ((2 == r) * 180) + ((3 == r) * 270)) * Math.PI / 180;
-			// rox = (x * hf) - (sprite.hFlipFlag * sprite.w);
+			// rox = (x * hf) - (spriteInfo.hflip * sprite.w);
 			rox = x;
 			roy = y;
 			x = (((Math.cos(r) + Math.sin(r)) * w) - w) * 0.5;
@@ -381,12 +384,9 @@ CanvasScroll.prototype = {
 		
 		if(sprite.swapImage != null){
 			//色変更描画
-			// sprite.workSpace.ctx.putImageData(image, 0, 0);
-			// this.ctx.drawImage(sprite.workSpace.canvas, 0, 0, 0 | sprite.w, 0 | sprite.h, 0 | (hf * x) - (sprite.w * sprite.hFlipFlag), 0 | (vf * y) - (sprite.h * sprite.vFlipFlag) , 0 | (sprite.w), 0 | (sprite.h));
 			this.ctx.drawImage(image, 0, 0, 0 | w, 0 | h, 0 | x, 0 | y, 0 | w, 0 | h);
 		}else{
 			//通常描画
-			// this.ctx.drawImage(image, 0 | sprite.x, 0 | sprite.y, 0 | sprite.w, 0 | sprite.h, 0 | (hf * x) - (sprite.w * sprite.hFlipFlag), 0 | (vf * y) - (sprite.h * sprite.vFlipFlag) , 0 | (sprite.w), 0 | (sprite.h));
 			this.ctx.drawImage(image, 0 | sprite.x, 0 | sprite.y, 0 | w, 0 | h, 0 | x, 0 | y, 0 | w, 0 | h);
 			
 		}
@@ -396,11 +396,10 @@ CanvasScroll.prototype = {
 			this.ctx.rotate(-r);
 			this.ctx.translate(-rox , -roy);
 		}
-		if(sprite.vFlipFlag || sprite.hFlipFlag){
+		if(vflip || hflip){
 			this.ctx.scale(hf, vf);
 			// sprite.flip();
 		}
-		//this.ctx.drawImage(otherScroll, otherScroll.x, otherScroll.y, otherScroll.w, otherScroll.h, otherScroll.x, otherScroll.y, otherScroll.w, otherScroll.h);
 		sprite = null;
 		image = null;
 	},
@@ -1288,6 +1287,9 @@ SpriteQueryCanvas.init = function(){
 	appendImage(name, this.scroll.canvas, CHIPCELL_SIZE, CHIPCELL_SIZE);
 	this.tmpScroll = makeScroll(tname, false);
 	appendImage(tname, this.tmpScroll.canvas, CHIPCELL_SIZE, CHIPCELL_SIZE);
+	//convertChunkで使います
+	this.convertScroll = makeScroll(tname, false);
+	appendImage(tname, this.convertScroll.canvas, CHIPCELL_SIZE, CHIPCELL_SIZE);
 	
 	this.queries = {};
 	this.rects = {};
@@ -1335,6 +1337,9 @@ SpriteQueryCanvas.resizeScroll = function(w, h){
 	if(s.canvas.width == w && s.canvas.height == h){
 		return;
 	}
+//	if(s.canvas.width > t.canvas.width || s.canvas.height > t.canvas.height){
+//		t.resizeCanvas(s.canvas.width, s.canvas.height);
+//	}
 	s.drawto(t);
 	s.resizeCanvas(w, h);
 	t.drawto(s);
@@ -1533,7 +1538,6 @@ function convertChunk(spriteChunk, query){
 //	sname = 'sprc-' + CONVERT_COUNT + '['+ sprite.name + ',' + w + ':' + h + ',' + sprite.x + ':' + sprite.y+ ']';
 	sname = 'sprc' + '['+ sprite.name + ',' + w + ':' + h + ',' + sprite.x + ':' + sprite.y+ ']';
 //	console.log(query);
-//	scroll = makeScroll(sname, false, sprite.w * w, sprite.h * h);
 	//sprite draw New Scroll
 	//スクロールサイズを算出
 	y = 0;
@@ -1550,9 +1554,10 @@ function convertChunk(spriteChunk, query){
 		}
 		y += sprite.h;
 	}
-//	scroll = makeScroll(sname, false, x, y);
 	sname = sprite.name + '['+ query + ']';
-	scroll = makeScroll(sname, false, x, y);
+	scroll = SpriteQueryCanvas.convertScroll;
+	scroll.resizeCanvas(x, y);
+	scroll.name = sname;
 	
 	//スプライト貼付け
 	y = 0;
@@ -1565,15 +1570,13 @@ function convertChunk(spriteChunk, query){
 			if(sprite == null){
 				continue;
 			}
-			scroll.drawSpriteInfo({sprite: sprite, x: x, y: y});
+			scroll.drawSpriteInfo(sprite.makeSpriteInfo(x, y));
 			x += sprite.w;
 		}
 		y += sprite.h;
 	}
 
 	CONVERT_COUNT++;
-//	maked = makeSpriteInCanvas(scroll.canvas, 0, 0, x, y);
-	
 	maked = sqCanvas.makeSpriteFromScroll(scroll);
 	
 	//id collect
@@ -1597,20 +1600,19 @@ function convertChunk(spriteChunk, query){
 		maked.chunkIds = ids;
 	}
 	//chunkmap collect
-	y = 0;
-	for(j = 0; j < clen; j++){
-		// subQuery[y] = [];
-		chunk = spriteChunk[j];
-		slen = chunk.length;
-		x = 0;
-		for(i = 0; i < slen; i++){
-			sprite = chunk[i];
-			if(sprite == null){
-				continue;
-			}
-		}
-		y += h;
-	}
+//	y = 0;
+//	for(j = 0; j < clen; j++){
+//		chunk = spriteChunk[j];
+//		slen = chunk.length;
+//		x = 0;
+//		for(i = 0; i < slen; i++){
+//			sprite = chunk[i];
+//			if(sprite == null){
+//				continue;
+//			}
+//		}
+//		y += h;
+//	}
 	return maked;
 }
 
@@ -2412,7 +2414,7 @@ CanvasSprite.prototype = {
 	
 	makeSpriteInfo: function(x, y)
 	{
-		return {sprite: this, x: x, y: y};
+		return {sprite: this, x: x, y: y, vflip: this.vFlipFlag, hflip: this.hFlipFlag, rot: this.rotFlag};
 	},
 
 	getRect: function()
