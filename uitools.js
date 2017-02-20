@@ -246,7 +246,11 @@ CUCursor.prototype = {
 	
 };
 
-
+function makeScene(){
+	var s = new SceneTransition();
+	s.init();
+	return s;
+}
 function SceneTransition(){return;}
 SceneTransition.prototype = {
 	init: function(){
@@ -389,26 +393,19 @@ SceneTransition.prototype = {
 		if(current == null && order.length == 0){
 			return;
 		}
-//		if(this.triggerScene != null && this.triggerScene.remove){
-//			this.triggerScene = null;
-//			return;
-//		}
+		if(this.triggerScene != null){
+			this.triggerScene = this.triggerScene.remove ? null : this.triggerScene;
+			return;
+		}
 		
 		current = current == null ? order.shift() : current;
 		this.sceneCurrent = current;
 		
 		if((current.name != null && caller[current.name](current)) || current.remove){
-//			this.scenePrevious = this.sceneCurrent;
-//			current.remove = true;
-//			this.sceneCurrent = null;
 			this.removeCurrentOrder();
-//			return;
 		}
 		current.count++;
 		if(current.duration > 0 && current.duration <= current.count){
-//			this.scenePrevious = this.sceneCurrent;
-//			current.remove = true;
-//			this.sceneCurrent = null;
 			this.removeCurrentOrder();
 			return;
 		}
@@ -471,6 +468,9 @@ function drawDebugCell(scroll, pointControll, wordprint, color){
 	//戻す
 	wordprint.setScroll(backScroll);
 }
+//TODO パレット画像から色配列を取得する仕組みを作る
+//TODO パレットを名前から取得できるようにする
+//TODO パレットを輝度変更できるような２次元配列
 
 var COLOR_BLACK = [0, 0, 1, 255];
 var COLOR_GRAY = [124, 124, 124, 255];
@@ -478,11 +478,10 @@ var COLOR_LGRAY = [188, 188, 188, 255];
 var COLOR_WHITE = [252, 252, 252, 255];
 var COLOR_HLGREEN = [184, 248, 184, 255];
 var COLOR_OCEAN = [0, 64, 88, 255];
-var COLOR_LBLUE = [164, 228, 252, 255];
 var COLOR_RED = [248, 56, 0, 255]; //canvasdraw.jsを上書き
 
 var COLOR_MIDNIGHT = [0, 0, 188, 255];
-var COLOR_MIDBLUE = [0, 88, 248, 255];
+var COLOR_MEDBLUE = [0, 88, 248, 255];
 var COLOR_ROYALBLUE = [104, 136, 252, 255];
 var COLOR_CORNFLOWER = [184, 184, 248, 255];
 
@@ -494,4 +493,32 @@ var COLOR_GREENYELLOW = [216, 248, 120, 255];
 var COLOR_BLUE = [0, 0, 252, 255];
 
 var COLOR_WHERET = [252, 224, 168, 255];
+
+var COLOR_ORANGERED = [248, 56, 0, 255];
+var COLOR_CORAL = [248, 120, 88, 255];
+var COLOR_PEACHPUFF = [240, 208, 176, 255];
+
+var COLOR_CARROT = [228, 92, 16, 255];
+var COLOR_SANDYBROWN = [252, 160, 68, 255];
+var COLOR_MOCCASIN = [252, 224, 168, 255];
+
 var COLOR_DARKGOLDENROD = [172, 124, 0, 255];
+var COLOR_BRIGHTYELLOW = [248, 184, 0, 255];
+var COLOR_KHAKI = [248, 216, 120, 255];
+
+var COLOR_VEGETABLE = [0, 168, 0, 255];
+var COLOR_CREAMGREEN = [88, 216, 84, 255];
+var COLOR_PALEGREEN = [184, 248, 184, 255];
+
+var COLOR_POWDERBLUE = [0, 120, 248, 255];
+var COLOR_DAYFLOWER = [60, 188, 252, 255];
+var COLOR_LBLUE = [164, 228, 252, 255];
+//var COLOR_LBLUE = [164, 228, 252, 255];
+
+var COLOR_SLATEBLUE = [104, 68, 252, 255];
+var COLOR_MEDPURPLE = [152, 120, 248, 255];
+var COLOR_IRISVIOLET = [216, 184, 248, 255];
+
+var COLOR_VIOMAGENTA = [216, 0, 204, 255];
+var COLOR_VIOLET = [248, 120, 248, 255];
+var COLOR_LPLUM = [248, 184, 248, 255];
