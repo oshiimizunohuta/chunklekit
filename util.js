@@ -393,6 +393,16 @@ Ease.prototype = {
 		}
 	},
 	
+	current: function(){
+		if(this.func == null){
+			return this.start;
+		}
+		if(this.count < this.duration){
+			return (this.func() * this.range) + this.start;
+		}else{
+			return this.range + this.start;
+		}
+	},
 	
 	next: function(){
 		if(this.func == null){
