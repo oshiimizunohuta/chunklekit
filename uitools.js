@@ -91,7 +91,7 @@ CUCursor.prototype = {
 	},
 	
 	isEnable: function(x, y, z){
-		var pos = this.dsablePos, i, str = this.makePositionStr(x, y, z);
+		var pos = this.disablePos, i, str = this.makePositionStr(x, y, z);
 		for(i = 0; i < pos.length; i++){
 			if(pos[i] == str){
 				return false;
@@ -258,7 +258,7 @@ SceneTransition.prototype = {
 		this.sceneOrder = [];
 		this.scenePrevious = null;
 		 this.sceneCurrent = null;
-		 this.triggerScene = null;
+//		 this.triggerScene = null;
 		 
 		 this.nullFunc = function(info){
 			 return false;
@@ -268,7 +268,7 @@ SceneTransition.prototype = {
 	makeParams: function(funcName, duration, params, count, remove){
 		count = count == null ? 0 : count;
 		remove = remove == null ? false : remove;
-		var res = {name: funcName, duration: duration, count: count, remove: remove, params: params};
+		var res = {name: funcName, duration: duration, count: count, remove: remove, params: params, trigger: null};
 		return res;
 	},
 	
@@ -278,13 +278,11 @@ SceneTransition.prototype = {
 		if(this.sceneCurrent != null && this.sceneCurrent.name == name){
 			return this.sceneCurrent;
 		}
-		f = this.sceneOrder.find(function(a){
+		f = this.sceneOrder.reverse().find(function(a){
 			return a.name == name;
 		});
-//		if(f == null){
-//			return f;
-//		}
 		
+		this.sceneOrder.reverse();
 		return f;
 //		return f[inIndex];
 	},
@@ -306,8 +304,20 @@ SceneTransition.prototype = {
 		return this.sceneCurrent;
 	},
 	
-	sumDuration: function()
-	{
+	last: function(){
+		var current = this.sceneCurrent
+			, order = this.sceneOrder
+		;
+		if(current != null){
+			return current;
+		}
+		if(order.length > 0){
+			return order[order.length - 1];
+		}
+		return false;
+	},
+	
+	sumDuration: function(){
 		var s = 0;
 		this.sceneOrder.forEach(function(a){
 			s += a.duration;
@@ -324,7 +334,7 @@ SceneTransition.prototype = {
 		this.sceneOrder.push(this.makeParams(funcName, duration, params));
 	},
 	
-	pushOrderFunc: function(func, duration, params){
+	pushOrderFunc: function(funcName, duration, params){
 		params = params == null ? {} : params;
 		this.sceneOrder.push(this.makeParams(funcName, duration, params));
 	},
@@ -334,10 +344,12 @@ SceneTransition.prototype = {
 		params = params == null ? {} : params;
 		if(current != null){
 			this.sceneCurrent = null;
-			this.sceneOrder.unshift({name: current.name, duration: current.duration, count: current.count, params: current.params});
+			this.sceneOrder.unshift(this.makeParams(current.name, current.duration, current.params, current.count));
+			this.sceneOrder.unshift(this.makeParams(funcName, duration, params));
+		}else{
+//			this.sceneOrder.unshift({name: funcName, duration: duration, count: 0, params: params});
 			this.sceneOrder.unshift(this.makeParams(funcName, duration, params));
 		}
-		this.sceneOrder.unshift({name: funcName, duration: duration, count: 0, params: params});
 	},
 	
 	removeCurrentOrder: function(){
@@ -381,9 +393,14 @@ SceneTransition.prototype = {
 //		return {order: [], current: null};
 	},
 	
-	setTrigger: function(scene)
+	setTrigger: function(scene, funcName, index)
 	{
-		this.triggerScene = scene;
+		var attach = this.last();
+		if(attach == false){
+			return false;
+		}
+		attach.trigger = scene;
+//		this.triggerScene = scene;
 	},
 	
 	transition: function(caller){
@@ -393,13 +410,18 @@ SceneTransition.prototype = {
 		if(current == null && order.length == 0){
 			return;
 		}
-		if(this.triggerScene != null){
-			this.triggerScene = this.triggerScene.remove ? null : this.triggerScene;
-			return;
-		}
+//		if(this.triggerScene != null){
+//			this.triggerScene = this.triggerScene.remove ? null : this.triggerScene;
+//			return;
+//		}
 		
 		current = current == null ? order.shift() : current;
 		this.sceneCurrent = current;
+
+		if(current.trigger != null){
+			current.trigger = current.trigger.remove ? null : current.trigger;
+			return;
+		}
 		
 		if((current.name != null && caller[current.name](current)) || current.remove){
 			this.removeCurrentOrder();
@@ -432,6 +454,7 @@ function drawDebugCell(scroll, pointControll, wordprint, color){
 	
 	pos = {x: toc(pos.x), y: toc(pos.y)};
 	start = {x: toc(start.x), y: toc(start.y)};
+	wordprint.setScroll(scroll);
 	if(left){
 		r = makeRect([start.x, start.y, pos.x, pos.y].join(' ') + ' :pos' );
 		scroll.debugRect(makeRect(r.toString() + ' *8'), color);
@@ -454,19 +477,20 @@ function drawDebugCell(scroll, pointControll, wordprint, color){
 		if(r.isContain(x, y)){
 //			color = COLOR_BLACK;
 		}
+	}else if(right){
+		wordprint.print('IMAGE RESOURCES: ' + Object.keys(imageResource.data).length, cto(0), cto(29), color, bgcolor);
+		
 	}else{
 		str = (pos.x < 10 ? 'x:0' : 'x:') + pos.x + '$n' + (pos.y < 10 ? 'y:0' : 'y:') + pos.y + '';
 		scroll.debugRect(makeRect(cto(pos.x), cto(pos.y), w, w), color);
 		x = pos.x - (pos.x < 1 ? 0 : 1);
 		y = pos.y - (pos.y < 2 ? -1 : 2);
 	}
-	wordprint.setScroll(scroll);
+	
 	wordprint.print(str, cto(x), cto(y), color, bgcolor);
-	
-	wordprint.print('IMAGE RESOURCES: ' + Object.keys(imageResource.data).length, cto(0), cto(29), color, bgcolor);
-	
 	//戻す
 	wordprint.setScroll(backScroll);
+	
 }
 //TODO パレット画像から色配列を取得する仕組みを作る
 //TODO パレットを名前から取得できるようにする
@@ -492,7 +516,7 @@ var COLOR_GREENYELLOW = [216, 248, 120, 255];
 
 var COLOR_BLUE = [0, 0, 252, 255];
 
-var COLOR_WHERET = [252, 224, 168, 255];
+var COLOR_WHEAT = [252, 224, 168, 255];
 
 var COLOR_ORANGERED = [248, 56, 0, 255];
 var COLOR_CORAL = [248, 120, 88, 255];
