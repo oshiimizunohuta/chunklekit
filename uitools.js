@@ -31,7 +31,13 @@ CUCursor.prototype = {
 		this.index = 0;
 		this.ranged = {x: 0, y: 0, z: 0};
 		this.offsetted = {x: 0, y: 0, z: 0};
-		this.rangeovered = {x: 0, y: 0, z: 0};
+		this.rangeovered = {x: 0, y: 0, z: 0}; //未使用？
+	},
+	
+	resize: function(x, y, z){
+		this.cells.x = x;
+		this.cells.y = y;
+		this.cells.z = z;
 	},
 	
 	right: function(num)
@@ -246,6 +252,30 @@ CUCursor.prototype = {
 	
 };
 
+function makeSceneOrder(order){
+	var s = new SceneOrder();
+	s.init(order);
+	return s;
+}
+function SceneOrder(){return;}
+SceneOrder.prototype = {
+	init: function(order){
+		this.name = order.name;
+		this.duration = order.duration;
+		this.count = order.count;
+		this.remove = order.remove;
+		this.params = order.params;
+		this.trigger = order.trigger;
+	},
+	isFirst: function(){
+		return this.count == 0;
+	},
+	isLast: function(){
+		return this.count >= this.duration - 1;
+	}
+	
+};
+
 function makeScene(){
 	var s = new SceneTransition();
 	s.init();
@@ -257,19 +287,23 @@ SceneTransition.prototype = {
 		this.transitionClock = 0;
 		this.sceneOrder = [];
 		this.scenePrevious = null;
-		 this.sceneCurrent = null;
-//		 this.triggerScene = null;
-		 
-		 this.nullFunc = function(info){
-			 return false;
-		 };
+		this.sceneCurrent = null;
+//		this.triggerScene = null;
+		
+		this.nullFunc = function(info){
+			return false;
+		};
+		
 	},
 	
 	makeParams: function(funcName, duration, params, count, remove){
 		count = count == null ? 0 : count;
 		remove = remove == null ? false : remove;
+		if(typeof funcName == 'object' && funcName != null){
+			return funcName;
+		}
 		var res = {name: funcName, duration: duration, count: count, remove: remove, params: params, trigger: null};
-		return res;
+		return makeSceneOrder(res);
 	},
 	
 	find: function(name, inIndex){
@@ -285,6 +319,21 @@ SceneTransition.prototype = {
 		this.sceneOrder.reverse();
 		return f;
 //		return f[inIndex];
+	},
+	
+		
+	indexOf: function(name, inIndex){
+		var i = -1;
+		if(this.sceneCurrent != null && this.sceneCurrent.name == name){
+			return this.sceneCurrent;
+		}
+		this.sceneOrder.reverse().find(function(a){
+			i++;
+			return a.name == name;
+		});
+		
+		this.sceneOrder.reverse();
+		return i;
 	},
 
 	current: function(name){
@@ -367,7 +416,7 @@ SceneTransition.prototype = {
 	},
 	
 	removeOrder: function(name){
-		var res;
+		var res = null;
 		if(name == null){
 			res = this.sceneOrder.slice();
 			this.sceneOrder = [];
@@ -433,6 +482,145 @@ SceneTransition.prototype = {
 		}
 		
 	},
+};
+
+var SPRITEANM_DELIMITER = '][';
+var SPRITEANM_FRAMES = '@'; //[frames, loops]
+var SPRITEANM_LOOPS = /^\/(\d+)/;
+function makeSpriteAnimation(imageName, query){
+	var i, res = [], qArr, q, spl, frames = [], sprites = [], spa, loops = {}, mat
+		, baseFrame = 1;
+	
+	query = query.replace(/^\[\[\]]+|\[\[\]]+$/g,'');
+	qArr = query.split(SPRITEANM_DELIMITER);
+	for(i = 0; i < qArr.length; i++){
+		q = qArr[i];
+		mat = q.match(SPRITEANM_LOOPS);
+		if(mat != null){
+			loops[sprites.length - 1] = mat[1];
+			continue;
+		}
+		spl = q.split(SPRITEANM_FRAMES);
+		if(spl[0].trim().length == 0){
+			baseFrame = spl[1];
+			continue;
+		}
+		if(spl[1] == null){
+			spl[1] = baseFrame;
+		}
+		
+		sprites.push(makeSpriteQuery(imageName, spl[0]));
+		frames.push(spl[1] | 0);
+	}
+	spa = new SpriteAnimation();
+	spa.init(sprites, frames, loops);
+	return spa;
+};
+function SpriteAnimation(){return;}
+SpriteAnimation.prototype = {
+	init: function(sprites, frames, playCounts){
+		var i, len;
+		this.sprites = sprites;
+		this.frames = frames;
+		this.pattern = 0;
+		this.count = 0;
+		this.currentCount = 0;
+		this.visible = true;
+		this.lastPattern = sprites.length - 1;
+		len = this.lastPattern;
+		if(playCounts == null || Object.keys(playCounts).length == 0){
+			this.play = {};
+			this.play[len] = 0;
+		}else{
+			this.play = playCounts;
+		}
+		this.played = {};
+		for(i in this.play){
+			this.played[i] = 0;
+		}
+		this.duration = frames.reduce(function(a, b){
+			return (a | 0) + (b | 0);
+		});
+	},
+	
+	hide: function(){
+		this.visible = false;
+	},
+	show: function(){
+		this.visible = true;
+	},
+	
+	reset: function(){
+		this.init(this.sprites, this.frames, this.play);
+	},
+	
+	resetLowerPlayed: function(pat){
+		var i;
+		for(i in this.played){
+			if(pat > i){
+				this.played[i] = 0;
+			}
+		}
+	},
+	
+	isLoop: function(){
+		var pattern = this.pattern
+			, play = this.play[pattern] != null ? this.play[pattern] : null
+		;
+		
+		if(play == null){
+			return false;
+		}
+		if(play > 0){
+			if(this.played[pattern] > play){
+				return false;
+			}
+		}
+		return true;
+	},
+	
+	isEnd: function(){
+		var mp = this.lastPattern
+		;
+		return this.play[mp] > 0 && (this.played[mp] >= this.play[mp]);
+//		return (this.pattern >= mp) && (this.currentCount >= this.frames[mp]) && (this.played[mp] >= this.play[mp]);
+	},
+	
+	current: function(){
+		return this.sprites[this.pattern];
+	},
+	
+	next: function(){
+		this.count++;
+		this.currentCount++;
+		
+		if(this.currentCount > this.frames[this.pattern]){
+			this.currentCount = 0;
+			if(this.isLoop()){
+				this.played[this.pattern]++;
+				this.pattern = 0;
+				this.resetLowerPlayed(this.pattern);
+			}else{
+				this.pattern++;
+			}
+		}
+		if(this.isEnd()){
+			if(this.visible){
+				this.sprites[this.lastPattern].show();
+			}else{
+				this.sprites[this.lastPattern].hide();
+			}
+			return this.sprites[this.lastPattern];
+		}
+		if(this.visible){
+			this.sprites[this.pattern].show();
+		}else{
+			this.sprites[this.pattern].hide();
+		}
+		
+		return this.sprites[this.pattern];
+	}
+	
 };
 
 function drawDebugCell(scroll, pointControll, wordprint, color){
