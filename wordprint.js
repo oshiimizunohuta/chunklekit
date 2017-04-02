@@ -98,6 +98,7 @@ WordPrint.prototype ={
 		this.DrawEvent;// = new DrawEvent();
 		this.str;
 		this.disp = true;
+		this.drawOrder = 128;
 	},
 	
 	//スプライトの元になるスクロールを生成
@@ -453,6 +454,10 @@ WordPrint.prototype ={
 		this.parse(str);
 	},
 	
+	setDrawOrder: function(o){
+		this.drawOrder = o;
+	},
+	
 	spriteWordIds_o: function(words)
 	{
 		var len = words.length, sprites = [], i, spr;
@@ -607,7 +612,9 @@ WordPrint.prototype ={
 				return i;
 //				break;
 			}
-			scr.drawSpriteChunk(s, x, y);
+			s.order = this.drawOrder;
+			scr.drawSprite(s, x, y);
+//			scr.drawSpriteChunk(s, x, y);
 			x += s.w;
 		}
 		
