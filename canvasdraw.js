@@ -131,6 +131,8 @@ CanvasScroll.prototype = {
 	//対象のスクロール基準の走査
 	rasterto: function(targetScroll, dx, dy, dw, dh)
 	{
+		var x, y
+		;
 		if(!this.is_visible()){return;}
 		if(dw == null){dw = this.canvas.width;}
 		if(dh == null){dh = this.canvas.height;}
@@ -147,18 +149,20 @@ CanvasScroll.prototype = {
 				if(raster[i] != null){
 					h = i - currentLine;
 					if(h > 0){
-						targetScroll.ctx.drawImage(this.canvas, 0, 0 | (currentLine - pos.y + fixpos.y) % (dh * 2), 0 | sw, h
-						, 0 | (pos.x + fixpos.x) % (dw * 2), currentLine, 0 | dw, h);
+						x = 0 | (pos.x + fixpos.x) % (dw * 2);
+						y = 0 | (currentLine - pos.y - fixpos.y) % (dh * 2);
+						targetScroll.ctx.drawImage(this.canvas, 0, y, 0 | sw, h, x, currentLine, 0 | dw, h);
 
 						currentLine = i;
 					}
-//					raster = horizon[i];
 					pos.x = raster[i].x;
 					pos.y = raster[i].y;
-					//%(dw*2) 球面スクロール考慮
 				}
 			}
-			targetScroll.ctx.drawImage(this.canvas, 0, 0 | (currentLine - pos.y + fixpos.y) % (dh * 2), 0 | sw, i - currentLine, 0 | pos.x + fixpos.x, currentLine, 0 | dw, i - currentLine);
+			x = 0 | (pos.x + fixpos.x) % (dw * 2);
+			y = 0 | (currentLine - pos.y - fixpos.y) % (dh * 2);
+			h = i - currentLine;
+			targetScroll.ctx.drawImage(this.canvas, 0, y, 0 | sw, h, x, currentLine, 0 | dw, h);
 		}else if(this.rasterLines.vertical.length > 0){
 			raster = this.rasterLines.vertical;
 			for(i = 0; i < sw; i++){
@@ -286,20 +290,26 @@ CanvasScroll.prototype = {
 	{
 		var stack = this.drawInfoStack, drawInfo, cnt = 0
 			, overnum = stack.length - this.maxSprites
-			, blinkStart = this.maxSprites - overnum
+//			, blinkStart = this.maxSprites - overnum
 			, blinkRate = overnum < 0 ? 0 : overnum / this.maxSprites
 			, blinked = 0, primal = this.drawPrimary, tinue = this.blinkContinues
 		;
+		bubbleSort(stack, 'asc', 'order');
+//		stack.sort(function(a, b){return a.order - b.order;});
+
+//		stack = stack.slice();
 		while(stack.length){
 			drawInfo = stack.shift();
 
 			if(drawInfo.sprite != null){
 				if(!primal && blinkRate > 0){
+//				if(blinkRate > 0){
 					if((blinkRate * cnt++) + tinue >= blinked){
 						blinked++;
 						continue;
 					}
 				}
+//				console.log(drawInfo.sprite.x);
 				this.drawSpriteInfo(drawInfo);
 			}else if(drawInfo.fillrect != null){
 				this.drawFillRectInfo(drawInfo);
@@ -406,7 +416,7 @@ CanvasScroll.prototype = {
 	
 	drawSpriteArray: function(spriteArray, x, y, cellsWidth)
 	{
-		var posX, posY, slen = spriteArray.length, i
+		var posX, posY, slen = spriteArray.length, i, sprite
 		;
 		if(cellsWidth == null){throw "noCellWidth!";}
 		
@@ -427,7 +437,7 @@ CanvasScroll.prototype = {
 // TODO 旧バージョンの-値使用状況を調べる
 	drawSprite2dArray: function(sprite2dArray, x, y)
 	{
-		var j , i, posX, posY, s2len = sprite2dArray.length, slen;
+		var j , i, posX, posY, s2len = sprite2dArray.length, slen, sprite, spriteArray;
 		for(j= 0; j < s2len; j++){
 			spriteArray = sprite2dArray[j];
 			slen = spriteArray.length;
@@ -533,7 +543,7 @@ CanvasScroll.prototype = {
 	spriteLine: function(from, to, color)
 	{
 		var f = {x: from.x, y: from.y}, t = {x: to.x, y: to.y}, c = color
-		,info = {from : f, to: t, color: c};
+		,info = {from : f, to: t, color: c, order: 128};
 		this.drawInfoStack.push(info);
 		if(this.maxSpritesStack < this.drawInfoStack.length){
 			this.drawInfoStack.shift();
@@ -554,7 +564,7 @@ CanvasScroll.prototype = {
 			this.ctx.fillStyle = makeRGB(color);
 			this.ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
 		}
-		this.drawInfoStack.push({color: color == null ? null : color, fillrect: rect == null ? null : rect});
+		this.drawInfoStack.push({color: color == null ? null : color, fillrect: rect == null ? null : rect, order: 128});
 	},
 	
 	drawFillRectInfo: function(rectInfo)
@@ -908,7 +918,7 @@ imageResource.init = function(){
 imageResource.init();
 imageResource.onload = [];
 
-
+//TODO リソース名をキーにしたパラメータを持つこと（現在パラメータキー）
 //imageResource.create = function(nameArray, sepWidth, sepHeight)
 imageResource.create = function(name, sepWidth, sepHeight, callbackEnable)
 {
@@ -1246,6 +1256,11 @@ function resourceSizeByName(name)
 function resourceByName(name)
 {
 	return imageResource.workSpace[name] != null ? imageResource.workSpace[name] : null;
+}
+
+function setResourceSeparate(name, w, h){
+	imageResource.separateWidth[name] = w;
+	imageResource.separateHeight[name] = h;
 }
 
 function appendImageOnload(name, func)
@@ -2398,6 +2413,7 @@ CanvasSprite.prototype = {
 		this.chunkMap = [[]]; //ChunkQuery-Position
 		this.chunkIds = null; //CurrentSpriteId
 		this.primary = true; //draw reliably even overdraw
+		this.order = 128; // display order [first << late]
 	},
 	
 	drawScroll: function(scroll, x, y)
@@ -2414,7 +2430,7 @@ CanvasSprite.prototype = {
 	
 	makeSpriteInfo: function(x, y)
 	{
-		return {sprite: this, x: x, y: y, vflip: this.vFlipFlag, hflip: this.hFlipFlag, rot: this.rotFlag};
+		return {sprite: this, x: x, y: y, vflip: this.vFlipFlag, hflip: this.hFlipFlag, rot: this.rotFlag, order: this.order};
 	},
 
 	getRect: function()
@@ -2537,7 +2553,14 @@ CanvasSprite.prototype = {
 		}
 		return false;
 	},
+	
+	show: function(){
+		this.x = this.x < 0 ? - this.x - this.w : this.x;
+	},
 
+	hide: function(){
+		this.x = this.x >= 0 ? - this.x - this.w : this.x;
+	},
 
 	/**
 	 * 色交換をリセット
@@ -2906,6 +2929,11 @@ SpriteHandle.prototype = {
 	},
 
 	visible: function()
+	{
+		this.disp = true;
+	},
+	
+	show: function()
 	{
 		this.disp = true;
 	},
