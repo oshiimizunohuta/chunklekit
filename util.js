@@ -286,13 +286,14 @@ Ease.prototype = {
 		var self = this;
 //		this.division = t * 0.01;
 		func = function(){
-			return self.count / self.duration;
+			return self.range * self.count / self.duration;
 		};
 		
 		return func;
 		
 	},
 	
+	// TODO 削除
 	exp: function(s, e, d){
 		var self = this;
 		this.init(s, e, d);
@@ -301,7 +302,7 @@ Ease.prototype = {
 			return 1 / Math.exp(self.division / (self.count + 0.001));
 		};
 	},
-	
+	// TODO 削除
 	swing: function(s, e, d){
 		var self = this;
 		this.init(s, e, d);
@@ -311,22 +312,44 @@ Ease.prototype = {
 		};
 	},
 	
+	setFunction: function(fin, fout, finout){
+		
+	},
+	
+	sinusoidal: function(e_in, e_out){
+		var func, self = this;
+		if(e_in && !e_out){
+			func = function(){
+				return (self.range * -Math.cos(self.count / self.duration * (Math.PI / 2))) + self.range;
+			};
+		}else if(!e_in && e_out){
+			func = function(){
+				return self.range * Math.sin(self.count / self.duration * (Math.PI / 2));
+			};
+		}else{
+			func = function(){
+				return self.range * -(Math.cos(Math.PI * self.count / self.duration) - 1) / 2;
+			};
+		}
+		return func;
+	},
+	
 	cubic: function(e_in, e_out){
 		var func, self = this;
 		if(e_in && !e_out){
 			func = function(){
 				var t = self.count / self.duration;
-				return t * t * t;
+				return self.range * t * t * t;
 			};
 		}else if(!e_in && e_out){
 			func = function(){
 				var t = (self.count / self.duration) - 1;
-				return (t * t * t) + 1;
+				return self.range * ((t * t * t) + 1);
 			};
 		}else{
 			func = function(){
 				var t = self.count / (self.duration / 2), t2 = t - 2;
-				return t < 1 ? t * t * t / 2 : ((t2 * t2 * t2) + 2) / 2;
+				return t < 1 ? self.range * t * t * t / 2 : self.range * ((t2 * t2 * t2) + 2) / 2;
 			};
 		}
 		return func;
@@ -337,17 +360,17 @@ Ease.prototype = {
 		if(e_in && !e_out){
 			func = function(){
 				var t = self.count / self.duration;
-				return t * t * t * t;
+				return self.range * t * t * t * t;
 			};
 		}else if(!e_in && e_out){
 			func = function(){
 				var t = (self.count / self.duration) - 1;
-				return -((t * t * t * t) - 1);
+				return self.range * -((t * t * t * t) - 1);
 			};
 		}else{
 			func = function(){
 				var t = self.count / (self.duration / 2), t2 = t - 2;
-				return t < 1 ? t * t * t * t / 2 : -((t2 * t2 * t2 * t2) - 2) / 2;
+				return t < 1 ? self.range * t * t * t * t / 2 : self.range * -((t2 * t2 * t2 * t2) - 2) / 2;
 			};
 		}
 		return func;
@@ -398,22 +421,26 @@ Ease.prototype = {
 			return this.start;
 		}
 		if(this.count < this.duration){
-			return (this.func() * this.range) + this.start;
+			return this.func() + this.start;
 		}else{
 			return this.range + this.start;
 		}
 	},
-	
+
 	next: function(){
 		if(this.func == null){
 			return this.start;
 		}
 		if(this.count < this.duration){
 			this.count++;
-			return (this.func() * this.range) + this.start;
+			return this.func() + this.start;
 		}else{
 			return this.range + this.start;
 		}
+	},
+	
+	isFin: function(){
+		return this.count >= this.duration;
 	}
 };
 
@@ -773,6 +800,36 @@ function arrayToObject(a){
 		o[i] = a[i];
 	}
 	return o;
+}
+
+function bubbleSort(data, order, k){
+	var i, j, n, len
+	, len = data.length
+	, diff = order == null || order == 'asc' 
+		? function(a, b){return a > b;} 
+		: function(a, b){return a < b;}
+	;
+	if(k == null){
+		for (i = 0; i < len - 1; i++){
+			for (j = 0; j < len - i - 1; j++){
+				if (diff(data[j], data[j + 1])){
+					n = data[j];
+					data[j] = data[j + 1];
+					data[j + 1] = n;
+				}
+			}
+		}
+	}else{
+		for (i = 0; i < len - 1; i++){
+			for (j = 0; j < len - i - 1; j++){
+				if (diff(data[j][k], data[j + 1][k])){
+					n = data[j];
+					data[j] = data[j + 1];
+					data[j + 1] = n;
+				}
+			}
+		}
+	}
 }
 
 /**
