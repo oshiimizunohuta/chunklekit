@@ -8,9 +8,9 @@
 function makeCursor(name, x, y, z){
 	var c = new CUCursor();
 	c.init();
-	c.cells.x = x;
-	c.cells.y = y;
-	c.cells.z = z;
+	c.cells.x = x < 1 ? 1 : x;
+	c.cells.y = y < 1 ? 1 : y;
+	c.cells.z = z < 1 ? 1 : z;
 	c.range(x, y, z);
 	c.name = name;
 	return c;
