@@ -163,7 +163,7 @@ CUCursor.prototype = {
 	move: function(x, y, z)
 	{
 		var pos = this.pos, pre = this.pos_pre, cells = this.cells
-		, loop = this.looped
+		, loop = this.looped, isReturn = this.cellReturn
 //		, keys = Object.keys(pos), a
 		, a, id
 		, nums = {x: (x == null ? 0 : x), y: (y == null ? 0 : y), z: (z == null ? 0 : z)};
@@ -173,11 +173,11 @@ CUCursor.prototype = {
 			pos[a] += nums[a];
 			if(pos[a] >= cells[a]){
 				loop[a] = pos[a] - cells[a] + 1;
-				pos[a] = pos[a] % cells[a];
+				pos[a] = isReturn ? pos[a] % cells[a] : cells[a] - 1;
 			}else if(pos[a] < 0){
 				loop[a] = pos[a];
 				//-pos
-				pos[a] = (cells[a] + pos[a]) % cells[a];
+				pos[a] = isReturn ? (cells[a] + pos[a]) % cells[a] : 0;
 			}else{
 				loop[a] = 0;
 			}
@@ -190,7 +190,7 @@ CUCursor.prototype = {
 	moveTo: function(x, y, z)
 	{
 		var pos = this.pos, pre = this.pos_pre, cells = this.cells
-		, loop = this.looped
+		, loop = this.looped, isReturn = this.cellReturn
 		, a
 		, nums = {x: (x == null ? 0 : x), y: (y == null ? 0 : y), z: (z == null ? 0 : z)};
 		
@@ -199,10 +199,10 @@ CUCursor.prototype = {
 			pos[a] = nums[a];
 			if(pos[a] >= cells[a]){
 				loop[a]++;
-				pos[a] = pos[a] % cells[a];
+				pos[a] = isReturn ? pos[a] % cells[a] : cells[a] - 1;
 			}else if(pos[a] < 0){
 				loop[a]--;
-				pos[a] = (cells[a] + pos[a]) % cells[a];
+				pos[a] = isReturn ? (cells[a] + pos[a]) % cells[a] : 0;
 			}else{
 				loop[a] = 0;
 			}
@@ -381,6 +381,7 @@ SceneTransition.prototype = {
 	pushOrder: function(funcName, duration, params){
 		params = params == null ? {} : params;
 		this.sceneOrder.push(this.makeParams(funcName, duration, params));
+		return this.sceneOrder[this.sceneOrder.length - 1];
 	},
 	
 	pushOrderFunc: function(funcName, duration, params){
@@ -399,6 +400,7 @@ SceneTransition.prototype = {
 //			this.sceneOrder.unshift({name: funcName, duration: duration, count: 0, params: params});
 			this.sceneOrder.unshift(this.makeParams(funcName, duration, params));
 		}
+		return this.sceneOrder[0];
 	},
 	
 	removeCurrentOrder: function(){
@@ -669,7 +671,7 @@ function drawDebugCell(scroll, pointControll, wordprint, color){
 		wordprint.print('IMAGE RESOURCES: ' + Object.keys(imageResource.data).length, cto(0), cto(29), color, bgcolor);
 		
 	}else{
-		str = (pos.x < 10 ? 'x:0' : 'x:') + pos.x + '$n' + (pos.y < 10 ? 'y:0' : 'y:') + pos.y + '';
+		str = (pos.x < 10 ? 'x:0' : 'x:') + pos.x + "$n" + (pos.y < 10 ? 'y:0' : 'y:') + pos.y + '';
 		scroll.debugRect(makeRect(cto(pos.x), cto(pos.y), w, w), color);
 		x = pos.x - (pos.x < 1 ? 0 : 1);
 		y = pos.y - (pos.y < 2 ? -1 : 2);
