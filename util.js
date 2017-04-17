@@ -750,6 +750,17 @@ function str_pad(input, pad_length, pad_string, pad_type)
 //	dulog(charArray);
 }
 
+function strpad(input, padstring, length){
+	var addcount, i;
+	input = input + '';
+	addcount = length - input.length;
+	for(i = 0; i < addcount; i++){
+		input = padstring + input;
+	}
+	
+	return input;
+}
+
 function numFormat(num, length)
 {
 	var addcount, i;
