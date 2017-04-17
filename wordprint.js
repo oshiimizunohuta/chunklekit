@@ -38,6 +38,9 @@ WordPrint.prototype ={
 			, 150: 105, 151: 106, 152: 107, 153: 108, 154: 109, 155: 115, 156: 116, 157: 117, 158: 118, 159: 119
 			, 160: 115, 161: 116, 162: 117, 163: 118, 164: 119
 		};
+		
+		this.sprtiteID = this.initSpriteID();
+		
 		this.soundmarkAlign = 'horizon'; // vertical:horizon
 		this.soundmarkPos = []; // {line:line, pos:pos}
 		this.soundmarkEnable = true;
@@ -121,6 +124,68 @@ WordPrint.prototype ={
 		return scroll;
 	},
 	
+	allocSprites: function(){
+		var spr = {vertical: {}, horizon: {}}, i, len
+			, w = this.moji_hira + this.moji_kata + this.moji_alph + this.moji_suji
+			, len = w.length
+			, str 
+		;
+		for(i = 0; i < len; i++){
+			str = w.substr(i, 1);
+			spr.vertical[str] = null;
+			spr.horizon[str] = null;
+		}
+		return spr;
+	},
+	
+	initSpriteID: function(){
+		var i, len
+			, w = this.moji_hira + this.moji_kata + this.moji_alph + this.moji_suji
+			, len = w.length, ids = {}
+		;
+		for(i = 0; i < len; i++){
+			ids[w.substr(i, 1)] = i;
+		}
+		return ids;
+	},
+	
+	/**
+	 * 文字をスプライト格納
+	 * @returns {undefined}
+	 */
+	initSprite: function(s){
+		var all = this.allWordSprites
+			, imageName = this.getImageName()
+			, q, space = this.soundmarkEnable ? this.SPACE_CODE + ';' : ''
+			, smark = this.soundmarkEnable ? this.soundmarks : {}
+			, spr, id
+		;
+		
+		if(all[imageName] == null){
+//			all[imageName] = {vertical: {}, horizon: {}};
+			all[imageName] = this.allocSprites();
+		}
+		
+		if(this.sprtiteID[s] == null){
+			id = this.NOTFOUND_CODE;
+			s = this.NOTFOUND_WORD;
+		}else{
+			id = this.sprtiteID[s];
+		}
+		
+		q = id in smark == false ? space + id : id + ';' + smark[id];
+		spr = makeSpriteQuery(this.sourceCanvasName, q);
+		spr = makeSpriteSwapColor(spr, [this.getColor(), this.getBGColor()], [this.DEFAULT_COLOR, this.DEFAULT_BGCOLOR]);
+		all[imageName].vertical[s] = spr;
+		
+		q = id in smark == false ? id + '': smark[id] + ' ' + id + '|r2';
+		spr = makeSpriteQuery(this.sourceCanvasName, q);
+		spr = makeSpriteSwapColor(spr, [this.getColor(), this.getBGColor()], [this.DEFAULT_COLOR, this.DEFAULT_BGCOLOR]);
+		all[imageName].horizon[s] = spr;
+		
+		return;
+	},
+	
 	/**
 	 * 全ての文字をスプライト格納
 	 * @returns {undefined}
@@ -200,12 +265,14 @@ WordPrint.prototype ={
 		imageName = imageName == null ? this.getImageName() : imageName;
 		align = align == null ? (this.isHorizon() ? 'horizon' : 'vertical') : align;
 		if(this.allWordSprites[imageName] == null){
-			console.warn('notFound ColorQuery: ' + imageName);
-			return null;
-		}
-		if(this.allWordSprites[imageName][align] == null){
-			console.warn('notFound align: ' + align);
-			return null;
+			this.allWordSprites[imageName] = this.allocSprites();
+//
+//			console.warn('notFound ColorQuery: ' + imageName);
+//			return null;
+//		}
+//		if(this.allWordSprites[imageName][align] == null){
+//			console.warn('notFound align: ' + align);
+//			return null;
 		}
 		
 		return this.allWordSprites[imageName][align];
@@ -440,7 +507,7 @@ WordPrint.prototype ={
 			return;
 		}
 		this.fontSize = sizetype;
-		this.initAllSprites();
+//		this.initAllSprites();
 	},
 	
 	setMarkAlign: function(align)
@@ -558,6 +625,7 @@ WordPrint.prototype ={
 			, enableMaxRow = this.rows > 0
 			, maxRowPos = ((this.rowSpace + this.vChipSize) * this.rows * (isVertical ? 2 : 1)) + posy
 			, sp_alph = this.sp_alph, sp_hira = this.sp_hira, sp_kata = this.sp_kata
+			, nfw = this.NOTFOUND_WORD
 			, newline = function(){
 				y += s.h;
 				x = posx;
@@ -582,6 +650,7 @@ WordPrint.prototype ={
 		}
 		str += '';
 		
+		str = str.replace(/\r?\n/g, newWord);
 		while(str.indexOf(newWord) >= 0){
 			newLines.push(str.indexOf(newWord));
 			str = str.replace(newWord, '');
@@ -589,9 +658,14 @@ WordPrint.prototype ={
 		len = str.length;
 		sprites = [];
 		for(i = 0; i < len; i++){
-			s = str.substr(i, 1);
-			s = inSP(s);
-			sprites.push(all[s] != null ? all[s] : all[this.NOTFOUND_WORD]);
+			s = inSP(str.substr(i, 1));
+			s = s !== false ? s : this.NOTFOUND_WORD;
+			if(all[s] == null){
+				// make colored sprite v and h
+				this.initSprite(s);
+				all = this.getWordSprites();
+			}
+			sprites.push(all[s]);
 		}
 		
 		len = sprites.length;
@@ -610,11 +684,9 @@ WordPrint.prototype ={
 			}
 			if(enableMaxRow && y + s.h >= maxRowPos){
 				return i;
-//				break;
 			}
 			s.order = this.drawOrder;
 			scr.drawSprite(s, x, y);
-//			scr.drawSpriteChunk(s, x, y);
 			x += s.w;
 		}
 		
@@ -772,7 +844,7 @@ WordPrint.prototype ={
 	
 	swapColor: function(){
 //		this.makeCustomCanvasSprite();
-		this.initAllSprites();
+//		this.initAllSprites();
 	},
 	
 	resetRead: function(){
@@ -802,7 +874,7 @@ WordPrint.prototype ={
 		if(y != null){this.position_y = y;}
 		if(color != null){this.color = color;}
 		if(bgcolor != null){this.bgcolor = bgcolor;}
-		this.swapColor();
+//		this.swapColor();
 		return this.drawWord(str);
 	},
 	
