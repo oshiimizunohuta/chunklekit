@@ -631,11 +631,18 @@ WordPrint.prototype ={
 				x = posx;
 			}
 			, inSP = function(w){
-				if(w in sp_alph){
+//				if(w in sp_alph){
+//					return sp_alph[w];
+//				}else if(w in sp_kata){
+//					return sp_kata[w];
+//				}else if(w in sp_hira){
+//					return sp_hira[w];
+//				}
+				if(sp_alph[w] != null){
 					return sp_alph[w];
-				}else if(w in sp_kata){
+				}else if(sp_kata[w] != null){
 					return sp_kata[w];
-				}else if(w in sp_hira){
+				}else if(sp_hira[w] != null){
 					return sp_hira[w];
 				}
 				
