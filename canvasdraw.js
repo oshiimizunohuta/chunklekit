@@ -1209,6 +1209,9 @@ function preLoadImages(imageInfo, func)
 			return;
 		}
 		info = imageInfo.shift();
+		
+		info = typeof info == 'string' ? [info, CHIPCELL_SIZE, CHIPCELL_SIZE] : info;
+		info[2] = info[2] == null ? info[1] : info[2];
 		t.onload = function(){
 			r.appendImage(this.name, this, this.sepWidth == null ? this.width | 0 : this.sepWidth, this.sepHeight == null ? this.height | 0 : this.sepHeight);
 			callback();
@@ -1221,6 +1224,7 @@ function preLoadImages(imageInfo, func)
 	}
 	;
 	imageInfo = imageInfo.length != null ? imageInfo : [imageInfo];
+	imageInfo = typeof imageInfo[0] != 'string' ? imageInfo : [imageInfo];
 	callback();
 	
 }
