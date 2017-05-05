@@ -34,6 +34,12 @@ CUCursor.prototype = {
 		this.rangeovered = {x: 0, y: 0, z: 0}; //未使用？
 	},
 	
+	copy: function(name){
+		var c = makeCursor(name == null ? this.name : name, this.cells.x, this.cells.y, this.cells.z);
+		c.moveTo(this.pos.x, this.pos.y, this.pos.z);
+		return c;
+	},
+	
 	resize: function(x, y, z){
 		this.cells.x = x;
 		this.cells.y = y;
@@ -238,13 +244,24 @@ CUCursor.prototype = {
 		return null;
 	},
 	
-	isLooped: function(axis)
+	isLooped: function(axis, valued)
 	{
-		if(axis == null){
-			return this.looped;
-		}
-		if(this.looped[axis] != null){
-			return this.looped[axis];
+		var l = this.looped;
+		valued = valued == null ? true : false;
+		
+		if(valued){
+			if(axis == null){
+				return this.looped;
+			}
+			if(this.looped[axis] != null){
+				return this.looped[axis];
+			}
+		}else{
+			if(axis == null){
+				return l.x != 0 || l.y != 0 || l.z != 0;
+			}else{
+				return l[axis] != 0;
+			}
 		}
 		return null;
 	}
@@ -637,6 +654,7 @@ function drawDebugCell(scroll, pointControll, wordprint, color){
 		, str
 		, backScroll = wordprint.getScroll()
 		, bgcolor = COLOR_BLACK
+		, backRow = wordprint.rows
 	;
 	
 	color = color == null ? COLOR_WHITE : color;
@@ -649,7 +667,7 @@ function drawDebugCell(scroll, pointControll, wordprint, color){
 		r = makeRect([start.x, start.y, pos.x, pos.y].join(' ') + ' :pos' );
 		scroll.debugRect(makeRect(r.toString() + ' *8'), color);
 		
-		str = numFormat(r.x, 2) + ':' + numFormat(r.y, 2) + '$n' 
+		str = numFormat(r.x, 2) + ':' + numFormat(r.y, 2) + "$n" 
 			+ numFormat(r.w, 2) + ':' + numFormat(r.h, 2);
 	
 		if(r.w > 2 && r.h > 1){
@@ -676,10 +694,12 @@ function drawDebugCell(scroll, pointControll, wordprint, color){
 		x = pos.x - (pos.x < 1 ? 0 : 1);
 		y = pos.y - (pos.y < 2 ? -1 : 2);
 	}
+	wordprint.setMaxRows(0);
 	
 	wordprint.print(str, cto(x), cto(y), color, bgcolor);
 	//戻す
 	wordprint.setScroll(backScroll);
+	wordprint.setMaxRows(backRow);
 	
 }
 //TODO パレット画像から色配列を取得する仕組みを作る
