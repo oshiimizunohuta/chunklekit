@@ -286,14 +286,12 @@ KeyControll.prototype = {
 	getState: function(name)
 	{
 		if(typeof name == "object"){
-			var states = {}, cont = this.controlls, nIndex = Object.keys(name), len = nIndex.length;
+			var states = {}, cont = this.controlls, nIndex = Object.keys(name), len = nIndex.length, n;
 			for(i = 0; i < len; i++){
 				n = name[i];
 				states[n] = cont[n].state;
 			}
 			return states;
-			// name.forEach(function(n, i){
-			// }, this);
 		}else{
 			if(this.controlls[name] == null){return false;}
 			return this.controlls[name].state;
@@ -308,15 +306,11 @@ KeyControll.prototype = {
 	getTrig: function(name)
 	{
 		if(typeof name == "object"){
-			var trigs = {}, cont = this.controlls, nIndex = Object.keys(name), len = nIndex.length;
+			var trigs = {}, cont = this.controlls, nIndex = Object.keys(name), len = nIndex.length, n;
 			for(i = 0; i < len; i++){
 				n = name[i];
 				trigs[n] = cont[n].trig;
 			}
-			// var trigs = {};
-			// name.forEach(function(n, i){
-				// trigs[n] = this.controlls[n].trig;
-			// }, this);
 			return trigs;
 		}else{
 			return this.controlls[name].trig;
@@ -331,15 +325,11 @@ KeyControll.prototype = {
 	getUntrig: function(name)
 	{
 		if(typeof name == "object"){
-			var unTrigs = {}, cont = this.controlls, nIndex = Object.keys(name), len = nIndex.length;
+			var unTrigs = {}, cont = this.controlls, nIndex = Object.keys(name), len = nIndex.length, n;
 			for(i = 0; i < len; i++){
 				n = name[i];
 				unTrigs[n] = cont[n].off;
 			}
-			// var unTrigs = {};
-			// name.forEach(function(n, i){
-				// unTrigs[n] = this.controlls[n].off;
-			// }, this);
 			return unTrigs;
 		}else{
 			return this.controlls[name].off;
@@ -354,18 +344,28 @@ KeyControll.prototype = {
 	getHold: function(name)
 	{
 		if(typeof name == "object"){
-			var holds = {}, cont = this.controlls, nIndex = Object.keys(name), len = nIndex.length;
+			var holds = {}, cont = this.controlls, nIndex = Object.keys(name), len = nIndex.length, n;
 			for(i = 0; i < len; i++){
 				n = name[i];
 				holds[n] = cont[n].hold;
 			}
-			// var holds = {};
-			// name.forEach(function(n, i){
-				// holds[n] = this.controlls[n].hold;
-			// }, this);
 			return holds;
 		}else{
 			return this.controlls[name].hold;
+		}
+	},
+	
+	getHoldTime: function(name)
+	{
+		if(typeof name == "object"){
+			var holds = {}, cont = this.controlls, nIndex = Object.keys(name), len = nIndex.length, n;
+			for(i = 0; i < len; i++){
+				n = name[i];
+				holds[n] = cont[n].time;
+			}
+			return holds;
+		}else{
+			return this.controlls[name].time;
 		}
 	},
 
