@@ -735,6 +735,7 @@ CanvasScroll.prototype = {
 		, type = 'image/png'
 		, element_img, element_a, del_a, pair;
 		//imgオブジェクトのsrcに格納。
+//		img.crossOrigin = 'Anonymous';
 		img.src = this.canvas.toDataURL(type);
 		//念のため、onloadで読み込み完了を待つ。
 		img.onload = function() {
@@ -1210,7 +1211,8 @@ function preLoadImages(imageInfo, func)
 		}
 		info = imageInfo.shift();
 		
-		info = typeof info == 'string' ? [info, CHIPCELL_SIZE, CHIPCELL_SIZE] : info;
+		info = typeof info != 'string' ? info : [info, CHIPCELL_SIZE, CHIPCELL_SIZE];
+//		info = typeof info == 'string' ? [info, CHIPCELL_SIZE, CHIPCELL_SIZE] : info;
 		info[2] = info[2] == null ? info[1] : info[2];
 		t.onload = function(){
 			r.appendImage(this.name, this, this.sepWidth == null ? this.width | 0 : this.sepWidth, this.sepHeight == null ? this.height | 0 : this.sepHeight);
@@ -1223,10 +1225,16 @@ function preLoadImages(imageInfo, func)
 			
 	}
 	;
-	imageInfo = imageInfo.length != null ? imageInfo : [imageInfo];
-	imageInfo = typeof imageInfo[0] != 'string' ? imageInfo : [imageInfo];
-	callback();
 	
+	//str > [str]
+	//[str, str, str]
+	//[str, x, y] > [[str, x, y]]
+	//[[str, x, y], str, str]
+	//[[str, xy], str, str]
+	imageInfo = imageInfo instanceof Array ? imageInfo : [imageInfo];
+	imageInfo = imageInfo[1] != null && isFinite(imageInfo[1]) ? [imageInfo] : imageInfo;
+	callback();
+
 }
 
 function setImageLoadRefreshTime(time){
