@@ -283,13 +283,23 @@ SceneOrder.prototype = {
 		this.remove = order.remove;
 		this.params = order.params;
 		this.trigger = order.trigger;
+		this.remTrigger = order.rem_trig;
+		this.funcNotFound = false;
 	},
 	isFirst: function(){
 		return this.count == 0;
 	},
 	isLast: function(){
 		return this.count >= this.duration - 1;
-	}
+	},
+	setTrigger: function(scene){
+		this.trigger = scene;
+		return this;
+	},
+	removeAt: function(scene){
+		this.remTrigger = scene;
+		return this;
+	},
 	
 };
 
@@ -319,7 +329,7 @@ SceneTransition.prototype = {
 		if(typeof funcName == 'object' && funcName != null){
 			return funcName;
 		}
-		var res = {name: funcName, duration: duration, count: count, remove: remove, params: params, trigger: null};
+		var res = {name: funcName, duration: duration, count: count, remove: remove, params: params, trigger: null, rem_trig: null};
 		return makeSceneOrder(res);
 	},
 	
@@ -421,7 +431,7 @@ SceneTransition.prototype = {
 	},
 	
 	removeCurrentOrder: function(){
-		var current = this.sceneCurrent;
+		var current = this.sceneCurrent, name;
 		if(current != null){
 			//即消し
 			current.remove = true;
@@ -430,6 +440,11 @@ SceneTransition.prototype = {
 		}else if(this.sceneOrder.length > 0){
 			//予約する
 			this.sceneOrder[0].remove = true;
+		}
+		
+		if(this.sceneOrder.length > 0){
+			name = current == null ? 'null' : current.name;
+			console.log(name + ' -> ' + this.sceneOrder[0].name);
 		}
 
 	},
@@ -468,7 +483,18 @@ SceneTransition.prototype = {
 			return false;
 		}
 		attach.trigger = scene;
+		return attach;
 //		this.triggerScene = scene;
+	},
+	
+	removeAt: function(scene)
+	{
+		var attach = this.last();
+		if(attach == false){
+			return false;
+		}
+		attach.removeAt = scene;
+		return attach;
 	},
 	
 	transition: function(caller){
@@ -478,10 +504,6 @@ SceneTransition.prototype = {
 		if(current == null && order.length == 0){
 			return;
 		}
-//		if(this.triggerScene != null){
-//			this.triggerScene = this.triggerScene.remove ? null : this.triggerScene;
-//			return;
-//		}
 		
 		current = current == null ? order.shift() : current;
 		this.sceneCurrent = current;
@@ -490,14 +512,24 @@ SceneTransition.prototype = {
 			current.trigger = current.trigger.remove ? null : current.trigger;
 			return;
 		}
-		
-		if((current.name != null && caller[current.name](current)) || current.remove){
+		if(current.funcFound == null){
+			current.funcFound = current.name == null || caller[current.name] != null;
+			if(!current.funcFound){
+				console.warn('NotFound scene: ' + current.name);
+			}
+		}
+		if(current.funcFound){
+			if((current.name != null && caller[current.name](current)) || current.remove){
+				this.removeCurrentOrder();
+			}
+		}
+		if(current.remTrigger != null && current.remTrigger.remove){
 			this.removeCurrentOrder();
 		}
+		
 		current.count++;
 		if(current.duration > 0 && current.duration <= current.count){
 			this.removeCurrentOrder();
-			return;
 		}
 		
 	},
@@ -506,9 +538,12 @@ SceneTransition.prototype = {
 var SPRITEANM_DELIMITER = '][';
 var SPRITEANM_FRAMES = '@'; //[frames, loops]
 var SPRITEANM_LOOPS = /^\/(\d+)/;
-function makeSpriteAnimation(imageName, query){
+function makeSpriteAnimation(imageName, query, canvasSprites){
 	var i, res = [], qArr, q, spl, frames = [], sprites = [], spa, loops = {}, mat
-		, baseFrame = 1;
+		, baseFrame = 1, maked, isReffer;
+	
+	//出来上がったスプライトを使用
+	isReffer = canvasSprites != null;
 	
 	query = query.replace(/^\[\[\]]+|\[\[\]]+$/g,'');
 	qArr = query.split(SPRITEANM_DELIMITER);
@@ -527,8 +562,8 @@ function makeSpriteAnimation(imageName, query){
 		if(spl[1] == null){
 			spl[1] = baseFrame;
 		}
-		
-		sprites.push(makeSpriteQuery(imageName, spl[0]));
+		maked = isReffer ? canvasSprites[spl[0]] : makeSpriteQuery(imageName, spl[0]);
+		sprites.push(maked);
 		frames.push(spl[1] | 0);
 	}
 	spa = new SpriteAnimation();
