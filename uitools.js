@@ -538,12 +538,17 @@ SceneTransition.prototype = {
 var SPRITEANM_DELIMITER = '][';
 var SPRITEANM_FRAMES = '@'; //[frames, loops]
 var SPRITEANM_LOOPS = /^\/(\d+)/;
-function makeSpriteAnimation(imageName, query, canvasSprites){
+//function makeSpriteAnimation(imageName, query, canvasSprites){
+function makeSpriteAnimation(spriteOrName, query){
 	var i, res = [], qArr, q, spl, frames = [], sprites = [], spa, loops = {}, mat
-		, baseFrame = 1, maked, isReffer;
+		, baseFrame = 1, maked, isReffer
+		, imageName, canvasSprites
+		;
 	
 	//出来上がったスプライトを使用
-	isReffer = canvasSprites != null;
+	isReffer = typeof spriteOrName == 'object';
+	imageName = isReffer ? null : spriteOrName;
+	canvasSprites = isReffer ? spriteOrName : null ;
 	
 	query = query.replace(/^\[\[\]]+|\[\[\]]+$/g,'');
 	qArr = query.split(SPRITEANM_DELIMITER);
@@ -648,7 +653,7 @@ SpriteAnimation.prototype = {
 		this.count++;
 		this.currentCount++;
 		
-		if(this.currentCount > this.frames[this.pattern]){
+		if(this.currentCount >= this.frames[this.pattern]){
 			this.currentCount = 0;
 			if(this.isLoop()){
 				this.played[this.pattern]++;
