@@ -102,6 +102,9 @@ WordPrint.prototype ={
 		this.str;
 		this.disp = true;
 		this.drawOrder = 128;
+		
+		this.propKeys = {};
+		this.initPropKeys();
 	},
 	
 	//スプライトの元になるスクロールを生成
@@ -122,6 +125,21 @@ WordPrint.prototype ={
 		this.canvasSpriteSource[imageName] = scroll;
 		
 		return scroll;
+	},
+	
+	initPropKeys: function(){
+		var props = {
+			'font-size': 'fontSize'
+			, 'bg-color': 'bgcolor'
+			, 'fg-color': 'color'
+			, 'mark-align': 'soundmarkAlign'
+			, 'cols-length': 'cols'
+			, 'max-rows': 'rows'
+			, 'row-space': 'rowSpace'
+			, 'draw-order': 'drawOrder'
+			, 'scroll': 'scroll'
+		};
+		this.propKeys = props;
 	},
 	
 	allocSprites: function(){
@@ -523,6 +541,23 @@ WordPrint.prototype ={
 	
 	setDrawOrder: function(o){
 		this.drawOrder = o;
+	},
+	
+	setStyle: function(prop, value){
+		var k, propKeys = this.propKeys
+		;
+		if(value != null){
+			this[prop] = value;
+			return;
+		}
+		
+		for(k in prop){
+			if(propKeys[k] == null){
+//				console.worn('word print prop[' + k + '] was not faund!');
+				continue;
+			}
+			this[propKeys[k]] = prop[k];
+		}
 	},
 	
 	spriteWordIds_o: function(words)
