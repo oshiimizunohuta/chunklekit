@@ -365,7 +365,7 @@ SceneTransition.prototype = {
 
 	current: function(name){
 		var rem, current;
-		if(name){
+		if(name != null){
 			rem = this.removeOrder(name);
 			if(rem != null){
 				this.scenePrevious = this.sceneCurrent;
@@ -429,7 +429,7 @@ SceneTransition.prototype = {
 		}
 		return this.sceneOrder[0];
 	},
-	
+	//transitionのみで使用・
 	removeCurrentOrder: function(){
 		var current = this.sceneCurrent, name;
 		if(current != null){
@@ -439,21 +439,33 @@ SceneTransition.prototype = {
 			this.sceneCurrent = null;
 		}else if(this.sceneOrder.length > 0){
 			//予約する
-			this.sceneOrder[0].remove = true;
+			//食い込み削除がされてしまう
+//			this.sceneOrder[0].remove = true;
+		}else{
+			return false;
 		}
 		
 		if(this.sceneOrder.length > 0){
 			name = current == null ? 'null' : current.name;
 			console.log(name + ' -> ' + this.sceneOrder[0].name);
 		}
-
+		
+		return true;
 	},
 	
 	removeOrder: function(name){
 		var res = null;
 		if(name == null){
+			//全て削除
 			res = this.sceneOrder.slice();
+			this.sceneOrder.filter(function(s){
+				s.remove = true;
+			});
 			this.sceneOrder = [];
+//			this.removeCurrentOrder();
+			if(this.sceneCurrent != null){
+				this.sceneCurrent.remove = true;
+			}
 			this.sceneCurrent = null;
 			return res;
 		}
@@ -513,12 +525,15 @@ SceneTransition.prototype = {
 			return;
 		}
 		if(current.funcFound == null){
+//			current.funcFound = current.name == null || caller[current.name] != null;
+			//名前指定しているがメソッドが見つからない
 			current.funcFound = current.name == null || caller[current.name] != null;
 			if(!current.funcFound){
 				console.warn('NotFound scene: ' + current.name);
 			}
 		}
 		if(current.funcFound){
+			//名前指定している、メソッドがTRUEを返すか削除フラグで削除処理
 			if((current.name != null && caller[current.name](current)) || current.remove){
 				this.removeCurrentOrder();
 			}
@@ -533,6 +548,18 @@ SceneTransition.prototype = {
 		}
 		
 	},
+	
+	print: function(){
+		var p = [];
+		this.sceneOrder.forEach(function(s){
+			p.push(s.name);
+		});
+		if(this.sceneCurrent != null){
+			p.push(this.sceneCurrent.name);
+		}
+		console.log(p.join("\n"));
+//		console.log(p);
+	}
 };
 
 var SPRITEANM_DELIMITER = '][';
@@ -556,7 +583,7 @@ function makeSpriteAnimation(spriteOrName, query){
 		q = qArr[i];
 		mat = q.match(SPRITEANM_LOOPS);
 		if(mat != null){
-			loops[sprites.length - 1] = mat[1];
+			loops[sprites.length - 1] = mat[1] | 0;
 			continue;
 		}
 		spl = q.split(SPRITEANM_FRAMES);
@@ -568,6 +595,9 @@ function makeSpriteAnimation(spriteOrName, query){
 			spl[1] = baseFrame;
 		}
 		maked = isReffer ? canvasSprites[spl[0]] : makeSpriteQuery(imageName, spl[0]);
+		if(maked == null){
+			console.worn('No Sprite Animation: ', spriteOrName, query);
+		}
 		sprites.push(maked);
 		frames.push(spl[1] | 0);
 	}
@@ -622,6 +652,14 @@ SpriteAnimation.prototype = {
 		}
 	},
 	
+	isPattern: function(pattern, count){
+		if(count != null){
+			return this.pattern == pattern && this.currentCount == count;
+		}else{
+			return this.pattern == pattern;
+		}
+	},
+	
 	isLoop: function(){
 		var pattern = this.pattern
 			, play = this.play[pattern] != null ? this.play[pattern] : null
@@ -649,7 +687,16 @@ SpriteAnimation.prototype = {
 		return this.sprites[this.pattern];
 	},
 	
+	sum: function(start, end){
+		var duration = this.frames.slice(start, end).reduce(function(a, b){
+			return (a | 0) + (b | 0);
+		});
+		
+		return duration;
+	},
+	
 	next: function(){
+		var s;
 		this.count++;
 		this.currentCount++;
 		
@@ -671,6 +718,7 @@ SpriteAnimation.prototype = {
 			}
 			return this.sprites[this.lastPattern];
 		}
+		
 		if(this.visible){
 			this.sprites[this.pattern].show();
 		}else{
