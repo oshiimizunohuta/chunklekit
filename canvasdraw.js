@@ -543,7 +543,7 @@ CanvasScroll.prototype = {
 	spriteLine: function(from, to, color)
 	{
 		var f = {x: from.x, y: from.y}, t = {x: to.x, y: to.y}, c = color
-		,info = {from : f, to: t, color: c, order: 128};
+		,info = {from : f, to: t, color: c, order: SPRITE_ORDER_DEFAULT};
 		this.drawInfoStack.push(info);
 		if(this.maxSpritesStack < this.drawInfoStack.length){
 			this.drawInfoStack.shift();
@@ -553,7 +553,7 @@ CanvasScroll.prototype = {
 	/**
 	* 消す
 	*/
-	clear: function(color, rect)
+	clear: function(color, rect, order)
 	{
 		if(rect == null){
 			rect = {x: 0, y: 0, w: (0 | this.canvas.width), h: (0 | this.canvas.height)};
@@ -564,7 +564,7 @@ CanvasScroll.prototype = {
 			this.ctx.fillStyle = makeRGB(color);
 			this.ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
 		}
-		this.drawInfoStack.push({color: color == null ? null : color, fillrect: rect == null ? null : rect, order: 128});
+		this.drawInfoStack.push({color: color == null ? null : color, fillrect: rect == null ? null : rect, order: order == null ? 0 : order});
 	},
 	
 	drawFillRectInfo: function(rectInfo)
@@ -2291,7 +2291,8 @@ function setSwapColorSprite(sprite, to, from, reset)
 	if(to == null && from == null){
 		sprite.resetSwapColor();
 	}else{
-		if(reset != null && reset){
+//		TODO 利用中のものを確認　if(reset != null && reset){
+		if(reset == null || reset){
 			sprite.setSwapColor(to, from);
 		}else{
 			sprite.pushSwapColor(to, from);
@@ -2425,7 +2426,7 @@ CanvasSprite.prototype = {
 		this.chunkMap = [[]]; //ChunkQuery-Position
 		this.chunkIds = null; //CurrentSpriteId
 		this.primary = true; //draw reliably even overdraw
-		this.order = 128; // display order [first << late]
+		this.order = SPRITE_ORDER_DEFAULT; // display order [first << late]
 	},
 	
 	drawScroll: function(scroll, x, y)

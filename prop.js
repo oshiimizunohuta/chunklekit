@@ -17,7 +17,7 @@ var SCROLL_MAX_SPRITES_DRAW = 32; //スプライト最大描画数
 var SCROLL_MAX_SPRITES_STACK = 2048; //スプライト最大スタック数
 
 var IMAGE_DIR = './img/'; //画像ファイル読み込みパス(URLフルパスも可)
-
+var SPRITE_ORDER_DEFAULT = 128;
 //wordprint
 
 var WORDPRINT_FONT8PX = 'font8p';
