@@ -819,6 +819,7 @@ function bubbleSort(data, order, k){
 	, diff = order == null || order == 'asc' 
 		? function(a, b){return a > b;} 
 		: function(a, b){return a < b;}
+		, swaped = true
 	;
 	if(k == null){
 		for (i = 0; i < len - 1; i++){
@@ -831,12 +832,20 @@ function bubbleSort(data, order, k){
 			}
 		}
 	}else{
-		for (i = 0; i < len - 1; i++){
-			for (j = 0; j < len - i - 1; j++){
+		i = 0;
+//		for (i = 0; i < len - 1; i++){
+		while(swaped){
+			swaped = false;
+			i++;
+			for (j = 0; j < len - i; j++){
+				if(data[j] == null || data[j + 1] == null){
+					debugger
+				}
 				if (diff(data[j][k], data[j + 1][k])){
 					n = data[j];
 					data[j] = data[j + 1];
 					data[j + 1] = n;
+					swaped = true;
 				}
 			}
 		}
