@@ -32,6 +32,10 @@ Rect.prototype = {
 //		this.SORTAXIS = ['x', 'y'];
 //		this.SORTSOLID = ['w', 'h'];
 	},
+	
+	center: function(){
+		return {x: this.x + (this.w / 2), y: this.y + (this.h / 2), z: this.z + (this.d / 2)};
+	},
 
 	isContain: function(x, y)
 	{
@@ -838,9 +842,6 @@ function bubbleSort(data, order, k){
 			swaped = false;
 			i++;
 			for (j = 0; j < len - i; j++){
-				if(data[j] == null || data[j + 1] == null){
-					debugger
-				}
 				if (diff(data[j][k], data[j + 1][k])){
 					n = data[j];
 					data[j] = data[j + 1];
