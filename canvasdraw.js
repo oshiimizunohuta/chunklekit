@@ -330,10 +330,12 @@ CanvasScroll.prototype = {
 	   */
 	drawSprite: function(sprite, x, y)
 	{
-		this.drawInfoStack.push(sprite.makeSpriteInfo(x, y));
+		var info = sprite.makeSpriteInfo(x, y);
+		this.drawInfoStack.push(info);
 		if(this.maxSpritesStack < this.drawInfoStack.length){
 			this.drawInfoStack.shift();
 		}
+		return info;
 	},
 
 	drawSpriteInfo: function(spriteInfo)
