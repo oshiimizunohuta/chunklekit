@@ -23,6 +23,7 @@ CUCursor.prototype = {
 		this.pos = {x: 0, y: 0, z: 0};
 		this.pos_pre = {x: 0, y:0, z: 0};
 		this.cells = {x: 0, y: 0, z: 0};
+		this.looped_pre = {x: 0, y: 0, z: 0};
 		this.looped = {x: 0, y: 0, z: 0};
 		this.outside = {x: 0, y: 0, z: 0};
 		this.disablePos = [];
@@ -165,17 +166,33 @@ CUCursor.prototype = {
 			}
 		}
 	},
+	
+	undo: function(){
+		var pos = this.pos, pre = this.pos_pre
+			, a, prepre
+			, loop = this.looped, loopre = this.looped_pre
+		;
+		for(a in pos){
+			prepre = pre[a];
+			pos[a] = pre[a];
+			pre[a] = prepre;
+			prepre = loop[a];
+			loop[a] = loopre[a];
+			loopre[a] = prepre;
+		}
+	},
 
 	move: function(x, y, z)
 	{
 		var pos = this.pos, pre = this.pos_pre, cells = this.cells
-		, loop = this.looped, isReturn = this.cellReturn
+		, loop = this.looped, loopre = this.looped_pre, isReturn = this.cellReturn
 //		, keys = Object.keys(pos), a
 		, a, id
 		, nums = {x: (x == null ? 0 : x), y: (y == null ? 0 : y), z: (z == null ? 0 : z)};
 		
 		for(a in pos){
 			pre[a] = pos[a];
+			loopre[a] = loop[a];
 			pos[a] += nums[a];
 			if(pos[a] >= cells[a]){
 				loop[a] = pos[a] - cells[a] + 1;
@@ -196,12 +213,13 @@ CUCursor.prototype = {
 	moveTo: function(x, y, z)
 	{
 		var pos = this.pos, pre = this.pos_pre, cells = this.cells
-		, loop = this.looped, isReturn = this.cellReturn
+		, loop = this.looped, loopre = this.looped_pre, isReturn = this.cellReturn
 		, a
 		, nums = {x: (x == null ? 0 : x), y: (y == null ? 0 : y), z: (z == null ? 0 : z)};
 		
 		for(a in pos){
 			pre[a] = pos[a];
+			loopre[a] = loop[a];
 			pos[a] = nums[a];
 			if(pos[a] >= cells[a]){
 				loop[a]++;
@@ -603,8 +621,16 @@ function makeSpriteAnimation(spriteOrName, query){
 	}
 	spa = new SpriteAnimation();
 	spa.init(sprites, frames, loops);
+	spa.query = query;
+	spa.source = spriteOrName;
 	return spa;
 };
+
+function copySpriteAnimation(anim){
+	var make = new SpriteAnimation();
+	make.init(anim.sprites, anim.frames,anim.play);
+	return make;
+}
 function SpriteAnimation(){return;}
 SpriteAnimation.prototype = {
 	init: function(sprites, frames, playCounts){
@@ -630,6 +656,8 @@ SpriteAnimation.prototype = {
 		this.duration = frames.reduce(function(a, b){
 			return (a | 0) + (b | 0);
 		});
+		this.query = '';
+		this.source = sprites;
 	},
 	
 	hide: function(){
@@ -653,10 +681,12 @@ SpriteAnimation.prototype = {
 	},
 	
 	isPattern: function(pattern, count){
-		if(count != null){
+		if(pattern == null){
+			return this.currentCount == count;
+		}else if(count != null){
 			return this.pattern == pattern && this.currentCount == count;
 		}else{
-			return this.pattern == pattern;
+			return this.pattern == pattern && this.currentCount == 0;
 		}
 	},
 	
