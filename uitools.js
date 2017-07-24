@@ -438,6 +438,7 @@ SceneTransition.prototype = {
 		var current = this.sceneCurrent;
 		params = params == null ? {} : params;
 		if(current != null){
+			//TODO currentを戻す必要性の調査
 			this.sceneCurrent = null;
 			this.sceneOrder.unshift(this.makeParams(current.name, current.duration, current.params, current.count));
 			this.sceneOrder.unshift(this.makeParams(funcName, duration, params));
@@ -570,7 +571,7 @@ SceneTransition.prototype = {
 	print: function(){
 		var p = [];
 		this.sceneOrder.forEach(function(s){
-			p.push(s.name);
+			p.push(s.name == null ? 'null' : s.name);
 		});
 		if(this.sceneCurrent != null){
 			p.push(this.sceneCurrent.name);

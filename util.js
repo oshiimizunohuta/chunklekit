@@ -777,6 +777,18 @@ function numFormat(num, length)
 	return num.slice(num.length - length);
 }
 
+function hexFormat(num, length)
+{
+	var addcount, i;
+	num = num.toString(16);
+	addcount = length - num.length;
+	for(i = 0; i < addcount; i++){
+		num = '0' + num;
+	}
+	
+	return num.slice(num.length - length);
+}
+
 function clone(src){
 	var dst, k
 	;
