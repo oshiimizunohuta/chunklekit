@@ -215,7 +215,8 @@ CUCursor.prototype = {
 		var pos = this.pos, pre = this.pos_pre, cells = this.cells
 		, loop = this.looped, loopre = this.looped_pre, isReturn = this.cellReturn
 		, a
-		, nums = {x: (x == null ? 0 : x), y: (y == null ? 0 : y), z: (z == null ? 0 : z)};
+		, nums = {x: (x == null ? pos.x : x), y: (y == null ? pos.y : y), z: (z == null ? pos.z : z)};
+//		, nums = {x: (x == null ? 0 : x), y: (y == null ? 0 : y), z: (z == null ? 0 : z)};
 		
 		for(a in pos){
 			pre[a] = pos[a];
