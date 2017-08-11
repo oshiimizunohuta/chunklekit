@@ -448,6 +448,19 @@ Ease.prototype = {
 	}
 };
 
+function makeEaseTri(){
+	var ease = {
+			x: new Ease()
+			, y: new Ease()
+			, z: new Ease()
+		}
+	;
+	ease.x.in(0, 0, 1);
+	ease.y.in(0, 0, 1);
+	ease.z.in(0, 0, 1);
+	return ease;
+};
+
 function Position(){return null;}
 Position.prototype = {
 	init: function(x, y, z){
