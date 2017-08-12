@@ -110,8 +110,8 @@ CanvasScroll.prototype = {
 		this.rasterVolatile = true;
 		
 		this.mirrorMode = null;
-		this.mirrorH = false;
-		this.mirrorV = false;
+		this.mirrorWidth = width;
+		this.mirrorHeight = height;
 		
 	},
 
@@ -142,6 +142,7 @@ CanvasScroll.prototype = {
 			, i, raster, pos = {x: 0, y: 0}, fixpos = {x: dx, y: dy}, currentLine = 0
 			, raster = this.rasterLines.horizon
 			, h = 0
+			, mirrorw = this.mirrorWidth, mirrorh = this.mirrorHeight
 			;
 			
 		if(raster.length > 0){
@@ -149,8 +150,14 @@ CanvasScroll.prototype = {
 				if(raster[i] != null){
 					h = i - currentLine;
 					if(h > 0){
-						x = 0 | (pos.x + fixpos.x) % (dw * 2);
-						y = 0 | (currentLine - pos.y - fixpos.y) % (dh * 2);
+//						x = 0 | (pos.x + fixpos.x) % (dw * 2);
+//						y = 0 | (currentLine - pos.y - fixpos.y) % (dh * 2);
+						x = 0 | (pos.x + fixpos.x);
+						x = x <= - mirrorw ? mirrorw + mirrorw + x : x;
+						x = x >= mirrorw ? x - mirrorw - mirrorw : x;
+						y = 0 | (currentLine - pos.y - fixpos.y);
+						y = y <= - mirrorh ? mirrorh + mirrorh + y : y;
+						y = y >= mirrorh ? y - mirrorh - mirrorh : y;
 						targetScroll.ctx.drawImage(this.canvas, 0, y, 0 | sw, h, x, currentLine, 0 | dw, h);
 
 						currentLine = i;
@@ -159,8 +166,14 @@ CanvasScroll.prototype = {
 					pos.y = raster[i].y;
 				}
 			}
-			x = 0 | (pos.x + fixpos.x) % (dw * 2);
-			y = 0 | (currentLine - pos.y - fixpos.y) % (dh * 2);
+//			x = 0 | (pos.x + fixpos.x) % (dw * 2);
+//			y = 0 | (currentLine - pos.y - fixpos.y) % (dh * 2);
+			x = 0 | (pos.x + fixpos.x);
+			x = x <= - mirrorw ? mirrorw + mirrorw + x : x;
+			x = x >= mirrorw ? x - mirrorw - mirrorw : x;
+			y = 0 | (currentLine - pos.y - fixpos.y);
+			y = y <= - mirrorh ? mirrorh + mirrorh + y : y;
+			y = y >= mirrorh ? y - mirrorh - mirrorh : y;
 			h = i - currentLine;
 			targetScroll.ctx.drawImage(this.canvas, 0, y, 0 | sw, h, x, currentLine, 0 | dw, h);
 		}else if(this.rasterLines.vertical.length > 0){
@@ -688,8 +701,10 @@ CanvasScroll.prototype = {
 	setRasterHorizon: function(sy, dx, dy) {
 		this.rasterLines.vertical = [];
 		this.rasterLines.horizon[sy] = {
-			x : dx,
-			y : dy
+			x : dx % (this.mirrorWidth * 2),
+			y : dy % (this.mirrorHeight * 2)
+//			x : dx % this.mirrorWidth,
+//			y : dy % this.mirrorHeight
 		};
 	},
 
@@ -697,8 +712,8 @@ CanvasScroll.prototype = {
 	setRasterVertical: function(sx, dx, dy) {
 		this.rasterLines.horizon = [];
 		this.rasterLines.vertical[sx] = {
-			x : dx,
-			y : dy
+			x : dx % (this.mirrorWidth * 2),
+			y : dy % (this.mirrorHeight * 2)
 		};
 	},
 
