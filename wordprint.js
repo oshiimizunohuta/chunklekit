@@ -48,6 +48,9 @@ WordPrint.prototype ={
 		this.color;
 		this.bgcolor;
 		
+		this.vflip = false;
+		this.hflip = false;
+		
 		
 	//	this.newLineWord = "\n";
 		this.newLineWord = "n";
@@ -138,6 +141,8 @@ WordPrint.prototype ={
 			, 'row-space': 'rowSpace'
 			, 'draw-order': 'drawOrder'
 			, 'scroll': 'scroll'
+			, 'v-flip': 'vflip'
+			, 'h-flip': 'hflip'
 		};
 		this.propKeys = props;
 	},
@@ -547,13 +552,16 @@ WordPrint.prototype ={
 		var k, propKeys = this.propKeys
 		;
 		if(value != null){
-			this[prop] = value;
-			return;
+			//prop指定 valueセット
+			if(propKeys[prop] == null){
+				return;
+			}
+			this[propKeys[prop]] = value;
 		}
 		
+		//propがobject
 		for(k in prop){
 			if(propKeys[k] == null){
-//				console.worn('word print prop[' + k + '] was not faund!');
 				continue;
 			}
 			this[propKeys[k]] = prop[k];
@@ -728,6 +736,8 @@ WordPrint.prototype ={
 				return i;
 			}
 			s.order = this.drawOrder;
+			s.vflip(this.vflip);
+			s.hflip(this.hflip);
 			scr.drawSprite(s, x, y);
 			x += s.w;
 		}
