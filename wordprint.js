@@ -568,6 +568,20 @@ WordPrint.prototype ={
 		}
 	},
 	
+	getStyle: function(key){
+		var k, props = this.propKeys
+			, styles = {}
+		;
+		if(key == null){
+			for(k in props){
+				styles[k] = this[props[k]];
+			}
+		}else{
+			return this[props[key]];
+		}
+		return styles;
+	},
+	
 	spriteWordIds_o: function(words)
 	{
 		var len = words.length, sprites = [], i, spr;
