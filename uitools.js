@@ -303,6 +303,7 @@ SceneOrder.prototype = {
 		this.params = order.params;
 		this.trigger = order.trigger;
 		this.remTrigger = order.rem_trig;
+//		this.skipRate = order.skip_rate;
 		this.funcNotFound = false;
 	},
 	isFirst: function(){
@@ -319,6 +320,11 @@ SceneOrder.prototype = {
 		this.remTrigger = scene;
 		return this;
 	},
+//	skip: function(){
+//		var skiped = this.isLast() === false;
+//		this.count = this.duration > 0 ? this.duration - 1 : this.count;
+//		return skiped;
+//	}
 	
 };
 
@@ -334,6 +340,7 @@ SceneTransition.prototype = {
 		this.sceneOrder = [];
 		this.scenePrevious = null;
 		this.sceneCurrent = null;
+		this.skipRate = 1;
 //		this.triggerScene = null;
 		
 		this.nullFunc = function(info){
@@ -410,6 +417,10 @@ SceneTransition.prototype = {
 			return order[order.length - 1];
 		}
 		return false;
+	},
+	
+	isEmpty: function(){
+		return (this.sceneOrder.length == 0) && (this.sceneCurrent == null);
 	},
 	
 	sumDuration: function(){
@@ -529,10 +540,16 @@ SceneTransition.prototype = {
 		return attach;
 	},
 	
-	transition: function(caller){
+	skip: function(rate)
+	{
+		this.skipRate = rate;
+	},
+	
+	transition: function(caller, skipCount){
 		var order = this.sceneOrder
 			, current = this.sceneCurrent
 		;
+		skipCount = skipCount == null ? 0 : skipCount;
 		if(current == null && order.length == 0){
 			return;
 		}
@@ -565,6 +582,13 @@ SceneTransition.prototype = {
 		current.count++;
 		if(current.duration > 0 && current.duration <= current.count){
 			this.removeCurrentOrder();
+		}
+		
+		while(this.skipRate - ++skipCount > 0){
+			if(this.isEmpty()){
+				break;
+			}
+			this.transition(caller, skipCount);
 		}
 		
 	},
