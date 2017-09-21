@@ -728,6 +728,9 @@ WordPrint.prototype ={
 				// make colored sprite v and h
 				this.initSprite(s);
 				all = this.getWordSprites();
+				if(all[s] == null){
+					all[s] = all[this.NOTFOUND_WORD];
+				}
 			}
 			sprites.push(all[s]);
 		}
@@ -739,6 +742,9 @@ WordPrint.prototype ={
 		
 		for(i = offset; i < len; i++){
 			s = sprites[i];
+			if(s == null){
+				s = this.NOTFOUND_WORD;
+			}
 			if(enableNewLine && x + s.w > newLinePos){
 				newline();
 			}

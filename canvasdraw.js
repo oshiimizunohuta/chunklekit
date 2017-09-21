@@ -775,6 +775,8 @@ CanvasScroll.prototype = {
 			
 			document.body.appendChild(pair);
 		}; 
+		
+		return img;
 	},
 
 };
