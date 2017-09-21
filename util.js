@@ -882,11 +882,85 @@ function bubbleSort(data, order, k){
  * APIインターフェース 
  */
 var APIServer = {url: null};
+var CKAPIServer = function(){return;};
+CKAPIServer.prototype = {
+	init: function(apiUrl){
+		this.serverUrl = apiUrl;
+	},
+	
+	post: function(api, params, func, errorFunc){
+		this.send('post', api, params, func, errorFunc);
+	},
+	get: function(api, params, func, errorFunc){
+		this.send('get', api, params, func, errorFunc);
+	},
+	
+	send: function(method, api, params, func, errorFunc){
+		var str, query = [], key, x = new XMLHttpRequest();
+		if(this.serverUrl == null){console.error('not initialize api server'); return;}
+
+		x.timeout = 5000;
+
+		x.onload = func != null ? function () {
+			var j;
+			if (x.readyState === 4) {
+				if (x.status === 200) {
+					try{
+						j = x.responseText;
+						j = typeof j == 'string' ? JSON.parse(j) : '';
+					}catch(e){
+						j = null;
+					}
+					func(j);
+				} else {
+					console.error(x.statusText);
+				}
+			}
+		} : function () {
+			return false;
+		};
+
+		if(errorFunc != null){
+			x.ontimeout = function(e){
+				errorFunc(e);
+				return false;
+			};
+			x.onerror = function(e){
+				errorFunc(e);
+				return false;
+			};
+			x.onabort = function(e){
+				errorFunc(e);
+				return false;
+			};
+		}
+
+
+		for(key in params){
+			query.push(key + '=' + params[key]);
+		}
+		str = query.join('&');
+		if(method.toUpperCase() == 'GET'){
+			x.open(method, this.serverUrl + '/' + api + '?' + str , true);
+			str = "";
+		}else{
+			x.open(method, this.serverUrl + '/' + api, true);
+		}
+		x.withCredentials = true;
+		x.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded;charset=UTF-8');
+
+		x.send(str);
+	}
+};
+
 function initAPIServer(apiUrl)
 {
 	APIServer.url = apiUrl;
 };
 
+function CKServers(name){
+	
+}
 /**
  * API送信
  * @param {string} method
@@ -900,33 +974,6 @@ function sendToAPIServer(method, api, params, func, errorFunc)
 {
 	var query = [], key, x = new XMLHttpRequest();
 	if(APIServer.url == null){console.error('not initialize api server'); return;}
-//	if(func != null){
-//		x.onreadystatechange = function(){
-//			var j;
-//			switch(x.readyState){
-//				case 0:break;//オブジェクト生成
-//				case 1:break;//オープン
-//				case 2:break;//ヘッダ受信
-//				case 3:break;//ボディ受信
-//				case 4:
-//							if((200 <= x.status && x.status < 300) || (x.status == 304)){
-//								j = x.responseText;
-//								try{
-//									j = typeof j == 'string' ? JSON.parse(j) : '';
-//								}catch(e){
-//									j = null;
-//								}
-//								func(j);
-//								x.abort();
-//							}else{
-////								x.ontimeout();
-//								x.abort();
-//							}
-//							 break;//send()完了
-//			}
-//		//	func;
-//		};
-//	}
 
 	x.timeout = 5000;
 	
