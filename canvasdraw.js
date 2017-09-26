@@ -25,7 +25,6 @@ function makeCanvasScroll(scrollName, insertID){
 	return scr;
 };
 
-
 /**
  * 描画リピート
  */
@@ -730,6 +729,7 @@ CanvasScroll.prototype = {
 		c.height = h;
 		c.style.width = w;
 		c.style.height = h;
+		
 	},
 
 	getSize: function() {
@@ -3260,6 +3260,23 @@ function makeColorArray(str)
 	return a.map(function(b){
 		return parseInt(b, 16);
 	});
+}
+
+/**
+ * スクリーンサイズ変更（環境設定）
+ * @param {type} scaleRate
+ * @returns {screenScale}
+ * @description PointingControll resizeRateも必要に応じて実行
+ */
+function screenScale(scaleRate){
+	if(scaleRate != null){
+		var s;
+		VIEWMULTI = scaleRate;
+		s = getDisplaySize();
+		scrollByName(UI_SCREEN_ID).resizeCanvas(s.w | 0, s.h | 0);
+		scrollByName(UI_SCREEN_ID).ctx.imageSmoothingEnabled = false;//アンチ無効
+	}
+	return VIEWMULTI;
 }
 
 /**
