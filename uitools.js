@@ -113,8 +113,14 @@ CUCursor.prototype = {
 		return true; 
 	},
 	
+	updateIndex: function(){
+		var pos = this.pos, cells = this.cells;
+		this.index = pos.x + (pos.y * cells.x) + (pos.z * cells.x * cells.y);
+		return this.index;
+	},
+	
 	valueOf: function(valueArray){
-		var i = this.index
+		var i = this.updateIndex()
 			, vala = []
 			, func = function(a){
 				if(a instanceof Array){
@@ -206,7 +212,7 @@ CUCursor.prototype = {
 			}
 		}
 		
-		this.index = pos.x + (pos.y * cells.x) + (pos.z * cells.x * cells.y);
+		this.updateIndex();
 		this.rangeOverCheck();
 	},
 	
@@ -232,7 +238,7 @@ CUCursor.prototype = {
 				loop[a] = 0;
 			}
 		}
-		this.index = pos.x + (pos.y * cells.x) + (pos.z * cells.x * cells.y);
+		this.updateIndex();
 		this.rangeOverCheck();
 	},
 	
@@ -266,7 +272,7 @@ CUCursor.prototype = {
 	isLooped: function(axis, valued)
 	{
 		var l = this.looped;
-		valued = valued == null ? true : false;
+		valued = valued == null ? true : valued;
 		
 		if(valued){
 			if(axis == null){
