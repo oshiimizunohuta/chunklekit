@@ -467,6 +467,17 @@ PointingControll.prototype ={
 		this.initMenuables();
 	},
 	
+	resizeRate: function(screenScroll){
+		if(screenScroll == null){
+			return this.sizeRate;
+		}
+		this.sizeRate = {
+			w: screenScroll.canvas.width / this.baseScroll.canvas.width,
+			h: screenScroll.canvas.height / this.baseScroll.canvas.height
+		};
+		return this.sizeRate;
+	},
+	
 	initTappables: function()
 	{
 		var self = this
