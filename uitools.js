@@ -453,18 +453,23 @@ SceneTransition.prototype = {
 	},
 	
 	unshiftOrder: function(funcName, duration, params){
-		var current = this.sceneCurrent;
+		var current = this.sceneCurrent
+			, order
+		;
 		params = params == null ? {} : params;
 		if(current != null){
 			//TODO currentを戻す必要性の調査
 			this.sceneCurrent = null;
-			this.sceneOrder.unshift(this.makeParams(current.name, current.duration, current.params, current.count));
-			this.sceneOrder.unshift(this.makeParams(funcName, duration, params));
+//			this.sceneOrder.unshift(this.makeParams(current.name, current.duration, current.params, current.count));
+			this.sceneOrder.unshift(current);
+			order = this.makeParams(funcName, duration, params);
+			this.sceneOrder.unshift(order);
 		}else{
-//			this.sceneOrder.unshift({name: funcName, duration: duration, count: 0, params: params});
-			this.sceneOrder.unshift(this.makeParams(funcName, duration, params));
+			order = this.makeParams(funcName, duration, params);
+			this.sceneOrder.unshift(order);
 		}
-		return this.sceneOrder[0];
+//		console.log(order);
+		return order;
 	},
 	//transitionのみで使用・
 	removeCurrentOrder: function(){
