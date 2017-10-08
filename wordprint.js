@@ -59,7 +59,7 @@ WordPrint.prototype ={
 		this.NOTFOUND_WORD = "？";
 		this.cols = 0; //自動改行までの文字数
 		this.rows = 0; //文字表示行数
-		this.rowSpace = 2; //改行幅
+		this.rowSpace = 0; //改行幅
 		
 		this.NOTFOUND_CODE = 83; //'？'
 		this.SPACE_CODE = 236; //'　'
@@ -289,6 +289,7 @@ WordPrint.prototype ={
 		align = align == null ? (this.isHorizon() ? 'horizon' : 'vertical') : align;
 		if(this.allWordSprites[imageName] == null){
 			this.allWordSprites[imageName] = this.allocSprites();
+			this.initSprite(this.NOTFOUND_WORD);
 //
 //			console.warn('notFound ColorQuery: ' + imageName);
 //			return null;
@@ -667,6 +668,97 @@ WordPrint.prototype ={
 		}
 	},
 	
+	textScale: function(str)
+	{
+		var i, len, s, sprite, offset
+			, isHorizon =  this.isHorizon(), isVertical = this.isVertical()
+			, sprites = []
+			, all = this.getWordSprites()
+			, posx = 0
+			, posy = 0, x, y
+			, newLines = [] , newWord = this.NEWLINE_WORD
+			, newLinePos = (this.chipSize * this.cols) + posx
+			, scr = this.scroll
+			, enableNewLine = this.cols > 0
+			, enableMaxRow = this.rows > 0
+			, rowHeight = (this.rowSpace + this.vChipSize) * (isVertical ? 2 : 1)
+			, maxRowPos = (rowHeight * this.rows) + posy
+			, sp_alph = this.sp_alph, sp_hira = this.sp_hira, sp_kata = this.sp_kata
+			, newline = function(){
+				y += rowHeight;
+//				y += s.h;
+				x = posx;
+			}
+			, inSP = function(w){
+				if(sp_alph[w] != null){
+					return sp_alph[w];
+				}else if(sp_kata[w] != null){
+					return sp_kata[w];
+				}else if(sp_hira[w] != null){
+					return sp_hira[w];
+				}
+				
+				return w;
+			}
+		;
+		if(!this.disp){
+			return 0;
+		}
+		if(typeof scr == "string"){
+			scr = layerScroll[scr];
+		}
+		str += '';
+		
+		str = str.replace(/\r?\n/g, newWord);
+		while(str.indexOf(newWord) >= 0){
+			newLines.push(str.indexOf(newWord));
+			str = str.replace(newWord, '');
+		}
+		len = str.length;
+		sprites = [];
+		for(i = 0; i < len; i++){
+			s = inSP(str.substr(i, 1));
+			s = s !== false ? s : this.NOTFOUND_WORD;
+			if(all[s] == null){
+				// make colored sprite v and h
+				this.initSprite(s);
+				all = this.getWordSprites();
+				if(all[s] == null){
+					all[s] = all[this.NOTFOUND_WORD];
+				}
+			}
+			sprites.push(all[s]);
+		}
+		
+		len = sprites.length;
+		x = 0;
+		y = 0;
+		offset = this.readMode ? this.readChars : 0;
+		i = newLines.indexOf(offset);
+		if(i >= 0){
+			delete newLines[i];
+		}
+		for(i = offset; i < len; i++){
+			s = sprites[i];
+			if(s == null){
+				s = all[this.NOTFOUND_WORD];
+			}
+			if(enableNewLine && x + s.w > newLinePos){
+				newline();
+			}
+			if(newLines.indexOf(i) >= 0){
+				newline();
+				newLines.shift();
+			}
+			if(enableMaxRow && y >= maxRowPos){
+				return {w: x + s.w, h: y + rowHeight};
+			}
+			x += s.w;
+		}
+		
+		return {w: x, h: y};
+	},
+	
 	drawWord: function(str)
 	{
 		var i, len, s, sprite, offset
@@ -680,21 +772,15 @@ WordPrint.prototype ={
 			, scr = this.scroll
 			, enableNewLine = this.cols > 0
 			, enableMaxRow = this.rows > 0
-			, maxRowPos = ((this.rowSpace + this.vChipSize) * this.rows * (isVertical ? 2 : 1)) + posy
+			, rowHeight = (this.rowSpace + this.vChipSize) * (isVertical ? 2 : 1)
+			, maxRowPos = (rowHeight * this.rows) + posy
 			, sp_alph = this.sp_alph, sp_hira = this.sp_hira, sp_kata = this.sp_kata
-			, nfw = this.NOTFOUND_WORD
 			, newline = function(){
-				y += s.h;
+				y += rowHeight;
+//				y += s.h;
 				x = posx;
 			}
 			, inSP = function(w){
-//				if(w in sp_alph){
-//					return sp_alph[w];
-//				}else if(w in sp_kata){
-//					return sp_kata[w];
-//				}else if(w in sp_hira){
-//					return sp_hira[w];
-//				}
 				if(sp_alph[w] != null){
 					return sp_alph[w];
 				}else if(sp_kata[w] != null){
@@ -739,20 +825,23 @@ WordPrint.prototype ={
 		x = posx;
 		y = posy;
 		offset = this.readMode ? this.readChars : 0;
-		
+		i = newLines.indexOf(offset);
+		if(i >= 0){
+			delete newLines[i];
+		}
 		for(i = offset; i < len; i++){
 			s = sprites[i];
 			if(s == null){
-				s = this.NOTFOUND_WORD;
+				s = all[this.NOTFOUND_WORD];
 			}
 			if(enableNewLine && x + s.w > newLinePos){
 				newline();
 			}
-			if(newLines.length > 0 && newLines[0] == i){
+			if(newLines.indexOf(i) >= 0){
 				newline();
 				newLines.shift();
 			}
-			if(enableMaxRow && y + s.h >= maxRowPos){
+			if(enableMaxRow && y >= maxRowPos){
 				return i;
 			}
 			s.order = this.drawOrder;
@@ -762,7 +851,7 @@ WordPrint.prototype ={
 			x += s.w;
 		}
 		
-		return -1;
+		return i;
 		
 	},
 
@@ -925,19 +1014,19 @@ WordPrint.prototype ={
 	
 	read: function(str, x, y, color, bgcolor)
 	{
-		var cnt, isEnd = false;
+		var cnt, noRead = false;
 		
 		this.readMode = true;
 		cnt = this.print(str, x, y, color, bgcolor);
 		this.readMode = false;
 		
-		this.readChars = cnt;
-		if(cnt < 0){
-			isEnd = true;
-			this.readChars = 0;
+		if(cnt == this.readChars){
+			noRead = true;
+//			this.readChars = 0;
 		}
+		this.readChars = cnt;
 		
-		return isEnd;
+		return noRead;
 	},
 
 	print: function(str, x, y, color, bgcolor)
