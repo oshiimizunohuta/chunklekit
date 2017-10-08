@@ -671,7 +671,7 @@ SpriteBone.prototype = {
 			return this.parts[q[0]];
 		}
 		if(this.parts[q[0]] == null || this.parts[q[0]][q[1]] == null){
-			console.worn('notfound ' + q[0] + ' ' + q[1]);
+			console.warn('notfound ' + q[0] + ' ' + q[1]);
 			return false;
 		}
 		this.parts[q[0]][q[1]](value);
