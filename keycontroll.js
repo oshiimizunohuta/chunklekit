@@ -1,18 +1,19 @@
 /**
- * @name Key Controll & Mouse Controll
+ * @name Key Controll & Mouse Controll & Gamepad Controll
  * @since 2013-11-19 07:43:37
  * @author bitchunk
- * @version 0.3.0
+ * @version 0.4.0
  */
 //TODO jslint
-var allcontrolls = {};
-var allcontrollsKeys = {};
+var ALLCONTROLLS = {};
+var ALLCONTROLLSKEYS = [];
 var nowkey;
 var ELSE_LOCK = false;
-window.onkeydown = function(e){
-	var enabled = true, i, c, indexes = Object.keys(allcontrolls), len = indexes.length;
+var GAMEPAD_DELIMITER = '@';
+window.addEventListener('keydown', function(e){
+	var enabled = true, i, c, indexes = ALLCONTROLLSKEYS, len = indexes.length;
 	for(i = 0; i < len; i++){
-		c = allcontrolls[indexes[i]];
+		c = ALLCONTROLLS[indexes[i]];
 		if(!(e.keyCode in c.code2name)){
 			if(ELSE_LOCK) {
 				e.preventDefault();
@@ -21,15 +22,16 @@ window.onkeydown = function(e){
 			return true;
 		}//余計なキーは反応させない
 		c.stateDown(e.keyCode);
+		e.preventDefault();
 		enabled = false;
 	}
 
 	return enabled;//false: 他の処理が無効
-};
-window.onkeyup = function(e){
-	var enabled = true, i, c, indexes = Object.keys(allcontrolls), len = indexes.length;
+}, false);
+window.addEventListener('keyup', function(e){
+	var enabled = true, i, c, indexes = ALLCONTROLLSKEYS, len = indexes.length;
 	for(i = 0; i < len; i++){
-		c = allcontrolls[indexes[i]];
+		c = ALLCONTROLLS[indexes[i]];
 		if(!(e.keyCode in c.code2name)){
 			if(ELSE_LOCK) {
 				e.preventDefault();
@@ -38,25 +40,132 @@ window.onkeyup = function(e){
 			return true;
 		}//余計なキーは反応させない
 		c.stateUp(e.keyCode);
+		e.preventDefault();
 		enabled = false;
 	}
 	if(enabled && ELSE_LOCK) {
 		e.preventDefault();
 	}
 	return enabled;
-};
+}, false);
 
+/**
+ * ゲームパッド対応
+ * @type Array
+ */
+var CKGAMEPADS = [];
+var CKGAMEPADSPREVKEYSTATE = {};
+window.addEventListener('gamepadconnected', function(e){
+	gamepadConnect(e, true);
+}, false);
+window.addEventListener('gamepaddisconnected', function(e){
+	gamepadConnect(e, false);
+}, false);
+window.addEventListener("webkitgamepadconnected", function(e){
+	gamepadConnect(e, true);
+}, false);
+window.addEventListener("webkitgamepaddisconnected", function(e){
+	gamepadConnect(e, false);
+}, false);
+
+function gamepadConnect(e, connect){
+	var pads = navigator.getGamepads != null ? navigator.getGamepads() : []
+		, i
+	;
+	if(e == null){
+		CKGAMEPADS = [];
+		for(i = 0; i < pads.length; i++){
+			if(pads[i] == null){
+				continue;
+			}
+			CKGAMEPADS[i] = pads[i];
+		}
+	}else if(connect == null || connect){
+		CKGAMEPADS[e.gamepad.index] = e.gamepad;
+		console.log(e.gamepad);
+	}else{
+		delete CKGAMEPADS[e.gamepad.index];
+		console.log(e.gamepad);
+	}
+}
+function gamepadState(){
+	var i, j
+		, pad, len
+		, buttons, blen
+		, axes, alen, id, v
+		, dir = ['right', 'left', 'down', 'up']
+		, state = {}
+	;
+	gamepadConnect();
+	len = CKGAMEPADS.length;
+	for(i = 0; i < len; i++){
+		pad = CKGAMEPADS[i];
+//		id = pad.id;
+		id = pad.index;
+		buttons = pad.buttons;
+		blen = buttons.length;
+		for(j = 0; j < blen; j++){
+			state[convertGamePadKey(id, j)] = buttons[j].value > 0.5;
+		}
+		axes = pad.axes;
+		alen = dir.length;
+		for(j = 0; j < alen; j++){
+			switch(dir[j]){
+				case 'right': v = axes[0] > 0.5; break;
+				case 'left': v = axes[0] < -0.5; break;
+				case 'down': v = axes[1] > 0.5; break;
+				case 'up': v = axes[1] < -0.5; break;
+			}
+			
+			state[convertGamePadKey(id, dir[j])] = v;
+		}
+		
+	}
+//	CKGAMEPADSKEYSTATE = state;
+	return state;
+}
+function applyGamepadKeys(state){
+	var i, j
+		, pad, len = CKGAMEPADS.length
+		, cont, c, clen = ALLCONTROLLSKEYS.length
+		, buttons, blen
+		, axes, alen, id, v, code, name
+		, dir = ['right', 'left', 'down', 'up']
+//		, state = {}
+	;
+	for(c = 0; c < clen; c++){
+		cont = ALLCONTROLLS[c];
+		for(code in state){
+			name = cont.code2name[code];
+			if(name == null){
+				continue;
+			}
+			if(state[code]){
+				cont.stateDown(code);
+			}else if(CKGAMEPADSPREVKEYSTATE[code] && cont.getState(name)){
+				cont.stateUp(code);
+			}
+		}
+	}
+	CKGAMEPADSPREVKEYSTATE = state;
+	return state;
+
+}
+
+function convertGamePadKey(index, button){
+	return index + GAMEPAD_DELIMITER + button;
+}
 
 //選択しない
-window.onmousedown = function(e){
+window.addEventListener('mousedown', function(e){
 	// e.preventDefault();
-};
+}, false);
 
 //ウィンドウ離れた
 window.addEventListener('blur', function(){
-	var enabled = true, i, c, indexes = Object.keys(allcontrolls), len = indexes.length;
+	var enabled = true, i, c, indexes = ALLCONTROLLSKEYS, len = indexes.length;
 	for(i = 0; i < len; i++){
-		allcontrolls[indexes[i]].allReset();
+		ALLCONTROLLS[indexes[i]].allReset();
 	}
 	// Object.keys(allcontrolls).forEach(function(idname){
 	// });
@@ -89,48 +198,27 @@ function debugLock()
 var KEYSTATE_CHECKFUNC = function(){return;};
 function keyStateCheck()
 {
+	var i, j, c, indexes = ALLCONTROLLSKEYS, len = indexes.length, codes, clen, cindex, state;
 	KEYSTATE_CHECKFUNC();
-	keyUntrig();
-	keyHold();
+	state = gamepadState();
+
+	for(i = 0; i < len; i++){
+		c = ALLCONTROLLS[indexes[i]];
+		codes = c.name2code;
+		
+		for(i in codes){
+			c.holdon(codes[i]);
+			c.untrig(codes[i]);
+		}
+	}
+	
+	applyGamepadKeys(state);
+//	keyUntrig();
+//	keyHold();
 }
 
 function setKeySetCheck(func){
 	KEYSTATE_CHECKFUNC = func != null ? func : function(){return;};
-}
-
-/**
- * キーのホールドを確認
- */
-function keyHold(){
-	var enabled = true, i, j, c, indexes = Object.keys(allcontrolls), len = indexes.length, codes, clen, cindex;
-	for(i = 0; i < len; i++){
-		c = allcontrolls[indexes[i]];
-		codes = c.name2code;
-		cindex =  Object.keys(codes);
-		clen = cindex.length;
-		for(j = 0; j < clen; j++){
-			c.holdon(codes[cindex[j]]);
-		}
-	}
-	// Object.keys(allcontrolls).forEach(function(idname){
-		// Object.keys(c.name2code).forEach(function(name){
-		// });
-	// });
-}
-/**
- * キーのトリガを解除
- */
-function keyUntrig(){
-	var enabled = true, i, j, c, indexes = Object.keys(allcontrolls), len = indexes.length, codes, clen, cindex;
-	for(i = 0; i < len; i++){
-		c = allcontrolls[indexes[i]];
-		codes = c.name2code;
-		cindex =  Object.keys(codes);
-		clen = cindex.length;
-		for(j = 0; j < clen; j++){
-			c.untrig(codes[cindex[j]]);
-		}
-	}
 }
 
 /**
@@ -141,12 +229,17 @@ function keyUntrig(){
 function KeyControll(){return;}
 KeyControll.prototype = {
 	initCommon: function(idname){
+		if(this.idname != null){
+			return;
+		}
 		this.controlls = {};//操作名に対する状態
 		this.code2name = {};//codeに対応する操作名
 		this.name2code = {};//操作名に対応するcode
-		this.idname = idname == null ? allcontrolls.length : idname;
+		this.idname = idname == null ? Object.keys(ALLCONTROLLS).length : idname;
 		this.action; //カスタム関数
-		allcontrolls[this.idname] = this;
+		ALLCONTROLLS[this.idname] = ALLCONTROLLS[this.idname] == null ? this : ALLCONTROLLS[this.idname];
+		
+		ALLCONTROLLSKEYS = Object.keys(ALLCONTROLLS);
 		try{
 			this.holdTime = KEYCONTROLL_HOLDTIME;
 		}catch(e){
@@ -154,6 +247,12 @@ KeyControll.prototype = {
 			console.warn(e);
 			console.log('key controll set hold on time: 20');
 		}		
+	},
+	
+	resetControlls: function(){
+		this.controlls = {};//操作名に対する状態
+		this.code2name = {};//codeに対応する操作名
+		this.name2code = {};//操作名に対応するcode
 	},
 	/**
 	 * 関数を登録
@@ -264,9 +363,9 @@ KeyControll.prototype = {
 
 	allReset: function()
 	{
-		var idnamename, states = {};
 		for(idname in this.code2name){
 			this.stateUp(idname);
+			this.untrig(idname);
 		}
 	},
 	
@@ -285,6 +384,7 @@ KeyControll.prototype = {
 	 */
 	getState: function(name)
 	{
+		var i;
 		if(typeof name == "object"){
 			var states = {}, cont = this.controlls, nIndex = Object.keys(name), len = nIndex.length, n;
 			for(i = 0; i < len; i++){
@@ -305,6 +405,7 @@ KeyControll.prototype = {
 	 */
 	getTrig: function(name)
 	{
+		var i;
 		if(typeof name == "object"){
 			var trigs = {}, cont = this.controlls, nIndex = Object.keys(name), len = nIndex.length, n;
 			for(i = 0; i < len; i++){
@@ -324,6 +425,7 @@ KeyControll.prototype = {
 	 */
 	getUntrig: function(name)
 	{
+		var i;
 		if(typeof name == "object"){
 			var unTrigs = {}, cont = this.controlls, nIndex = Object.keys(name), len = nIndex.length, n;
 			for(i = 0; i < len; i++){
@@ -343,6 +445,7 @@ KeyControll.prototype = {
 	 */
 	getHold: function(name)
 	{
+		var i;
 		if(typeof name == "object"){
 			var holds = {}, cont = this.controlls, nIndex = Object.keys(name), len = nIndex.length, n;
 			for(i = 0; i < len; i++){
@@ -357,6 +460,7 @@ KeyControll.prototype = {
 	
 	getHoldTime: function(name)
 	{
+		var i;
 		if(typeof name == "object"){
 			var holds = {}, cont = this.controlls, nIndex = Object.keys(name), len = nIndex.length, n;
 			for(i = 0; i < len; i++){
@@ -367,6 +471,62 @@ KeyControll.prototype = {
 		}else{
 			return this.controlls[name].time;
 		}
+	},
+	
+	applyKeys: function(keys, padButtons, gamepadIndex){
+		var keycodes = []
+			, name, button, code
+			, i, index
+			, indexes = []
+		;
+		if(typeof keys == 'string'){
+			keycodes = keys.trim().replace(/\n/, ' ').split(' ');
+		}else{
+			keycodes = keys;
+		}
+//		if(typeof index != 'string' && keycodes.length != index.length){
+//			console.warn('controll key&id no mach length');
+//			return;
+//		}
+		for(i = 0; i < keycodes.length; i++){
+			if(padButtons == null && gamepadIndex == null){
+				code = keycodes[i].trim().split(GAMEPAD_DELIMITER);
+				name = code[0];
+				index = code[1];
+				button = code[2];
+			}else{
+				name = keycodes[i];
+				button = padButtons[i];
+				index = gamepadIndex;
+			}
+			this.setKey(name, convertGamePadKey(index, button));
+		}
+	},
+	
+	initGamepad: function(gamepad){
+		//USB Gamepad (Vendor: 04b4 Product: 010a)
+		if(gamepad == null){
+			gamepadConnect();
+			gamepad = navigator.getGamepads()[0];
+			if(gamepad == null){
+				return false;
+			}
+		}
+		var index = gamepad.index
+			, conv = convertGamePadKey
+		;
+//		console.log(gamepad);
+		this.initCommon();
+		this.setKey('left', conv(index, 'left'));
+		this.setKey('up', conv(index, 'up'));
+		this.setKey('right', conv(index, 'right'));
+		this.setKey('down', conv(index, 'down'));
+		this.setKey('<', conv(index, '1'));
+		this.setKey('>', conv(index, '2'));
+		this.setKey('select', conv(index, '8'));
+		this.setKey('space', conv(index, '0'));
+		this.setKey('debug', conv(index, '6'));
+		return true;
 	},
 
 	initDefaultKey: function(type)
