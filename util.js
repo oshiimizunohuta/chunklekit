@@ -1039,3 +1039,17 @@ function checkAPIReceive(data){
 	}
 	return true;
 }
+
+function timetoYmdHis(timestamp){
+	var d = new Date(timestamp * 1000)
+		, dstr = {
+			y: formatNum(d.getFullYear(), 4)
+			, m: formatNum(d.getMonth() + 1, 2)
+			, d: formatNum(d.getDate(), 2)
+			, h: formatNum(d.getHours(), 2)
+			, i: formatNum(d.getMinutes(), 2)
+			, s: formatNum(d.getSeconds(), 2)
+		};
+		
+	return dstr;
+}
