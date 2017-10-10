@@ -582,7 +582,8 @@ SceneTransition.prototype = {
 		}
 		if(current.funcFound){
 			//名前指定している、メソッドがTRUEを返すか削除フラグで削除処理
-			if((current.name != null && caller[current.name](current)) || current.remove){
+//			if((current.name != null && caller[current.name](current)) || current.remove){
+			if(current.remove || (current.name != null && caller[current.name](current))){
 				this.removeCurrentOrder();
 			}
 		}
@@ -717,13 +718,22 @@ SpriteAnimation.prototype = {
 		}
 	},
 	
+	framesPattern: function(pattern){
+		if(pattern == null){
+			return this.frames[this.pattern];
+		}else{
+			return this.frames[pattern];
+		}
+	},
+	
 	isPattern: function(pattern, count){
 		if(pattern == null){
 			return this.currentCount == count;
 		}else if(count != null){
 			return this.pattern == pattern && this.currentCount == count;
 		}else{
-			return this.pattern == pattern && this.currentCount == 0;
+//			return this.pattern == pattern && this.currentCount == 0;
+			return this.pattern == pattern;
 		}
 	},
 	
@@ -874,7 +884,7 @@ var COLOR_MEDBLUE = [0, 88, 248, 255];
 var COLOR_ROYALBLUE = [104, 136, 252, 255];
 var COLOR_CORNFLOWER = [184, 184, 248, 255];
 
-var COLOR_FOREST = [0, 120, 0];
+var COLOR_FOREST = [0, 120, 0, 255];
 var COLOR_LIMEGREEN = [0, 184, 0, 255];
 //var COLOR_GREENYELLOW = [216, 248, 120, 255];
 var COLOR_GREENYELLOW = [216, 248, 120, 255];
