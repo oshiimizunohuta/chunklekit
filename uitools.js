@@ -718,6 +718,12 @@ SpriteAnimation.prototype = {
 		}
 	},
 	
+	setPattern: function(pattern, frame){
+		this.pattern = pattern != null ? pattern : this.pattern;
+		this.currentCount = frame != null ? frame : this.currentCount;
+		return this.current();
+	},
+	
 	framesPattern: function(pattern){
 		if(pattern == null){
 			return this.frames[this.pattern];
@@ -761,7 +767,7 @@ SpriteAnimation.prototype = {
 	},
 	
 	current: function(){
-		return this.sprites[this.pattern];
+		return !this.isEnd() ? this.sprites[this.pattern] : this.sprites[this.lastPattern];
 	},
 	
 	sum: function(start, end){
