@@ -815,6 +815,16 @@ function clone(src){
 	return dst;
 }
 
+function merge(a, b){
+	if(typeof a != 'object' || typeof b != 'object'){
+		return false;
+	}
+	for(var k in b){
+		a[k] = b[k];
+	}
+	return a;
+}
+
 /**
  * 
  * @param {object} obj
