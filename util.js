@@ -767,6 +767,14 @@ function str_pad(input, pad_length, pad_string, pad_type)
 //	dulog(charArray);
 }
 
+/**
+ * 指定文字数の左側に空きを文字でうめる
+ * default STR_PAD_RIGHT
+ * @param input
+ * @param pad_length
+ * @param pad_string
+ * @returns
+ */
 function strpad(input, padstring, length){
 	var addcount, i;
 	input = input + '';
@@ -896,6 +904,7 @@ var CKAPIServer = function(){return;};
 CKAPIServer.prototype = {
 	init: function(apiUrl){
 		this.serverUrl = apiUrl;
+		this.filterFunc = function(j){return j;};
 	},
 	
 	post: function(api, params, func, errorFunc){
@@ -906,7 +915,9 @@ CKAPIServer.prototype = {
 	},
 	
 	send: function(method, api, params, func, errorFunc){
-		var str, query = [], key, x = new XMLHttpRequest();
+		var str, query = [], key, x = new XMLHttpRequest()
+			, self = this
+		;
 		if(this.serverUrl == null){console.error('not initialize api server'); return;}
 
 		x.timeout = 5000;
@@ -918,6 +929,7 @@ CKAPIServer.prototype = {
 					try{
 						j = x.responseText;
 						j = typeof j == 'string' ? JSON.parse(j) : '';
+						j = self.filterFunc(j);
 					}catch(e){
 						j = null;
 					}
