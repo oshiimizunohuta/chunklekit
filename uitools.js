@@ -778,6 +778,13 @@ SpriteAnimation.prototype = {
 		return duration;
 	},
 	
+	skip: function(count){
+		for(var i = 0; i < count; i++){
+			this.next();
+		}
+		return this.current();
+	},
+	
 	next: function(){
 		var s;
 		this.count++;
