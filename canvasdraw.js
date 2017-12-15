@@ -692,9 +692,19 @@ CanvasScroll.prototype = {
 		this.rasterFunc = func;
 	},
 
-	resetRaster: function() {
-		this.rasterLines.vertical = [];
-		this.rasterLines.horizon = [];
+	resetRaster: function(start, end) {
+		var i;
+		if(start != null || end != null){
+			start = start == null ? 0 : start;
+			end = end == null ? 0 : end;
+			for(i = start; i < end; i++){
+				this.rasterLines.vertical[i] = null;
+				this.rasterLines.horizon[i] = null;
+			}
+		}else{
+			this.rasterLines.vertical = [];
+			this.rasterLines.horizon = [];
+		}
 	},
 
 	setRasterHorizon: function(sy, dx, dy) {
@@ -2429,6 +2439,8 @@ CanvasSprite.prototype = {
 	{
 		this.x = x; this.y = y;
 		this.w = w; this.h = h;
+//		this.bfsx = 0; this.bfsy = 0;
+		this.bufferOriginal = null;
 		this.swaps = null;
 		this.swapImage = null;
 		this.swapCanvas = null;
@@ -2586,6 +2598,52 @@ CanvasSprite.prototype = {
 		return false;
 	},
 	
+	resetShiftBuffer: function(){
+//		this.bfsx = x;
+//		this.bfsy = y;
+		if(this.bufferOriginal != null){
+			this.ctx.putImageData(this.bufferOriginal, this.x, this.y);
+		}
+	},
+	
+	shiftBuffer: function(x, y){
+		var dat 
+			, sx = this.x
+			, sy = this.y
+			, w = this.w
+			, h = this.h
+			, slicew = w, sliceh = h
+		;
+		if(this.bufferOriginal == null){
+			dat = this.ctx.getImageData(sx, sy, w, h);
+			this.bufferOriginal = dat;
+		}else{
+			dat = this.bufferOriginal;
+		}
+		
+		if(x != null && x != 0){
+			x = (((x % w) + w) % w) | 0;
+			slicew = w - x;
+		}else{
+			x = 0;
+		}
+		if(y != null && y != 0){
+			y = (((y % h) + h) % h) | 0;
+			sliceh = h - y;
+		}else{
+			y = 0;
+		}
+		if(x != null && x != 0){
+			this.ctx.putImageData(dat, sx + x, sy + y, 0, 0, slicew, sliceh);
+			this.ctx.putImageData(dat, sx - slicew, sy + y, slicew, 0, x, sliceh);
+		}
+		
+		if(y != null && y != 0){
+			this.ctx.putImageData(dat, sx + x, sy - sliceh, 0, sliceh, slicew, y);
+			this.ctx.putImageData(dat, sx - slicew, sy  - sliceh, slicew, sliceh, x, y);
+		}
+		
+	},
 	show: function(){
 		this.x = this.x < 0 ? - this.x - this.w : this.x;
 	},
