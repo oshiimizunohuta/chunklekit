@@ -136,16 +136,22 @@ Rect.prototype = {
 		align.forEach(function(a, i){
 			var p, s = axis[i], d = solid[i];
 			if(a == 'lower'){
+				//対象の最小（上）部
 				p = rect[s] - self[d];
 			}else if(a == 'higher'){
+				//対象の最大（下）部
 				p = rect[s] + rect[d];
 			}else if(a == 'low'){
+				//対象の内側最小（上）部
 				p = rect[s];
 			}else if(a == 'middle'){
+				//対象の中心
 				p = rect[s] + (rect[d] / 2) - (self[d] / 2);
 			}else if(a == 'high'){
+				//対象の内部最大（下）部
 				p = rect[s] + rect[d] - self[d];
 			}else{
+				//keep?
 				p = self[s];
 			}
 			self[axis[i]] = p;
@@ -505,6 +511,7 @@ SpritePart.prototype = {
 		this.sprites = [];
 		this.visible = true;
 		this.spriteNum = 0;
+		this.name = '';
 	},
 	
 	initQueries: function(resourceName, queries){
@@ -633,6 +640,9 @@ SpriteBone.prototype = {
 		this.local = makePosition();
 		this.global = makePosition();
 		this.visible = true;
+		this.vflip = false;
+		this.hflip = false;
+		this.originPart = '';
 	},
 	//{name: spriteQuery}
 	addPartsBySpriteQuery: function(resourceName, parts){
@@ -641,6 +651,7 @@ SpriteBone.prototype = {
 		for(k in parts){
 //			sp = makeSpriteQuery(resourceName, parts[k]);
 			this.parts[k] = makeSpritePart(resourceName, parts[k]);
+			this.parts[k].name = k;
 			this.partsArray.push(this.parts[k]);
 		}
 	},
@@ -678,23 +689,46 @@ SpriteBone.prototype = {
 		return this.parts[q[0]];
 	},
 	
-	drawTo: function(scroll){
+	flip: function(h, v, originPart){
+		this.hflip = h != null ? h : this.hflip;
+		this.vflip = v != null ? v : this.vflip;
+	},
+	
+	drawTo: function(scroll, x, y){
 		var parts = this.partsArray
 			, sortparts = []
 			, bonepos = this.global
+			, x = x != null ? x : bonepos.x
+			, y = y != null ? y : bonepos.y
+			, z = bonepos.z
+			, vf = this.vflip, hf = this.hflip
+			, op = this.parts[this.originPart]
+			, oname = this.originPart
+			, os = op.sprites[op.spriteNum]
 		;
 		if(this.visible == false){
 			return;
 		}
-			
+		
 		sortparts = parts.slice().sort(function(a, b){
 			var c = a.local.z - b.local.z;
 			return c;
-//				return c == 0 ? -1 : c;
 		});
-
+		
 		sortparts.forEach(function(a){
-			a.drawTo(scroll, bonepos);
+			var s = a.sprites[a.spriteNum];
+			if(s == null){
+				return;
+			}
+			s.vflip(vf);
+			s.hflip(hf);
+			a.drawTo(scroll, {
+				x: hf && oname != a.name ? x + os.w - (a.local.x * 2 + s.w) : x
+				, y: vf && oname != a.name ? y + os.h - s.y : y
+				, z: s.z
+			});
+			s.vflip(false);
+			s.hflip(false);
 		});
 	},
 
