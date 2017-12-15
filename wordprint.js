@@ -30,6 +30,22 @@ WordPrint.prototype ={
 			, 'ー': '⼀', '？': '？', '！': '！', '・':'・', '『': '『', '』': '』', '◯': '◯', '☓': '☓'
 			,'･':'・', '?': '？', '!': '！',  '「': '『', '」': '』', '○': '◯', '×': '☓'
 		};
+		
+		this.swapWords = {
+			',': ',', '.': '.', ':': ':', ';': ';' , ' ': ' ', '^': '^', '&': '&', '©': '©'
+			,'，': ',', '．': '.', '：': ':', '；': ';' , '　': ' ', '＾': '^', '＆': '&', '@': '©', '＠': '©', '™': '©'
+			,
+			'＝':'＝', '＋': '＋', '－': '－', '＊': '＊', '／': '／'
+			,'=':'＝', '+': '＋', '-': '－', '*': '＊', '/': '／'
+			, '_': '－', '～': '～', '(':  '（', ')': '）'
+			, '♥':'♥', '♡':'♥', '❤':'♡' 
+			, '☆':'☆', '★':'☆'
+			,
+			'、': '、', '。': '。'  
+			, 'ー': '⼀', '？': '？', '！': '！', '・':'・', '『': '『', '』': '』', '◯': '◯', '☓': '☓'
+			,'･':'・', '?': '？', '!': '！',  '「': '『', '」': '』', '○': '◯', '×': '☓'
+		};
+		
 		this.soundmarks = {
 			50: 5, 51: 6, 52: 7, 53: 8, 54: 9, 55: 10, 56: 11, 57: 12, 58: 13, 59: 14
 			, 60: 15, 61: 16, 62: 17, 63: 18, 64: 19, 65: 25, 66: 26, 67: 27, 68: 28, 69: 29
@@ -39,7 +55,9 @@ WordPrint.prototype ={
 			, 160: 115, 161: 116, 162: 117, 163: 118, 164: 119
 		};
 		
-		this.sprtiteID = this.initSpriteID();
+		this.allWordString = this.moji_hira + this.moji_kata + this.moji_alph + this.moji_suji;
+		
+		this.sprtiteID = this.initSpriteID(this.allWordString);
 		
 		this.soundmarkAlign = 'horizon'; // vertical:horizon
 		this.soundmarkPos = []; // {line:line, pos:pos}
@@ -101,6 +119,21 @@ WordPrint.prototype ={
 		this.spriteArray = [];
 		this.scroll = "";
 		
+		this.infoCache = {
+			newLinesPosition:{
+				key: '', info: null
+			},
+			replaceNewLineStr:{
+				key: '', info: null
+			},
+			wordSprites:{
+				key: '', info: null
+			},
+			wordSpritesInfo:{
+				key: '', info: null
+			},
+		};
+		
 		this.DrawEvent;// = new DrawEvent();
 		this.str;
 		this.disp = true;
@@ -110,7 +143,114 @@ WordPrint.prototype ={
 		this.initPropKeys();
 	},
 	
-	//スプライトの元になるスクロールを生成
+	initCommon: function(){
+		
+//		this.sprtiteID = this.initSpriteID();
+		
+		this.swapWords = {};
+		this.soundmarkAlign = 'horizon'; // vertical:horizon
+		this.soundmarkPos = []; // {line:line, pos:pos}
+		this.soundmarkEnable = true;
+	
+		this.color;
+		this.bgcolor;
+		
+		this.vflip = false;
+		this.hflip = false;
+		
+		
+	//	this.newLineWord = "\n";
+		this.newLineWord = "n";
+		this.escapeWord = "$";
+		this.NEWLINE_WORD = this.escapeWord + this.newLineWord;
+		this.NOTFOUND_WORD = "?";
+//		this.NOTFOUND_WORD = "？";
+		this.cols = 0; //自動改行までの文字数
+		this.rows = 0; //文字表示行数
+		this.rowSpace = 0; //改行幅
+		
+//		this.NOTFOUND_CODE = 83; //'？'
+//		this.SPACE_CODE = 236; //'　'
+//		this.HYPHEN_CODE = 177; //'-'
+//		this.ESCAPE_CODE = 254; //$
+//		this.imageNames = {
+//			'8px': WORDPRINT_FONT8PX
+//			, '12px': WORDPRINT_FONT12PX
+//			, '4v6px': WORDPRINT_FONT4V6PX
+//		};
+		
+//		this.chipSize = 8;
+//		this.vChipSize = 8;
+//		this.fontSize = '8px';
+//		sizetype = sizetype != null ? sizetype : '8px';
+//		this.sourceCanvasName = this.imageNames[sizetype];
+		
+		
+		this.allWordSprites = {};
+		this.DEFAULT_COLOR = COLOR_WHITE;
+		this.DEFAULT_BGCOLOR = COLOR_TRANSPARENT;
+		this.canvasSpriteSource = {};
+		this.coloredCanvasSprite = {};
+		this.scroll;
+		
+		this.setColor(this.DEFAULT_COLOR, this.DEFAULT_BGCOLOR);
+		
+		this.wordIds;// = new Array();
+		this.readMode = false; //外部から弄らない
+		this.readChars = 0;
+		
+		// this.targetScroll;
+		this.position_x = 0;
+		this.position_y = 0;
+		this.spriteArray = [];
+		this.scroll = "";
+		
+		this.infoCache = {
+			newLinesPosition:{
+				key: '', info: null
+			},
+			replaceNewLineStr:{
+				key: '', info: null
+			},
+			wordSprites:{
+				key: '', info: null
+			},
+			wordSpritesInfo:{
+				key: '', info: null
+			},
+		};
+		
+		this.DrawEvent;// = new DrawEvent();
+		this.str;
+		this.disp = true;
+		this.drawOrder = 128;
+		
+		this.propKeys = {};
+		this.initPropKeys();		
+	},
+	
+	initWith: function(fontName, wordStr){
+		var tag = 'font_'
+			, size
+		;
+		this.initCommon();
+		
+		this.allWordString = wordStr;
+		this.fontSize = fontName;
+		this.sourceCanvasName = tag + fontName;
+		this.sprtiteID = this.initSpriteID(this.allWordString);
+
+		size = resourceSizeByName(this.sourceCanvasName);
+		this.chipSize = size.w;
+		this.vChipSize = size.h;
+		this.soundmarkEnable = false;
+		
+		this.SPACE_CODE = 36; //alphabet+number
+			
+	},
+	
+	
+	//スプライトの元になるスクロールを生成（基本未使用）
 	initSourceCanvasScroll: function(imageName)
 	{
 		var w, h
@@ -149,7 +289,8 @@ WordPrint.prototype ={
 	
 	allocSprites: function(){
 		var spr = {vertical: {}, horizon: {}}, i, len
-			, w = this.moji_hira + this.moji_kata + this.moji_alph + this.moji_suji
+			, w = this.allWordString
+//			, w = this.moji_hira + this.moji_kata + this.moji_alph + this.moji_suji
 			, len = w.length
 			, str 
 		;
@@ -161,9 +302,10 @@ WordPrint.prototype ={
 		return spr;
 	},
 	
-	initSpriteID: function(){
+	initSpriteID: function(wordStr){
 		var i, len
-			, w = this.moji_hira + this.moji_kata + this.moji_alph + this.moji_suji
+			, w = wordStr
+//			, w = this.moji_hira + this.moji_kata + this.moji_alph + this.moji_suji
 			, len = w.length, ids = {}
 		;
 		for(i = 0; i < len; i++){
@@ -210,13 +352,14 @@ WordPrint.prototype ={
 	},
 	
 	/**
-	 * 全ての文字をスプライト格納
+	 * 全ての文字をスプライト格納（基本未使用）
 	 * @returns {undefined}
 	 */
 	initAllSprites: function()
 	{
 		var all = this.allWordSprites
-			, w = this.moji_hira + this.moji_kata + this.moji_alph + this.moji_suji
+			, w = this.allWordString
+//			, w = this.moji_hira + this.moji_kata + this.moji_alph + this.moji_suji
 			, spr = {}, i, len = w.length
 			, imageName = this.getImageName()
 			, q, space = this.soundmarkEnable ? this.SPACE_CODE + ';' : ''
@@ -307,6 +450,7 @@ WordPrint.prototype ={
 		return this.scroll;
 	},
 	
+	//TODO 未使用
 	getSpriteHandle: function(str)
 	{
 		this.makeStrId(str);
@@ -314,6 +458,7 @@ WordPrint.prototype ={
 		return SpriteHandles;
 	},
 	
+	//TODO 未使用
 	getSpriteArray: function(str, color, bgColor)
 	{
 		this.setColor(color == null ? this.color : color, bgColor == null ? this.bgcolor : bgColor);
@@ -332,6 +477,7 @@ WordPrint.prototype ={
 		return (this.chipSize < 12 && this.soundmarkAlign == 'vertical');
 	},
 	
+	//TODO 未使用
 	SearchWordNum: function(w){
 		var match;
 		//ひらがな
@@ -350,6 +496,7 @@ WordPrint.prototype ={
 		return match;
 	},
 	
+	//TODO 未使用
 	indexOf: function(i){
 		//ひらがな
 		if(i < 90){return this.moji_hira.substr(i, 1);}
@@ -364,6 +511,7 @@ WordPrint.prototype ={
 		return -1;
 	},
 
+	//TODO 未使用
 	searchNum: function(w){
 		var match = -1, ofs = 0, code = w.charCodeAt(0);
 
@@ -403,6 +551,7 @@ WordPrint.prototype ={
 		return match < 0 ? this.NOTFOUND_CODE : match + ofs;
 	},
 	
+	//TODO 未使用
 	toStrId: function(str)
 	{
 		var idstr, baseword, TheWord, baseWords = []
@@ -414,6 +563,7 @@ WordPrint.prototype ={
 		return baseWords;
 	},
 	
+	//TODO 未使用
 	makeStrId: function(MS)
 	{
 		var i, j, theWord, baseword = 0, subword = this.SPACE_CODE
@@ -539,6 +689,7 @@ WordPrint.prototype ={
 		this.soundmarkAlign = align;
 	},
 
+	//TODO 未使用
 	setStr: function(str)
 	{
 		this.str = str;
@@ -643,6 +794,7 @@ WordPrint.prototype ={
 		return sArray;
 	},
 
+	//TODO 未使用
 	parse: function(MS)// char length, message
 	{
 		var ar, spr, isHorizon = this.isHorizon(), subLine, baseWords;
@@ -668,6 +820,10 @@ WordPrint.prototype ={
 		}
 	},
 	
+	lineHeight: function(){
+		return (this.rowSpace + this.vChipSize) * (this.isVertical() ? 2 : 1);
+	},
+	
 	textScale: function(str)
 	{
 		var i, len, s, sprite, offset
@@ -683,23 +839,24 @@ WordPrint.prototype ={
 			, enableMaxRow = this.rows > 0
 			, rowHeight = (this.rowSpace + this.vChipSize) * (isVertical ? 2 : 1)
 			, maxRowPos = (rowHeight * this.rows) + posy
-			, sp_alph = this.sp_alph, sp_hira = this.sp_hira, sp_kata = this.sp_kata
+			, sp_alph = this.swapWords
+//			, sp_alph = this.sp_alph, sp_hira = this.sp_hira, sp_kata = this.sp_kata
 			, newline = function(){
 				y += rowHeight;
 //				y += s.h;
 				x = posx;
 			}
-			, inSP = function(w){
-				if(sp_alph[w] != null){
-					return sp_alph[w];
-				}else if(sp_kata[w] != null){
-					return sp_kata[w];
-				}else if(sp_hira[w] != null){
-					return sp_hira[w];
-				}
-				
-				return w;
-			}
+//			, inSP = function(w){
+//				if(sp_alph[w] != null){
+//					return sp_alph[w];
+//				}else if(sp_kata[w] != null){
+//					return sp_kata[w];
+//				}else if(sp_hira[w] != null){
+//					return sp_hira[w];
+//				}
+//				
+//				return w;
+//			}
 		;
 		if(!this.disp){
 			return 0;
@@ -717,8 +874,10 @@ WordPrint.prototype ={
 		len = str.length;
 		sprites = [];
 		for(i = 0; i < len; i++){
-			s = inSP(str.substr(i, 1));
-			s = s !== false ? s : this.NOTFOUND_WORD;
+//			s = inSP(str.substr(i, 1));
+			s = str.substr(i, 1);
+			s = s != null ? sp_alph[s] : s;
+			s = s !== false ? s : this.NOTFOUND_WORD; //TODO 不要???
 			if(all[s] == null){
 				// make colored sprite v and h
 				this.initSprite(s);
@@ -759,57 +918,114 @@ WordPrint.prototype ={
 		return {w: x, h: y};
 	},
 	
-	drawWord: function(str)
-	{
-		var i, len, s, sprite, offset
-			, isHorizon =  this.isHorizon(), isVertical = this.isVertical(), isSoundmark
-			, sprites = []
-			, all = this.getWordSprites()
-			, posx = this.position_x
-			, posy = isVertical && this.soundmarkEnable ? this.position_y - this.vChipSize : this.position_y, x, y
-			, newLines = [] , newWord = this.NEWLINE_WORD
-			, newLinePos = (this.chipSize * this.cols) + posx
-			, scr = this.scroll
-			, enableNewLine = this.cols > 0
-			, enableMaxRow = this.rows > 0
-			, rowHeight = (this.rowSpace + this.vChipSize) * (isVertical ? 2 : 1)
-			, maxRowPos = (rowHeight * this.rows) + posy
-			, sp_alph = this.sp_alph, sp_hira = this.sp_hira, sp_kata = this.sp_kata
-			, newline = function(){
-				y += rowHeight;
-//				y += s.h;
-				x = posx;
-			}
-			, inSP = function(w){
-				if(sp_alph[w] != null){
-					return sp_alph[w];
-				}else if(sp_kata[w] != null){
-					return sp_kata[w];
-				}else if(sp_hira[w] != null){
-					return sp_hira[w];
-				}
-				
-				return w;
-			}
+	cacheInfo: function(category, key, info){
+		this.infoCache[category].key = key;
+		this.infoCache[category].info = info;
+	},
+	
+	restoreFromCache: function(category, keystr){
+		var cache = this.infoCache[category]
 		;
-		if(!this.disp){
-			return 0;
+		if(cache.key == keystr){
+			return cache.info;
+		}else{
+			return false;
 		}
-		if(typeof scr == "string"){
-			scr = layerScroll[scr];
-		}
+	},
+	
+	strReplaceNewLine: function(str){
+		var newLines = []
+			, newWord = this.NEWLINE_WORD
+			, cache, nlstr = ''
+		;
 		str += '';
 		
-		str = str.replace(/\r?\n/g, newWord);
-		while(str.indexOf(newWord) >= 0){
-			newLines.push(str.indexOf(newWord));
-			str = str.replace(newWord, '');
+		cache = this.restoreFromCache('replaceNewLineStr', str);
+		if(cache != false){
+			return cache;
 		}
-		len = str.length;
+		
+		nlstr = str.replace(/\r?\n/g, newWord);
+		while(nlstr.indexOf(newWord) >= 0){
+			newLines.push(nlstr.indexOf(newWord));
+			nlstr = nlstr.replace(newWord, '');
+		}
+		//現在の改行情報に追加
+		this.cacheInfo('newLinesPosition', str, newLines);
+		//現在の改行置換情報に追加
+		this.cacheInfo('replaceNewLineStr', str, nlstr);
+		
+		return nlstr;
+	},
+	
+	strNewLines: function(str){
+		var newLines = []
+			, newWord = this.NEWLINE_WORD
+			, cache
+			, nlstr = ''
+		;
+		str += '';
+		
+		cache = this.restoreFromCache('newLinesPosition', str);
+		if(cache != false){
+			return cache.slice();
+		}
+		
+		this.strReplaceNewLine(str);
+//		nlstr = str.replace(/\r?\n/g, newWord);
+//		while(nlstr.indexOf(newWord) >= 0){
+//			newLines.push(nlstr.indexOf(newWord));
+//			nlstr = nlstr.replace(newWord, '');
+//		}
+		newLines = this.restoreFromCache('newLinesPosition', str);
+		
+		//現在の改行情報に追加
+		this.cacheInfo('newLinesPosition', str, newLines);
+		
+		return newLines.slice();
+	},
+
+	
+	strWordSprites: function(str){
+		var i, len, s
+			, isHorizon =  this.isHorizon(), isVertical = this.isVertical()
+			, sprites = []
+			, all = this.getWordSprites()
+			, newWord = this.NEWLINE_WORD
+			, sp_alph = this.swapWords
+//			, sp_alph = this.sp_alph, sp_hira = this.sp_hira, sp_kata = this.sp_kata
+//			, inSP = function(w){
+//				if(sp_alph[w] != null){
+//					return sp_alph[w];
+//				}else if(sp_kata[w] != null){
+//					return sp_kata[w];
+//				}else if(sp_hira[w] != null){
+//					return sp_hira[w];
+//				}
+//				
+//				return w;
+//			}
+			, cache, nlstr
+		;
+		str += '';
+		
+		cache = this.restoreFromCache('wordSprites', str);
+		
+		if(cache != false){
+			return cache;
+		}
+		
+		nlstr = this.strReplaceNewLine(str);
+		len = nlstr.length;
 		sprites = [];
 		for(i = 0; i < len; i++){
-			s = inSP(str.substr(i, 1));
+//			s = inSP(nlstr.substr(i, 1));
+			s = nlstr.substr(i, 1);
+			s = sp_alph[s] != null ? sp_alph[s] : s;
 			s = s !== false ? s : this.NOTFOUND_WORD;
+			if(s == newWord){
+				continue;
+			}
 			if(all[s] == null){
 				// make colored sprite v and h
 				this.initSprite(s);
@@ -820,7 +1036,44 @@ WordPrint.prototype ={
 			}
 			sprites.push(all[s]);
 		}
+		this.cacheInfo('wordSprites', str, sprites);
 		
+		return sprites;
+	},
+	
+	makeStrWordSpriteInfo: function(str, x, y){
+		var i, len
+			, isHorizon =  this.isHorizon(), isVertical = this.isVertical()
+			, posx, posy
+			, info = [], sprites, newLines
+			, cache, offset, s
+			, all = this.getWordSprites()
+			, enableNewLine = this.cols > 0
+			, enableMaxRow = this.rows > 0
+			, rowHeight = (this.rowSpace + this.vChipSize) * (isVertical ? 2 : 1)
+			, newLinePos
+			, maxRowPos
+			, newline = function(){
+				y += rowHeight;
+				x = posx;
+			}			
+		;
+		str += '';
+//		cache = this.restoreFromCache('wordSpritesInfo', str);
+//		if(cache != false){
+//			return cache;
+//		}
+
+		this.position_x = x == null ? this.position_x : x;
+		this.position_y = y == null ? this.position_y : y;
+		posx = this.position_x;
+		posy = isVertical && this.soundmarkEnable ? this.position_y - this.vChipSize : this.position_y;
+		newLinePos = (this.chipSize * this.cols) + posx;
+		maxRowPos = (rowHeight * this.rows) + posy;
+		
+		newLines = this.strNewLines(str);
+		sprites = this.strWordSprites(str);
+
 		len = sprites.length;
 		x = posx;
 		y = posy;
@@ -842,16 +1095,118 @@ WordPrint.prototype ={
 				newLines.shift();
 			}
 			if(enableMaxRow && y >= maxRowPos){
-				return i;
+				return info;
 			}
 			s.order = this.drawOrder;
 			s.vflip(this.vflip);
 			s.hflip(this.hflip);
-			scr.drawSprite(s, x, y);
+			info.push(s.makeSpriteInfo(x, y));
 			x += s.w;
 		}
 		
-		return i;
+		return info;
+	},
+	
+	drawWord: function(str)
+	{
+		var i, len, s, sprite, offset
+			, isHorizon =  this.isHorizon(), isVertical = this.isVertical()
+//			, isSoundmark
+			, sprites = []
+//			, all = this.getWordSprites()
+//			, posx = this.position_x
+//			, posy = isVertical && this.soundmarkEnable ? this.position_y - this.vChipSize : this.position_y, x, y
+//			, newLines = []
+//			, newWord = this.NEWLINE_WORD
+//			, newLinePos = (this.chipSize * this.cols) + posx
+			, scr = this.scroll
+//			, enableNewLine = this.cols > 0
+//			, enableMaxRow = this.rows > 0
+//			, rowHeight = (this.rowSpace + this.vChipSize) * (isVertical ? 2 : 1)
+//			, maxRowPos = (rowHeight * this.rows) + posy
+//			, sp_alph = this.sp_alph
+//			, sp_hira = this.sp_hira
+//			, sp_kata = this.sp_kata
+//			, newline = function(){
+//				y += rowHeight;
+//				x = posx;
+//			}
+//			, inSP = function(w){
+//				if(sp_alph[w] != null){
+//					return sp_alph[w];
+//				}else if(sp_kata[w] != null){
+//					return sp_kata[w];
+//				}else if(sp_hira[w] != null){
+//					return sp_hira[w];
+//				}
+//				
+//				return w;
+//			}
+		;
+		if(!this.disp){
+			return 0;
+		}
+		if(typeof scr == "string"){
+			scr = getScrolls()[scr];
+		}
+//		str += '';
+//		
+//		str = str.replace(/\r?\n/g, newWord);
+//		while(str.indexOf(newWord) >= 0){
+//			newLines.push(str.indexOf(newWord));
+//			str = str.replace(newWord, '');
+//		}
+//		len = str.length;
+//		sprites = [];
+//		for(i = 0; i < len; i++){
+//			s = inSP(str.substr(i, 1));
+//			s = s !== false ? s : this.NOTFOUND_WORD;
+//			if(all[s] == null){
+//				// make colored sprite v and h
+//				this.initSprite(s);
+//				all = this.getWordSprites();
+//				if(all[s] == null){
+//					all[s] = all[this.NOTFOUND_WORD];
+//				}
+//			}
+//			sprites.push(all[s]);
+//		}
+		
+		sprites = this.makeStrWordSpriteInfo(str);
+//		newLines = this.strNewLines(str);
+		
+		len = sprites.length;
+//		x = posx;
+//		y = posy;
+//		offset = this.readMode ? this.readChars : 0;
+//		i = newLines.indexOf(offset);
+//		if(i >= 0){
+//			delete newLines[i];
+//		}
+		for(i = 0; i < len; i++){
+			s = sprites[i];
+//			if(s == null){
+//				s = all[this.NOTFOUND_WORD];
+//			}
+//			if(enableNewLine && x + s.w > newLinePos){
+//				newline();
+//			}
+//			if(newLines.indexOf(i) >= 0){
+//				newline();
+//				newLines.shift();
+//			}
+//			if(enableMaxRow && y >= maxRowPos){
+//				return i;
+//			}
+//			s.order = this.drawOrder;
+//			s.vflip(this.vflip);
+//			s.hflip(this.hflip);
+			scr.drawSprite(s.sprite, s.x, s.y);
+//			x += s.w;
+		}
+		
+		offset = this.readMode ? this.readChars : 0;
+		return i + offset;
 		
 	},
 
