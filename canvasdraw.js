@@ -696,7 +696,7 @@ CanvasScroll.prototype = {
 		var i;
 		if(start != null || end != null){
 			start = start == null ? 0 : start;
-			end = end == null ? 0 : end;
+			end = end == null ? this.canvas.height : end;
 			for(i = start; i < end; i++){
 				this.rasterLines.vertical[i] = null;
 				this.rasterLines.horizon[i] = null;
@@ -1302,6 +1302,13 @@ function resourceByName(name)
 function setResourceSeparate(name, w, h){
 	imageResource.separateWidth[name] = w;
 	imageResource.separateHeight[name] = h;
+}
+
+function getResourceChipSize(name){
+	return {
+		w: imageResource.separateWidth[name]
+		, h: imageResource.separateHeight[name]
+	};
 }
 
 function appendImageOnload(name, func)
