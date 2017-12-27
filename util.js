@@ -251,8 +251,10 @@ function makeRect(x, y, w, h)
 		if(ptp){
 			yf = x[1] > x[3];
 			xf = x[0] > x[2];
-			h = yf ? x[1] - x[3] + 1: x[3] - x[1] + 1;
-			w = xf ? x[0] - x[2] + 1: x[2] - x[0] + 1;
+			h = yf ? x[1] - x[3] + 1: x[3] - x[1];
+			w = xf ? x[0] - x[2] + 1: x[2] - x[0];
+//			h = yf ? x[1] - x[3] + 1: x[3] - x[1] + 1;
+//			w = xf ? x[0] - x[2] + 1: x[2] - x[0] + 1;
 			y = yf ? x[3] : x[1];
 			x = xf ? x[2] : x[0];
 		}else{
