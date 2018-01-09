@@ -99,6 +99,7 @@ WordPrint.prototype ={
 		this.allWordSprites = {};
 		this.DEFAULT_COLOR = COLOR_FONT8;
 		this.DEFAULT_BGCOLOR = COLOR_TRANSPARENT;
+		this.COLORS = [COLOR_WHITE, COLOR_LGRAY, COLOR_GRAY, COLOR_TRANSPARENT];
 		// this.canvas = null;
 		// this.context = null;
 		this.canvasSpriteSource = {};
@@ -106,7 +107,8 @@ WordPrint.prototype ={
 		this.coloredCanvasSprite = {};
 		this.scroll;
 		
-		this.setColor(this.DEFAULT_COLOR, this.DEFAULT_BGCOLOR)
+		this.swapColors = {to:[this.DEFAULT_COLOR, this.DEFAULT_BGCOLOR], from:[this.DEFAULT_COLOR, this.DEFAULT_BGCOLOR]};
+		this.setColor(this.DEFAULT_COLOR, this.DEFAULT_BGCOLOR);
 		this.setFontSize(sizetype);
 		
 		this.wordIds;// = new Array();
@@ -151,10 +153,9 @@ WordPrint.prototype ={
 		this.soundmarkAlign = 'horizon'; // vertical:horizon
 		this.soundmarkPos = []; // {line:line, pos:pos}
 		this.soundmarkEnable = true;
+		this.COLORS = [COLOR_WHITE, COLOR_LGRAY, COLOR_GRAY, COLOR_TRANSPARENT];
+		this.swapColors = {from: this.COLORS, to: this.COLORS};
 	
-		this.color;
-		this.bgcolor;
-		
 		this.vflip = false;
 		this.hflip = false;
 		
@@ -187,13 +188,16 @@ WordPrint.prototype ={
 		
 		
 		this.allWordSprites = {};
-		this.DEFAULT_COLOR = COLOR_WHITE;
-		this.DEFAULT_BGCOLOR = COLOR_TRANSPARENT;
 		this.canvasSpriteSource = {};
 		this.coloredCanvasSprite = {};
 		this.scroll;
 		
-		this.setColor(this.DEFAULT_COLOR, this.DEFAULT_BGCOLOR);
+		//TODO 未使用へ移行
+//		this.color;
+//		this.bgcolor;
+//		this.DEFAULT_COLOR = COLOR_WHITE;
+//		this.DEFAULT_BGCOLOR = COLOR_TRANSPARENT;
+//		this.setColor(this.DEFAULT_COLOR, this.DEFAULT_BGCOLOR);
 		
 		this.wordIds;// = new Array();
 		this.readMode = false; //外部から弄らない
@@ -240,7 +244,7 @@ WordPrint.prototype ={
 		this.sourceCanvasName = tag + fontName;
 		this.sprtiteID = this.initSpriteID(this.allWordString);
 
-		size = resourceSizeByName(this.sourceCanvasName);
+		size = getResourceChipSize(this.sourceCanvasName);
 		this.chipSize = size.w;
 		this.vChipSize = size.h;
 		this.soundmarkEnable = false;
@@ -275,6 +279,7 @@ WordPrint.prototype ={
 			'font-size': 'fontSize'
 			, 'bg-color': 'bgcolor'
 			, 'fg-color': 'color'
+			, 'color': 'swapColors'
 			, 'mark-align': 'soundmarkAlign'
 			, 'cols-length': 'cols'
 			, 'max-rows': 'rows'
@@ -323,7 +328,7 @@ WordPrint.prototype ={
 			, imageName = this.getImageName()
 			, q, space = this.soundmarkEnable ? this.SPACE_CODE + ';' : ''
 			, smark = this.soundmarkEnable ? this.soundmarks : {}
-			, spr, id
+			, spr, id, swaps = this.getSwapColor()
 		;
 		
 		if(all[imageName] == null){
@@ -340,12 +345,14 @@ WordPrint.prototype ={
 		
 		q = id in smark == false ? space + id : id + ';' + smark[id];
 		spr = makeSpriteQuery(this.sourceCanvasName, q);
-		spr = makeSpriteSwapColor(spr, [this.getColor(), this.getBGColor()], [this.DEFAULT_COLOR, this.DEFAULT_BGCOLOR]);
+		spr = makeSpriteSwapColor(spr, swaps.to, swaps.from);
+//		spr = makeSpriteSwapColor(spr, [this.getColor(), this.getBGColor()], [this.DEFAULT_COLOR, this.DEFAULT_BGCOLOR]);
 		all[imageName].vertical[s] = spr;
 		
 		q = id in smark == false ? id + '': smark[id] + ' ' + id + '|r2';
 		spr = makeSpriteQuery(this.sourceCanvasName, q);
-		spr = makeSpriteSwapColor(spr, [this.getColor(), this.getBGColor()], [this.DEFAULT_COLOR, this.DEFAULT_BGCOLOR]);
+		spr = makeSpriteSwapColor(spr, swaps.to, swaps.from);
+//		spr = makeSpriteSwapColor(spr, [this.getColor(), this.getBGColor()], [this.DEFAULT_COLOR, this.DEFAULT_BGCOLOR]);
 		all[imageName].horizon[s] = spr;
 		
 		return;
@@ -365,6 +372,7 @@ WordPrint.prototype ={
 			, q, space = this.soundmarkEnable ? this.SPACE_CODE + ';' : ''
 			, smark = this.soundmarkEnable ? this.soundmarks : {}
 			, scroll, scrollRect
+			, swaps = this.getSwapColor()
 		;
 		
 		if(all[imageName] == null){
@@ -372,10 +380,14 @@ WordPrint.prototype ={
 			scrollRect = scroll.getRect();
 			appendImage(imageName, scroll.canvas, this.chipSize, this.vChipSize);
 			swapColorImageData(scroll.ctx
-				, [[this.DEFAULT_COLOR, this.getColor()]
-				, [this.DEFAULT_BGCOLOR, this.getBGColor()]]
+				, [swaps.to, swaps.from]
 				, scroll.getRect()
 			);
+//			swapColorImageData(scroll.ctx
+//				, [[this.DEFAULT_COLOR, this.getColor()]
+//				, [this.DEFAULT_BGCOLOR, this.getBGColor()]]
+//				, scroll.getRect()
+//			);
 			all[imageName] = {vertical: {}, horizon: {}};
 		}else{
 			return;
@@ -407,14 +419,52 @@ WordPrint.prototype ={
 	 */
 	colorQuery: function()
 	{
-		var colorQuery = [];
-		if(this.color != null){
-			colorQuery.push(this.color != null ? this.color.join(',') : '');
+		var colorQuery = []
+			, swaps = this.getSwapColor()
+			, i, len, c, str = ''
+		;
+		c = swaps.to;
+		len = c.length;
+		for(i = 0; i < len; i++){
+			str += c[i].join();
 		}
-		if(this.bgcolor != null){
-			colorQuery.push(this.bgcolor != null ? this.bgcolor.join(',') : '');
+		colorQuery.push(str);
+		
+		c = swaps.from;
+		str = '';
+		len = c.length;
+		for(i = 0; i < len; i++){
+			str += c[i].join();
 		}
+		colorQuery.push(str);
+		
+//		if(this.color != null){
+//			colorQuery.push(this.color != null ? this.color.join(',') : '');
+//		}
+//		if(this.bgcolor != null){
+//			colorQuery.push(this.bgcolor != null ? this.bgcolor.join(',') : '');
+//		}
 		return colorQuery.join(':');
+	},
+	
+	getSwapColor: function(){
+//		if(this.swapColors == null || this.swapColors.to == null){
+		if(this.getColor() != null){
+			return {to: [this.getColor(), this.getBGColor()], from: [this.DEFAULT_COLOR, this.DEFAULT_BGCOLOR]};
+		}else{
+			return this.swapColors;
+		}
+		
+	},
+	setSwapColor: function(to){
+		var i;
+		if(to.length == null){
+			to = [to];
+		}
+		this.swapColors.to = [];
+		for(i = 0; i < to.length; i++){
+			this.swapColors.to[i] = to[i] != null ? to[i] : this.swapColors.from[i];
+		}
 	},
 	
 	getImageName: function()
@@ -708,12 +758,20 @@ WordPrint.prototype ={
 			if(propKeys[prop] == null){
 				return;
 			}
+			if(propKeys[prop] == 'swapColors'){
+				this.setSwapColor(value);
+				return;
+			}
 			this[propKeys[prop]] = value;
 		}
 		
 		//propがobject
 		for(k in prop){
 			if(propKeys[k] == null){
+				continue;
+			}
+			if(propKeys[k] == 'swapColors'){
+				this.setSwapColor(prop[k]);
 				continue;
 			}
 			this[propKeys[k]] = prop[k];
@@ -1320,6 +1378,8 @@ WordPrint.prototype ={
 	{
 		this.color = color;
 		this.bgcolor = bgColor == null ? this.bgcolor : bgColor;
+		
+		this.setSwapColor([this.color, this.bgcolor]);
 //		this.swapColor();
 	},
 	
