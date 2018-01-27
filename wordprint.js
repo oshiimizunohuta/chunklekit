@@ -465,6 +465,7 @@ WordPrint.prototype ={
 		for(i = 0; i < to.length; i++){
 			this.swapColors.to[i] = to[i] != null ? to[i] : this.swapColors.from[i];
 		}
+		return this;
 	},
 	
 	getImageName: function()
