@@ -388,13 +388,13 @@ CanvasScroll.prototype = {
 			// sprite.flip();
 		}
 		//回転
-		if(sprite.rotFlag > 0){
-			if(sprite.rotFlag % 2 == 1){
+		if(spriteInfo.rot > 0){
+			if(spriteInfo.rot % 2 == 1){
 				t = w;
 				w = h;
 				h = t;
 			}
-			r = sprite.rotFlag;
+			r = spriteInfo.rot;
 
 			r = (((1 == r) * 90) + ((2 == r) * 180) + ((3 == r) * 270)) * Math.PI / 180;
 			// rox = (x * hf) - (spriteInfo.hflip * sprite.w);
@@ -416,7 +416,7 @@ CanvasScroll.prototype = {
 		}
 		
 		//以下元通りにする
-		if(sprite.rotFlag > 0){
+		if(spriteInfo.rot > 0){
 			this.ctx.rotate(-r);
 			this.ctx.translate(-rox , -roy);
 		}
