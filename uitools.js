@@ -51,31 +51,37 @@ CUCursor.prototype = {
 	{
 		num = num == null ? 1 : num;
 		this.move(num, 0, 0);
+		return this;
 	},
 	left: function(num)
 	{
 		num = num == null ? 1 : num;
 		this.move(-num, 0, 0);
+		return this;
 	},
 	up: function(num)
 	{
 		num = num == null ? 1 : num;
 		this.move(0, -num, 0);
+		return this;
 	},
 	down: function(num)
 	{
 		num = num == null ? 1 : num;
 		this.move(0, num, 0);
+		return this;
 	},
 	front: function(num)
 	{
 		num = num == null ? 1 : num;
 		this.move(0, 0, num);
+		return this;
 	},
 	back: function(num)
 	{
 		num = num == null ? 1 : num;
 		this.move(0, 0, -num);
+		return this;
 	},
 	
 	disable: function(x, y, z){
@@ -117,6 +123,22 @@ CUCursor.prototype = {
 		var pos = this.pos, cells = this.cells;
 		this.index = pos.x + (pos.y * cells.x) + (pos.z * cells.x * cells.y);
 		return this.index;
+	},
+	
+	positionByIndex: function(index){
+		var cells = this.cells 
+			, pos = {}
+			, p
+		;
+		if(index < 0){
+			p = cells.x * cells.y * cells.z;
+			index = p - 1 + (index % p);
+		}
+		pos.x = index % cells.x;
+		pos.z = ((index / (cells.x * cells.y)) | 0) % cells.z;
+		pos.y = ((index / cells.x) | 0) % cells.y;
+		
+		return pos; 
 	},
 	
 	valueOf: function(valueArray){
@@ -186,6 +208,7 @@ CUCursor.prototype = {
 			loop[a] = loopre[a];
 			loopre[a] = prepre;
 		}
+		return this;
 	},
 
 	move: function(x, y, z)
@@ -214,6 +237,7 @@ CUCursor.prototype = {
 		
 		this.updateIndex();
 		this.rangeOverCheck();
+		return this;
 	},
 	
 	moveTo: function(x, y, z)
@@ -240,6 +264,7 @@ CUCursor.prototype = {
 		}
 		this.updateIndex();
 		this.rangeOverCheck();
+		return this;
 	},
 	
 	rangeOverCheck: function()
