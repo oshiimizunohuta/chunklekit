@@ -867,7 +867,7 @@ function drawDebugCell(scroll, pointControll, wordprint, color){
 	start = {x: toc(start.x), y: toc(start.y)};
 	wordprint.setScroll(scroll);
 	if(left){
-		r = makeRect([start.x, start.y, pos.x, pos.y].join(' ') + ' :pos' );
+		r = makeRect([start.x, start.y, pos.x + 1, pos.y + 1].join(' ') + ' :pos' );
 		scroll.debugRect(makeRect(r.toString() + ' *8'), color);
 		
 		str = numFormat(r.x, 2) + ':' + numFormat(r.y, 2) + "$n" 
