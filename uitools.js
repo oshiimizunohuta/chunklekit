@@ -391,17 +391,26 @@ SceneTransition.prototype = {
 	},
 	
 	find: function(name, inIndex){
-		var f;
+		var f = [];
 //		inIndex = inIndex == null ? 0 : inIndex;
 		if(this.sceneCurrent != null && this.sceneCurrent.name == name){
-			return this.sceneCurrent;
+			f.push(this.sceneCurrent);
+//			return this.sceneCurrent;
 		}
-		f = this.sceneOrder.reverse().find(function(a){
+		f = f.concat(this.sceneOrder.filter(function(a){
 			return a.name == name;
-		});
+		}));
+//		f = this.sceneOrder.reverse().find(function(a){
+//			return a.name == name;
+//		});
 		
-		this.sceneOrder.reverse();
-		return f;
+//		this.sceneOrder.reverse();
+		if(f.length == 0){
+			return null;
+		}
+
+		return inIndex != null ? f[inIndex] : f.pop();
+//		return f;
 //		return f[inIndex];
 	},
 	
@@ -434,7 +443,9 @@ SceneTransition.prototype = {
 				this.sceneCurrent = rem;
 			}
 		}
-		return this.sceneCurrent;
+		
+		
+		return this.sceneCurrent == null ? this.sceneOrder[0] : this.sceneCurrent;
 	},
 	
 	last: function(){
@@ -853,6 +864,7 @@ function drawDebugCell(scroll, pointControll, wordprint, color){
 		, left = pointControll.getState('left')
 		, cto = cellhto, toc = tocellh
 		, x, y, w = cto(1)
+		, xs, xe, ys, ye
 		, r
 		, str
 		, backScroll = wordprint.getScroll()
@@ -865,9 +877,14 @@ function drawDebugCell(scroll, pointControll, wordprint, color){
 	
 	pos = {x: toc(pos.x), y: toc(pos.y)};
 	start = {x: toc(start.x), y: toc(start.y)};
+	xs = start.x > pos.x ? start.x + 1: start.x;
+	xe = start.x > pos.x ? pos.x : pos.x + 1;
+	ys = start.y > pos.y ? start.y + 1: start.y;
+	ye = start.y > pos.y ? pos.y : pos.y + 1;
+
 	wordprint.setScroll(scroll);
 	if(left){
-		r = makeRect([start.x, start.y, pos.x + 1, pos.y + 1].join(' ') + ' :pos' );
+		r = makeRect([xs, ys, xe, ye].join(' ') + ' :pos' );
 		scroll.debugRect(makeRect(r.toString() + ' *8'), color);
 		
 		str = numFormat(r.x, 2) + ':' + numFormat(r.y, 2) + "$n" 
