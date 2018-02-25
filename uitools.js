@@ -452,12 +452,20 @@ SceneTransition.prototype = {
 		var current = this.sceneCurrent
 			, order = this.sceneOrder
 		;
-		if(current != null){
-			return current;
-		}
+		//TODO currentの優先変更を検証
 		if(order.length > 0){
 			return order[order.length - 1];
+		}else if(current != null){
+			return current;
 		}
+
+
+//		if(current != null){
+//			return current;
+//		}
+//		if(order.length > 0){
+//			return order[order.length - 1];
+//		}
 		return false;
 	},
 	
@@ -716,6 +724,8 @@ SpriteAnimation.prototype = {
 		this.currentCount = 0;
 		this.visible = true;
 		this.lastPattern = sprites.length - 1;
+		this.fixedPatterns = [];
+		this.fixed = false;
 		len = this.lastPattern;
 		if(playCounts == null || Object.keys(playCounts).length == 0){
 			this.play = {};
@@ -802,6 +812,13 @@ SpriteAnimation.prototype = {
 //		return (this.pattern >= mp) && (this.currentCount >= this.frames[mp]) && (this.played[mp] >= this.play[mp]);
 	},
 	
+	getFixed: function(count){
+		if(!this.fixed){
+			this.skip(count + 1);
+		}
+		return this.sprites[this.fixedPatterns[count % this.fixedPatterns.length]];
+	},
+	
 	current: function(){
 		return !this.isEnd() ? this.sprites[this.pattern] : this.sprites[this.lastPattern];
 	},
@@ -822,27 +839,34 @@ SpriteAnimation.prototype = {
 	},
 	
 	next: function(){
-		var s;
+		var s
+		;
+		
 		this.count++;
 		this.currentCount++;
 		
-		if(this.currentCount >= this.frames[this.pattern]){
+		if(!this.fixed && this.currentCount >= this.frames[this.pattern]){
 			this.currentCount = 0;
 			if(this.isLoop()){
 				this.played[this.pattern]++;
 				this.pattern = 0;
 				this.resetLowerPlayed(this.pattern);
+				this.fixed = true;
 			}else{
 				this.pattern++;
 			}
 		}
+		
 		if(this.isEnd()){
 			if(this.visible){
 				this.sprites[this.lastPattern].show();
 			}else{
 				this.sprites[this.lastPattern].hide();
 			}
+			this.fixed = true;
 			return this.sprites[this.lastPattern];
+		}else if(this.fixed){
+			return this.sprites[this.fixedPatterns[this.count % this.fixedPatterns.length]];
 		}
 		
 		if(this.visible){
@@ -851,6 +875,8 @@ SpriteAnimation.prototype = {
 			this.sprites[this.pattern].hide();
 		}
 		
+		// !this.fixed
+		this.fixedPatterns.push(this.pattern);
 		return this.sprites[this.pattern];
 	}
 	
