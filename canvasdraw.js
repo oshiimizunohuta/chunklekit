@@ -2605,6 +2605,13 @@ CanvasSprite.prototype = {
 		return false;
 	},
 	
+	getBufferOriginal: function(){
+		if(this.bufferOriginal == null){
+			this.bufferOriginal = this.ctx.getImageData(this.x, this.y, this.w, this.h);
+		}
+		return this.bufferOriginal;
+	},
+	
 	resetShiftBuffer: function(){
 //		this.bfsx = x;
 //		this.bfsy = y;
@@ -2613,19 +2620,29 @@ CanvasSprite.prototype = {
 		}
 	},
 	
-	shiftBuffer: function(x, y){
-		var dat 
+	shiftBufferRotate: function(x, y, append1, append2, append3){
+		var dat1, dat2, dat3, dat4
 			, sx = this.x
 			, sy = this.y
 			, w = this.w
 			, h = this.h
 			, slicew = w, sliceh = h
+			, norotate = false
 		;
-		if(this.bufferOriginal == null){
-			dat = this.ctx.getImageData(sx, sy, w, h);
-			this.bufferOriginal = dat;
-		}else{
-			dat = this.bufferOriginal;
+		dat1 = this.getBufferOriginal();
+		dat3 = null;
+		dat2 = null;
+		dat4 = null;
+		
+		if(append1 instanceof CanvasSprite){
+			dat2 = append1.getBufferOriginal();
+			dat4 = dat2;
+		}
+		if(append2 instanceof CanvasSprite){
+			dat3 = append2.getBufferOriginal();
+		}
+		if(append3 instanceof CanvasSprite){
+			dat4 = append3.getBufferOriginal();
 		}
 		
 		if(x != null && x != 0){
@@ -2641,16 +2658,120 @@ CanvasSprite.prototype = {
 			y = 0;
 		}
 		if(x != null && x != 0){
-			this.ctx.putImageData(dat, sx + x, sy + y, 0, 0, slicew, sliceh);
-			this.ctx.putImageData(dat, sx - slicew, sy + y, slicew, 0, x, sliceh);
+			if(dat2 != null){
+				this.ctx.putImageData(dat2, sx - slicew, sy + y, slicew, 0, x, sliceh);
+			}else{
+				this.ctx.fillStyle = makeRGBA(append1);
+				this.ctx.fillRect(sx - slicew + w, sy + y + h, x, sliceh);
+			}
+			this.ctx.putImageData(dat1, sx + x, sy + y, 0, 0, slicew, sliceh);
 		}
 		
 		if(y != null && y != 0){
-			this.ctx.putImageData(dat, sx + x, sy - sliceh, 0, sliceh, slicew, y);
-			this.ctx.putImageData(dat, sx - slicew, sy  - sliceh, slicew, sliceh, x, y);
+			if(dat4 != null){
+				this.ctx.putImageData(dat4, sx - slicew, sy - sliceh, slicew, sliceh, x, y);
+			}else{
+				this.ctx.fillStyle = makeRGBA(append1);
+				this.ctx.fillRect(sx - slicew + w, sy - sliceh + h, slicew, sliceh);
+			}
+			this.ctx.putImageData(dat3, sx + x, sy - sliceh, 0, sliceh, slicew, y);
 		}
+		return this;
 		
 	},
+	/**
+	 * 
+	 * @param {unsigned Number} x
+	 * @param {unsigned Number} y
+	 * @param {Sprite}{ColorArray} append1
+	 * @returns {this}
+	 * @description スプライト情報の上書き
+	 */
+	
+	shiftBuffer: function(x, y, append1, append2, append3){
+		var dat4, dat2, dat3, dat1
+			, w = this.w
+			, h = this.h
+			, col = COLOR_BLACK
+		;
+		dat1 = this.getBufferOriginal();
+		dat3 = col;
+		dat2 = col;
+		dat4 = col;
+		
+		if(append1 instanceof CanvasSprite){
+			dat2 = append1.getBufferOriginal();
+			dat3 = dat2;
+			dat4 = dat1;
+		}else{
+			//色指定
+			dat2 = append1 == null ? makeRGBA(COLOR_WHITE) : makeRGBA(append1);
+			dat3 = dat2;
+			dat4 = dat1;
+		}
+		if(append2 instanceof CanvasSprite){
+			dat3 = append2.getBufferOriginal();
+			dat4 = dat2;
+		}
+		if(append3 instanceof CanvasSprite){
+			dat4 = append3.getBufferOriginal();
+		}
+		//testclear
+//		this.ctx.fillStyle = makeRGBA(col);
+//		this.ctx.fillRect(sx, sy, 96, 32);
+		this.shiftBufferSub(x, y, dat1);
+		this.shiftBufferSub(x + this.w, y, dat2);
+		this.shiftBufferSub(x, y + this.h, dat3);
+		this.shiftBufferSub(x + this.w, y + this.h, dat4);
+		return this;
+	},
+	shiftBufferSub: function(x, y, dat){
+		var
+			 sx = this.x
+			, sy = this.y
+			, w = this.w
+			, h = this.h
+			, slicewR = w, slicehB = h
+			, slicewL = 0, slicehT = 0
+//			, col = COLOR_BLACK
+		;
+		if(x != null && x != 0){
+			if(x <= -w){
+				x =  ((x - w) % (w + w)) + w;
+			}else if(x >= w){
+				x =  ((x + w) % (w + w)) - w;
+			}
+			slicewR = x > 0 ? w - (x % w) : w + (x % w);
+			slicewL = w - slicewR;
+		}else{
+			x = 0;
+		}
+		//y = -32
+		if(y != null && y != 0){
+			if(y <= -h){
+				y =  ((y - h) % (h + h)) + h;
+			}else if(y >= h){
+				y =  ((y + h) % (h + h)) - h;
+			}
+			slicehT = y > 0 ? (y % h) : -(y % h);
+			slicehB = h - slicehT;
+		}else{
+			y = 0;
+		}
+		if(y == -h || x == -w){
+			return;
+		}
+		if(dat instanceof ImageData){
+			this.ctx.putImageData(dat, sx + x, sy + y,  x > 0 ? 0 : slicewL, y > 0 ? 0 : slicehT, slicewR, slicehB);
+		}else{
+			x = x < 0 ? 0 : x;
+			y = y < 0 ? 0 : y;
+			this.ctx.fillStyle = dat;
+			this.ctx.fillRect(sx + x, sy + y, slicewR, slicehB);
+		}
+
+	},
+	
 	show: function(){
 		this.x = this.x < 0 ? - this.x - this.w : this.x;
 	},
