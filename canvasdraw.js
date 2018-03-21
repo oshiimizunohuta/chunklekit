@@ -2705,7 +2705,7 @@ CanvasSprite.prototype = {
 			dat4 = dat1;
 		}else{
 			//色指定
-			dat2 = append1 == null ? makeRGBA(COLOR_WHITE) : makeRGBA(append1);
+			dat2 = append1 == null ? makeRGBA(COLOR_BLACK) : makeRGBA(append1);
 			dat3 = dat2;
 			dat4 = dat1;
 		}
@@ -2719,6 +2719,8 @@ CanvasSprite.prototype = {
 		//testclear
 //		this.ctx.fillStyle = makeRGBA(col);
 //		this.ctx.fillRect(sx, sy, 96, 32);
+		x = Math.round(x);
+		y = Math.round(y);
 		this.shiftBufferSub(x, y, dat1);
 		this.shiftBufferSub(x + this.w, y, dat2);
 		this.shiftBufferSub(x, y + this.h, dat3);
@@ -2758,7 +2760,8 @@ CanvasSprite.prototype = {
 		}else{
 			y = 0;
 		}
-		if(y == -h || x == -w){
+//		if(y == -h || x == -w){
+		if(y >= h || y <= -h || x >= w || x <= -w){
 			return;
 		}
 		if(dat instanceof ImageData){
