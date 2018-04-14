@@ -707,19 +707,45 @@ CanvasScroll.prototype = {
 		}
 	},
 
-	setRasterHorizon: function(sy, dx, dy) {
+	setRasterHorizon: function(sy, dx, dy, retention) {
+		var i, line;
 		this.rasterLines.vertical = [];
+		if(retention != null && retention){
+			for(i = sy; i >= 0; i--){
+				if(this.rasterLines.horizon[i] != null){
+					line = this.rasterLines.horizon[i];
+					break;
+				}
+			}
+			if(line != null){
+				dx = line.x;
+				dy = line.y;
+			}
+		}
 		this.rasterLines.horizon[sy] = {
 			x : dx % (this.mirrorWidth * 2),
 			y : dy % (this.mirrorHeight * 2)
-//			x : dx % this.mirrorWidth,
-//			y : dy % this.mirrorHeight
 		};
 	},
 
 
-	setRasterVertical: function(sx, dx, dy) {
+	setRasterVertical: function(sx, dx, dy, retention) {
+		var i, line;
 		this.rasterLines.horizon = [];
+		if(retention != null && retention){
+			for(i = sy; i >= 0; i--){
+				if(this.rasterLines.horizon[i] != null){
+					line = this.rasterLines.horizon[i];
+					break;
+				}
+			}
+			if(line != null){
+				dx = line.x;
+				dy = line.y;
+			}
+		}		if(retention != null && retention && this.rasterLines.vertical[sx] != null){
+			return;
+		}
 		this.rasterLines.vertical[sx] = {
 			x : dx % (this.mirrorWidth * 2),
 			y : dy % (this.mirrorHeight * 2)
