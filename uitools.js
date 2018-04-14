@@ -314,8 +314,18 @@ CUCursor.prototype = {
 			}
 		}
 		return null;
-	}
+	},
 	
+	is: function(x, y, z){
+		var p = true;
+		if(x == null && y == null && z == null){
+			return null;
+		}
+		p = x != null ? x == this.x && p : p;
+		p = y != null ? y == this.y && p : p;
+		p = z != null ? z == this.z && p : p;
+		return p;
+	}
 	
 };
 
@@ -560,6 +570,7 @@ SceneTransition.prototype = {
 		this.sceneOrder = this.sceneOrder.filter(function(a){
 			if(a.name == name){
 				res = a;
+				res.remove = true;
 			}
 			return a.name != name;
 		});
@@ -567,6 +578,7 @@ SceneTransition.prototype = {
 		if(this.sceneCurrent != null && this.sceneCurrent.name == name){
 			res = this.sceneCurrent;
 			this.sceneCurrent = null;
+			res.remove = true;
 			return res;
 		}
 
