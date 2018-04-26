@@ -112,6 +112,9 @@ CanvasScroll.prototype = {
 		this.mirrorWidth = width;
 		this.mirrorHeight = height;
 		
+		this.volatile = false;
+		this.defaultColor = null;
+		
 	},
 
 	drawto: function(targetScroll, x, y, w, h)
@@ -687,6 +690,18 @@ CanvasScroll.prototype = {
 		}
 		return true;
 	},
+	
+	disableVolatile: function(){
+		this.volatile = true;
+	},
+	enableVolatile: function(color){
+		this.defaultColor = color;
+		this.volatile = true;
+	},
+	
+	isVolatile: function(){
+		return this.volatile;
+	},
 
 	setRasterFunc: function(func) {
 		this.rasterFunc = func;
@@ -898,6 +913,9 @@ function drawCanvasStacks(max)
 	var cnt = 0, k, scr = canvasScrollBundle == null ? layerScroll : canvasScrollBundle, complete = true;
 	max = max == null ? SCROLL_MAX_SPRITES_DRAW * canvasScrollBundle.length : max;
 	for(k in scr){
+		if(scr[k].isVolatile()){
+			scr[k].clear(scr[k].defaultColor);
+		}
 		complete &= scr[k].drawDrawInfoStack();
 		if(max <= cnt++){
 			break;
