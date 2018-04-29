@@ -211,16 +211,16 @@ WordPrint.prototype ={
 		
 		this.infoCache = {
 			newLinesPosition:{
-				key: '', info: null
+				key: '', info: null, color: ''
 			},
 			replaceNewLineStr:{
-				key: '', info: null
+				key: '', info: null, color: ''
 			},
 			wordSprites:{
-				key: '', info: null
+				key: '', info: null, color: ''
 			},
 			wordSpritesInfo:{
-				key: '', info: null
+				key: '', info: null, color: ''
 			},
 		};
 		
@@ -980,12 +980,13 @@ WordPrint.prototype ={
 	cacheInfo: function(category, key, info){
 		this.infoCache[category].key = key;
 		this.infoCache[category].info = info;
+		this.infoCache[category].color = this.colorQuery();
 	},
 	
 	restoreFromCache: function(category, keystr){
 		var cache = this.infoCache[category]
 		;
-		if(cache.key == keystr){
+		if(cache.key == keystr && this.colorQuery() == cache.color){
 			return cache.info;
 		}else{
 			return false;
