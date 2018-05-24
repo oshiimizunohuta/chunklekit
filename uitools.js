@@ -708,7 +708,7 @@ function makeSpriteAnimation(spriteOrName, query){
 		}
 		maked = isReffer ? canvasSprites[spl[0]] : makeSpriteQuery(imageName, spl[0]);
 		if(maked == null){
-			console.worn('No Sprite Animation: ', spriteOrName, query);
+			console.warn('No Sprite Animation: ', spriteOrName, query);
 		}
 		sprites.push(maked);
 		frames.push(spl[1] | 0);
