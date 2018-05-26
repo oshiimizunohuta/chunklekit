@@ -280,6 +280,7 @@ KeyControll.prototype = {
 		this.controlls[name].off = false;
 		this.controlls[name].hold = false;
 		this.controlls[name].time = 0;
+		this.controlls[name].func = null;
 	},
 	
 	unsetKey: function(name)
@@ -293,6 +294,12 @@ KeyControll.prototype = {
 		}
 		delete this.name2code[name];
 		delete this.controlls[name];
+	},
+	
+	setKeydown: function(name, func){
+		var controll = this.controlls[name]
+		;
+		controll.func = func;
 	},
 
 	/**
@@ -311,6 +318,10 @@ KeyControll.prototype = {
 			this.controlls[controll].trig = true;
 			this.controlls[controll].state = true;
 			this.controlls[controll].off = false;
+			
+			if(this.controlls[controll].func != null){
+				this.controlls[controll].func();
+			};
 		}
 
 	},
@@ -321,11 +332,16 @@ KeyControll.prototype = {
 	 */
 	stateUp: function(code)
 	{
-		var controll = this.code2name[code];
+		var controll = this.code2name[code]
+			, state = this.controlls[controll].state;
+		;
 		this.controlls[controll].off = true;
 		this.controlls[controll].state = false;
 		this.controlls[controll].trig = false;
 
+		if(state && this.controlls[controll].func != null){
+//			this.controlls[controll].func();
+		};
 	},
 	
 	/**
