@@ -114,6 +114,8 @@ CanvasScroll.prototype = {
 		
 		this.volatile = false;
 		this.defaultColor = null;
+		//描画された履歴
+		this.drawnInfoHistory = {};
 		
 	},
 
@@ -417,6 +419,10 @@ CanvasScroll.prototype = {
 			this.ctx.drawImage(image, 0 | sprite.x, 0 | sprite.y, 0 | w, 0 | h, 0 | x, 0 | y, 0 | w, 0 | h);
 			
 		}
+		//描画情報を記録
+		this.drawnInfoHistory[y] = this.drawnInfoHistory[y] != null ? this.drawnInfoHistory[y] : {};
+		this.drawnInfoHistory[y][x] = spriteInfo;
+//		this.drawnInfoHistory[y][x] = this.drawnInfoHistory[y][x] != null ? spriteInfo : {};
 		
 		//以下元通りにする
 		if(spriteInfo.rot > 0){
@@ -429,6 +435,19 @@ CanvasScroll.prototype = {
 		}
 		sprite = null;
 		image = null;
+	},
+	
+	//drawInfoを再描画
+	redrawInfo: function(){
+		var x, y
+			, dinfo = this.drawnInfoHistory
+		;
+		
+		for(y in dinfo){
+			for(x in dinfo[y]){
+				this.drawSpriteInfo(dinfo[y][x]);
+			}
+		}
 	},
 	
 	drawSpriteArray: function(spriteArray, x, y, cellsWidth)
@@ -915,6 +934,7 @@ function drawCanvasStacks(max)
 	for(k in scr){
 		if(scr[k].isVolatile()){
 			scr[k].clear(scr[k].defaultColor);
+			scr[k].drawnInfoHistory = {};
 		}
 		complete &= scr[k].drawDrawInfoStack();
 		if(max <= cnt++){
@@ -1558,7 +1578,7 @@ function makeSpriteImage(name)
 		, cw = d.width / img.separateWidth[name] | 0
 		, ch = d.height / img.separateWidth[name] | 0
 		;
-	return makeSpriteChunk(name, makeRect(0, 0, cw, ch));
+	return convertChunk(makeSpriteChunk(name, makeRect(0, 0, cw, ch)), SPQ_ALL);
 		
 };
 
@@ -2065,6 +2085,7 @@ function makeSpriteQuery(name, spq, nstpat)
 	}
 	
 	if(spq == SPQ_ALL){
+		SPQ_RCOUNT = 0;
 		return makeSpriteImage(name);
 	}
 	try{
@@ -2664,6 +2685,7 @@ CanvasSprite.prototype = {
 		}
 	},
 	
+	//TODO 未使用？
 	shiftBufferRotate: function(x, y, append1, append2, append3){
 		var dat1, dat2, dat3, dat4
 			, sx = this.x
@@ -2724,14 +2746,13 @@ CanvasSprite.prototype = {
 		
 	},
 	/**
-	 * 
+	 * @name shiftBuffer
 	 * @param {unsigned Number} x
 	 * @param {unsigned Number} y
 	 * @param {Sprite}{ColorArray} append1
 	 * @returns {this}
 	 * @description スプライト情報の上書き
 	 */
-	
 	shiftBuffer: function(x, y, append1, append2, append3){
 		var dat4, dat2, dat3, dat1
 			, w = this.w
