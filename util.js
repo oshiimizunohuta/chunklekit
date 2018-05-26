@@ -941,6 +941,7 @@ CKAPIServer.prototype = {
 	init: function(apiUrl){
 		this.serverUrl = apiUrl;
 		this.filterFunc = function(j){return j;};
+		this.error = null;
 	},
 	
 	post: function(api, params, func, errorFunc){
@@ -951,7 +952,7 @@ CKAPIServer.prototype = {
 	},
 	
 	send: function(method, api, params, func, errorFunc){
-		var str, query = [], key, x = new XMLHttpRequest()
+		var data, query = [], key, x = new XMLHttpRequest()
 			, self = this
 		;
 		if(this.serverUrl == null){console.error('not initialize api server'); return;}
@@ -980,34 +981,41 @@ CKAPIServer.prototype = {
 
 		if(errorFunc != null){
 			x.ontimeout = function(e){
-				errorFunc(e);
+				self.error = e.data != null ? e.data.error : null;
+				errorFunc(e, error_code);
 				return false;
 			};
 			x.onerror = function(e){
-				errorFunc(e);
+				self.error = e.data != null ? e.data.error : null;
+				errorFunc(e, error_code);
 				return false;
 			};
 			x.onabort = function(e){
-				errorFunc(e);
+				self.error = e.data != null ? e.data.error : null;
+				errorFunc(e, error_code);
 				return false;
 			};
 		}
 
-
-		for(key in params){
-			query.push(key + '=' + params[key]);
-		}
-		str = query.join('&');
-		if(method.toUpperCase() == 'GET'){
-			x.open(method, this.serverUrl + '/' + api + '?' + str , true);
-			str = "";
+		if(params instanceof FormData){
+			data = params;
+			x.open(method, this.serverUrl + '/' + api , true);
 		}else{
-			x.open(method, this.serverUrl + '/' + api, true);
+			for(key in params){
+				query.push(key + '=' + params[key]);
+			}
+			data = query.join('&');
+			if(method.toUpperCase() == 'GET'){
+				x.open(method, this.serverUrl + '/' + api + '?' + data , true);
+				data = "";
+			}else{
+				x.open(method, this.serverUrl + '/' + api, true);
+			}
+			x.withCredentials = true;
+			x.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded;charset=UTF-8');
 		}
-		x.withCredentials = true;
-		x.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded;charset=UTF-8');
 
-		x.send(str);
+		x.send(data);
 	}
 };
 
