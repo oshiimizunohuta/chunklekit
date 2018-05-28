@@ -17,12 +17,14 @@ window.addEventListener('keydown', function(e){
 		if(!(e.keyCode in c.code2name)){
 			if(ELSE_LOCK) {
 				e.preventDefault();
+				e.stopPropagation();
 				return false;
 			}
 			return true;
 		}//余計なキーは反応させない
-		c.stateDown(e.keyCode);
+		c.stateDown(e.keyCode, e);
 		e.preventDefault();
+		e.stopPropagation();
 		enabled = false;
 	}
 
@@ -35,12 +37,14 @@ window.addEventListener('keyup', function(e){
 		if(!(e.keyCode in c.code2name)){
 			if(ELSE_LOCK) {
 				e.preventDefault();
+				e.stopPropagation();
 				return false;
 			}
 			return true;
 		}//余計なキーは反応させない
 		c.stateUp(e.keyCode);
 		e.preventDefault();
+		e.stopPropagation();
 		enabled = false;
 	}
 	if(enabled && ELSE_LOCK) {
@@ -306,7 +310,7 @@ KeyControll.prototype = {
 	 * キーが押された瞬間の挙動
 	 * @param code
 	 */
-	stateDown: function(code)
+	stateDown: function(code, event)
 	{
 		var controll = this.code2name[code]
 			, state = this.controlls[controll].state;
@@ -320,7 +324,7 @@ KeyControll.prototype = {
 			this.controlls[controll].off = false;
 			
 			if(this.controlls[controll].func != null){
-				this.controlls[controll].func();
+				this.controlls[controll].func(event);
 			};
 		}
 
