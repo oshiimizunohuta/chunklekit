@@ -6,21 +6,21 @@
  * @author bitchunk
  * @version 0.4.5
  */
+
+import * as props from './prop.js'; 
+import {makeRect, CKAPIServer, initAPIServer, bubbleSort} from './util.js';
 //キャンバスことスクロール
 var canvasScrollBundle = {};
-//var VIEWMULTI = 1;
-// var SCROLL_MAX_SPRITES_DRAW = 32;
-// var SCROLL_MAX_SPRITES_STACK = 2048;
 
 function makeScroll(name, mainFlag, width, height){
 	var scr = new CanvasScroll();
 	scr.init(name, mainFlag, width, height);
 	return scr;
 };
-function makeCanvasScroll(scrollName, insertID){
+export function makeCanvasScroll(scrollName, insertID){
 	var scr = new CanvasScroll();
 	insertID = insertID == null ? 'display' : insertID;
-	scr.init(scrollName, scrollName == UI_SCREEN_ID, null, null, insertID);
+	scr.init(scrollName, scrollName == props.UI_SCREEN_ID, null, null, insertID);
 	canvasScrollBundle[scrollName] = scr;
 	return scr;
 };
@@ -37,7 +37,33 @@ function canvasDrawRepeat()
 	CANVASDRAWREPEATFUNC();
 }
 
-dulog = function(){return;};
+
+function screenViewScroll(){
+	return scrollByName(props.UI_SCREEN_ID);
+}
+/**
+ * 拡大縮小済み画面サイズ
+ * @returns {___anonymous22047_22111}
+ */
+function getDisplaySize()
+{
+//	let s = screenViewScroll();
+//	return s.getRect();
+	let r = CanvasScroll.scaleRate()
+		, c = CanvasScroll
+	;
+	return {w: r * c.DISPLAY_WIDTH, h: r * c.DISPLAY_HEIGHT};
+}
+
+function getScrollSize()
+{
+	let C = CanvasScroll
+		, R = imageResource
+	;
+//	return {w: (VIEWMULTI * (DISPLAY_WIDTH + CHIPCELL_SIZE)), h: (VIEWMULTI * (DISPLAY_HEIGHT + CHIPCELL_SIZE))};
+	return {w: C.DISPLAY_WIDTH, h: C.DISPLAY_HEIGHT};
+//	return {w: C.DISPLAY_WIDTH + R.CHIPCELL_SIZE, h: C.DISPLAY_HEIGHT + R.CHIPCELL_SIZE};
+}
 
 
 /**
@@ -45,12 +71,8 @@ dulog = function(){return;};
  * @class
  * @name CanvasScroll
  */
-function CanvasScroll()
-{
-	return;
-}
-CanvasScroll.prototype = {
-	init: function(name, mainFlag, width, height, insertID){
+class CanvasScroll{
+	init(name, mainFlag, width, height, insertID){
 		var size = getDisplaySize()
 			, scrsize = getScrollSize()
 			, display
@@ -70,7 +92,7 @@ CanvasScroll.prototype = {
 		mainFlag = mainFlag == null ? false : mainFlag;
 		if(mainFlag != null && mainFlag){
 			width = size.w;
-			height =size.h;
+			height = size.h;
 	//		this.autoClear = false;
 		}else if(width == null && height == null){
 			width = scrsize.w;
@@ -96,8 +118,8 @@ CanvasScroll.prototype = {
 		this.x = 0;
 		this.y = 0;
 //		canvasScrollBundle[name] = this;
-		this.maxSprites = SCROLL_MAX_SPRITES_DRAW;
-		this.maxSpritesStack = SCROLL_MAX_SPRITES_STACK;
+		this.maxSprites = props.SCROLL_MAX_SPRITES_DRAW;
+		this.maxSpritesStack = props.SCROLL_MAX_SPRITES_STACK;
 		this.drawInfoStack = [];
 		this.drawPrimary = true; //draw reliably even overdraw
 		this.blinkContinues = 0; 
@@ -117,9 +139,9 @@ CanvasScroll.prototype = {
 		//描画された履歴
 		this.drawnInfoHistory = {};
 		
-	},
+	}
 
-	drawto: function(targetScroll, x, y, w, h)
+	drawto(targetScroll, x, y, w, h)
 	{
 		if(!this.is_visible()){return;}
 		if(targetScroll == null){return;}
@@ -129,11 +151,11 @@ CanvasScroll.prototype = {
 		if(y == null){y = this.y;}
 		targetScroll.ctx.drawImage(this.canvas, 0 | x, 0 | y, w, h);
 //		targetScroll.ctx.drawImage(this.canvas, 0 | -x, 0 | -y, w, h);
-	},
+	}
 
 	//拡大しない
 	//対象のスクロール基準の走査
-	rasterto: function(targetScroll, dx, dy, dw, dh)
+	rasterto(targetScroll, dx, dy, dw, dh)
 	{
 		var x, y
 		;
@@ -207,10 +229,10 @@ CanvasScroll.prototype = {
 		if(this.rasterVolatile){
 			this.resetRaster();
 		}
-	},
+	}
 	
 	//元のスクロール基準の走査
-	rasterfrom: function(targetScroll, dx, dy, dw, dh)
+	rasterfrom(targetScroll, dx, dy, dw, dh)
 	{
 		if(!this.is_visible()){return;}
 		if(dw == null){dw = this.canvas.width;}
@@ -262,7 +284,7 @@ CanvasScroll.prototype = {
 		if(this.rasterVolatile){
 			this.resetRaster();
 		}
-	},
+	}
 	
 	
 	/**
@@ -270,10 +292,10 @@ CanvasScroll.prototype = {
 	 * @param targetScroll
 	 * @param multi
 	 */
-	nearestTo: function(targetScroll, multi)
+	nearestTo(targetScroll, multi)
 	{
 		if(targetScroll.canvas == null){return;}
-		if(multi == null){multi = VIEWMULTI;}
+		if(multi == null){multi = props.VIEWMULTI;}
 
 //		var from = {};
 		var to = {}, w, h;//, x, y;
@@ -301,9 +323,9 @@ CanvasScroll.prototype = {
 			targetScroll.ctx.drawImage(this.canvas, 0, 0, w, h, to.x - to.w, to.y - to.h, to.w, to.h);
 		}
 
-	},
+	}
 
-	drawDrawInfoStack: function()
+	drawDrawInfoStack()
 	{
 		var stack = this.drawInfoStack, drawInfo, cnt = 0
 			, overnum = stack.length - this.maxSprites
@@ -337,7 +359,7 @@ CanvasScroll.prototype = {
 		
 		this.blinkContinues = (blinkRate * cnt) + tinue - blinked;
 		return true;
-	},
+	}
 
 	/**
 	   * 描く
@@ -345,7 +367,7 @@ CanvasScroll.prototype = {
 	   * @param x
 	   * @param y
 	   */
-	drawSprite: function(sprite, x, y)
+	drawSprite(sprite, x, y)
 	{
 		var info = sprite.makeSpriteInfo(x, y);
 		this.drawInfoStack.push(info);
@@ -353,9 +375,9 @@ CanvasScroll.prototype = {
 			this.drawInfoStack.shift();
 		}
 		return info;
-	},
+	}
 
-	drawSpriteInfo: function(spriteInfo)
+	drawSpriteInfo(spriteInfo)
 	{
 		var sprite, x, y
 				, image
@@ -435,10 +457,10 @@ CanvasScroll.prototype = {
 		}
 		sprite = null;
 		image = null;
-	},
+	}
 	
 	//drawInfoを再描画
-	redrawInfo: function(){
+	redrawInfo(){
 		var x, y
 			, dinfo = this.drawnInfoHistory
 		;
@@ -448,9 +470,9 @@ CanvasScroll.prototype = {
 				this.drawSpriteInfo(dinfo[y][x]);
 			}
 		}
-	},
+	}
 	
-	drawSpriteArray: function(spriteArray, x, y, cellsWidth)
+	drawSpriteArray(spriteArray, x, y, cellsWidth)
 	{
 		var posX, posY, slen = spriteArray.length, i, sprite
 		;
@@ -459,19 +481,19 @@ CanvasScroll.prototype = {
 		for(i = 0; i < slen; i++){
 			sprite = spriteArray[i];
 			posX = (x < 0) 
-			? DISPLAY_WIDTH + (sprite.w * (i % cellsWidth)) + x
+			? props.DISPLAY_WIDTH + (sprite.w * (i % cellsWidth)) + x
 			: (sprite.w * (i % cellsWidth)) + x;
 			posY = (y < 0)
-			? DISPLAY_HEIGHT + (sprite.h * (0 | (i / cellsWidth))) + y
+			? props.DISPLAY_HEIGHT + (sprite.h * (0 | (i / cellsWidth))) + y
 			: (sprite.h * (0 | (i / cellsWidth))) + y;
 			if((y < 0) ){
-				dulog(((0 | (i / cellsWidth)) - (0 | (slen / cellsWidth))));
+				console.warn(((0 | (i / cellsWidth)) - (0 | (slen / cellsWidth))));
 			}
 			this.drawSprite(sprite, posX, posY);
 		}
-	},
+	}
 // TODO 旧バージョンの-値使用状況を調べる
-	drawSprite2dArray: function(sprite2dArray, x, y)
+	drawSprite2dArray(sprite2dArray, x, y)
 	{
 		var j , i, posX, posY, s2len = sprite2dArray.length, slen, sprite, spriteArray;
 		for(j= 0; j < s2len; j++){
@@ -490,9 +512,9 @@ CanvasScroll.prototype = {
 				this.drawSprite(sprite, posX, posY);
 			}
 		}
-	},
+	}
 
-	drawSpriteChunk: function(chunk, x, y)
+	drawSpriteChunk(chunk, x, y)
 	{
 		if(chunk.length == null){
 			// dulog(chunk);
@@ -505,19 +527,19 @@ CanvasScroll.prototype = {
 			chunk = [chunk];
 		}
 		this.drawSprite2dArray(chunk, x, y);
-	},
+	}
 
-	stackClear: function()
+	stackClear()
 	{
 		DRAW_EVENTS.oneShot(this, "clear");
-	},
+	}
 
-	stackDraw: function(func)
+	stackDraw(func)
 	{
 		DRAW_EVENTS.oneShot(this, func);
-	},
+	}
 
-	pset: function(x, y, color)
+	pset(x, y, color)
 	{
 		var img = this.ctx.getImageData(0, 0)
 		// var img = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height)
@@ -528,9 +550,9 @@ CanvasScroll.prototype = {
 			// img[pos++] = color[1];
 			// img[pos++] = color[2];
 			// img[pos++] = color[3];
-	},
+	}
 
-	drawSpriteLineInfo: function(lineInfo)
+	drawSpriteLineInfo(lineInfo)
 	{
 		var i, from = lineInfo.from, to = lineInfo.to, color = lineInfo.color
 			, point, x = from.x | 0, y = from.y | 0
@@ -573,23 +595,23 @@ CanvasScroll.prototype = {
 			}
 		}
 		
-	},
+	}
 	
 	// function spriteLine(from, to, sprite)
-	spriteLine: function(from, to, color)
+	spriteLine(from, to, color)
 	{
 		var f = {x: from.x, y: from.y}, t = {x: to.x, y: to.y}, c = color
-		,info = {from : f, to: t, color: c, order: SPRITE_ORDER_DEFAULT};
+		,info = {from : f, to: t, color: c, order: props.SPRITE_ORDER_DEFAULT};
 		this.drawInfoStack.push(info);
 		if(this.maxSpritesStack < this.drawInfoStack.length){
 			this.drawInfoStack.shift();
 		}
-	},
+	}
 	
 	/**
 	* 消す
 	*/
-	clear: function(color, rect, order)
+	clear(color, rect, order)
 	{
 		if(rect == null){
 			rect = {x: 0, y: 0, w: (0 | this.canvas.width), h: (0 | this.canvas.height)};
@@ -601,9 +623,9 @@ CanvasScroll.prototype = {
 			this.ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
 		}
 		this.drawInfoStack.push({color: color == null ? null : color, fillrect: rect == null ? null : rect, order: order == null ? 0 : order});
-	},
+	}
 	
-	drawFillRectInfo: function(rectInfo)
+	drawFillRectInfo(rectInfo)
 	{
 		var color = rectInfo.color, rect = rectInfo.fillrect;
 		if(rect == null){
@@ -616,26 +638,26 @@ CanvasScroll.prototype = {
 		}else{
 			this.ctx.clearRect(rect.x, rect.y, rect.w, rect.h);
 		}
-	},
+	}
 	
-	debugRect: function(rect, color)
+	debugRect(rect, color)
 	{
 		color = COLOR_WHITE;
 		this.clear(color, rect);
-	},
+	}
 	
-	clearDrawInfoStack: function()
+	clearDrawInfoStack()
 	{
 		this.drawInfoStack = [];
-	},
+	}
 
-	isDrawingInfoStack: function()
+	isDrawingInfoStack()
 	{
 		return this.drawInfoStack.length > 0;
-	},
+	}
 
 //未使用？
-	colorSwap: function(sprite, left, top)
+	colorSwap(sprite, left, top)
 	{
 		var swaps = sprite.swaps
 			, tmp, tmpimage
@@ -678,55 +700,55 @@ CanvasScroll.prototype = {
 		from = null;
 		to = null;
 		data = null;
-	},
+	}
 
 	/**
 	* 映す
 	*/
-	project: function(scrollsrc)
+	project(scrollsrc)
 	{
 		this.ctx.clearRect();
-	},
+	}
 
-	zIndex: function(z)
+	zIndex(z)
 	{
 		this.canvas.style.zIndex = z;
-	},
+	}
 
 
-	hide: function() {
+	hide() {
 		this.canvas.hidden = true;
-	},
+	}
 
-	visible: function() {
+	visible() {
 		this.canvas.hidden = false;
-	},
+	}
 
 
-	is_visible: function() {
+	is_visible() {
 		if (this.canvas.hidden) {
 			return false;
 		}
 		return true;
-	},
+	}
 	
-	disableVolatile: function(){
+	disableVolatile(){
 		this.volatile = true;
-	},
-	enableVolatile: function(color){
+	}
+	enableVolatile(color){
 		this.defaultColor = color;
 		this.volatile = true;
-	},
+	}
 	
-	isVolatile: function(){
+	isVolatile(){
 		return this.volatile;
-	},
+	}
 
-	setRasterFunc: function(func) {
+	setRasterFunc(func) {
 		this.rasterFunc = func;
-	},
+	}
 
-	resetRaster: function(start, end) {
+	resetRaster(start, end) {
 		var i;
 		if(start != null || end != null){
 			start = start == null ? 0 : start;
@@ -739,9 +761,9 @@ CanvasScroll.prototype = {
 			this.rasterLines.vertical = [];
 			this.rasterLines.horizon = [];
 		}
-	},
+	}
 
-	setRasterHorizon: function(sy, dx, dy, retention) {
+	setRasterHorizon(sy, dx, dy, retention) {
 		var i, line;
 		this.rasterLines.vertical = [];
 		if(retention != null && retention){
@@ -760,10 +782,10 @@ CanvasScroll.prototype = {
 			x : dx % (this.mirrorWidth * 2),
 			y : dy % (this.mirrorHeight * 2)
 		};
-	},
+	}
 
 
-	setRasterVertical: function(sx, dx, dy, retention) {
+	setRasterVertical(sx, dx, dy, retention) {
 		var i, line;
 		this.rasterLines.horizon = [];
 		if(retention != null && retention){
@@ -784,15 +806,15 @@ CanvasScroll.prototype = {
 			x : dx % (this.mirrorWidth * 2),
 			y : dy % (this.mirrorHeight * 2)
 		};
-	},
+	}
 
-	setPosition: function(x, y) {
+	setPosition(x, y) {
 		this.canvas.style.left = x + "px";
 		this.canvas.style.top = y + "px";
-	},
+	}
 	
 	//※内容は削除される
-	resizeCanvas: function(w, h){
+	resizeCanvas(w, h){
 		var c = this.canvas
 		;
 		c.width = w;
@@ -800,21 +822,32 @@ CanvasScroll.prototype = {
 		c.style.width = w;
 		c.style.height = h;
 		
-	},
+	}
 
-	getSize: function() {
+	getSize() {
 		var size = {}
 		;
 		size.h = this.canvas.height;
 		size.w = this.canvas.width;
 		return size;
-	},
+	}
 
-	getRect: function() {
+	getRect() {
 		return makeRect(this.x, this.y, this.canvas.width, this.canvas.height);
-	},
-
-	screenShot: function()
+	}
+	
+	static scaleRate(scale){
+		if(scale != null){
+			CanvasScroll.SCALSE_RATE = scale;
+		}else{
+			return CanvasScroll.SCALSE_RATE;
+		}
+	}
+	static displaySize(){
+		
+	}
+	
+	screenShot()
 	{
 		//図形の保存
 		var img = new Image()
@@ -847,9 +880,13 @@ CanvasScroll.prototype = {
 		}; 
 		
 		return img;
-	},
+	}
 
-};
+}
+CanvasScroll.SCALSE_RATE = props.VIEWMULTI;
+CanvasScroll.DISPLAY_WIDTH = props.DISPLAY_WIDTH;
+CanvasScroll.DISPLAY_HEIGHT = props.DISPLAY_HEIGHT;
+
 
 function swapColorImageData(ctx, swaps, rect){
 	var tmp = ctx.getImageData(rect.x, rect.y, rect.w, rect.h)
@@ -898,12 +935,12 @@ function SSImgRemove(obj)
 /**
  * 簡易呼び出し
  */
-function screenView(to, from, multi)
+export function screenView(to, from, multi)
 {
-	from.nearestTo(to, multi == null ? VIEWMULTI : multi);
+	from.nearestTo(to, multi == null ? props.VIEWMULTI : multi);
 }
 
-function scrollByName(name)
+export function scrollByName(name)
 {
 	var scr = canvasScrollBundle == null ? layerScroll : canvasScrollBundle;
 	return (scr[name] != null) ? scr[name] : null;
@@ -920,17 +957,17 @@ function getMainScroll()
 	return null;
 }
 
-function getScrolls()
+export function getScrolls()
 {
 	var scr = canvasScrollBundle == null ? layerScroll : canvasScrollBundle;
 	return scr;
 	
 }
 
-function drawCanvasStacks(max)
+export function drawCanvasStacks(max)
 {
 	var cnt = 0, k, scr = canvasScrollBundle == null ? layerScroll : canvasScrollBundle, complete = true;
-	max = max == null ? SCROLL_MAX_SPRITES_DRAW * canvasScrollBundle.length : max;
+	max = max == null ? props.SCROLL_MAX_SPRITES_DRAW * canvasScrollBundle.length : max;
 	for(k in scr){
 		if(scr[k].isVolatile()){
 			scr[k].clear(scr[k].defaultColor);
@@ -1007,10 +1044,13 @@ imageResource.init = function(){
 	this.ctx = {};
 	this.loadRefreshTime = Date.now();
 	
-	this.multi = window.VIEWMULTI == null ? 1 : window.VIEWMULTI;
+//	this.multi = window.VIEWMULTI == null ? 1 : window.VIEWMULTI;
+	this.multi = 1;
 };	
 imageResource.init();
 imageResource.onload = [];
+
+imageResource.CHIPCELL_SIZE = props.CHIPCELL_SIZE;
 
 //TODO リソース名をキーにしたパラメータを持つこと（現在パラメータキー）
 //imageResource.create = function(nameArray, sepWidth, sepHeight)
@@ -1049,7 +1089,8 @@ imageResource.loaded = function (img){
 	
 	//make workspace
 	r.workSpace[img.name] = r.makeWorkSpace(img, r.separateWidth[img.name], r.separateHeight[img.name]);
-	delete img;
+	img = null
+//	delete img;
 	if(imageResource.isload()){
 		console.log('Onload ImageResource.');
 		if(imageResource.onload.length == null){
@@ -1261,26 +1302,28 @@ imageResource.makeWorkSpace = function(img, w, h)
 };
 
 // [name, cellsize_x, cellsize_y]
-function loadImages(imageInfo, func)
+export const
+loadImages = function(imageInfo, func)
 {
 	var R = imageResource, i, info;
 	imageInfo = imageInfo.length != null ? imageInfo : [imageInfo];
 	
 	for(i = 0; i < imageInfo.length; i++){
-		info = typeof imageInfo[i] != 'string' ? imageInfo[i] : [imageInfo[i], CHIPCELL_SIZE, CHIPCELL_SIZE];
+		info = typeof imageInfo[i] != 'string' ? imageInfo[i] : [imageInfo[i], R.CHIPCELL_SIZE, R.CHIPCELL_SIZE];
 		R.push(info[0], info[1], info[2]);
 	}
-	IMAGE_DIR = IMAGE_DIR.replace(/\/+$/, '') + '/';
-	R.dirpath = IMAGE_DIR;
+	props.CKImageDir(props.IMAGE_DIR);
+//	props.IMAGE_DIR = props.IMAGE_DIR.replace(/\/+$/, '') + '/';
+	R.dirpath = props.IMAGE_DIR;
 	R.onload.push(func == null ? R.onload : func);
 	R.createStack();
-};
+}
 
 /**
  * コールバック付き画像ロード
  * 追加で画像を読み込む場合
  */
-function preLoadImage(name, sepWidth, sepHeight,  func)
+, preLoadImage = function(name, sepWidth, sepHeight,  func)
 {
 	// preLoadObj = this.apply;
 	var t = new Image(), r = imageResource;
@@ -1294,24 +1337,24 @@ function preLoadImage(name, sepWidth, sepHeight,  func)
 	};
 }
 
-function preLoadImages(imageInfo, func)
+, preLoadImages = function(imageInfo, func)
 {
 	var callback = function(){
-		var t = new Image(), info, r = imageResource;
+		var t = new Image(), info, R = imageResource;
 		if(imageInfo.length == 0){
 			func();
 			return;
 		}
 		info = imageInfo.shift();
 		
-		info = typeof info != 'string' ? info : [info, CHIPCELL_SIZE, CHIPCELL_SIZE];
-//		info = typeof info == 'string' ? [info, CHIPCELL_SIZE, CHIPCELL_SIZE] : info;
+		info = typeof info != 'string' ? info : [info, R.CHIPCELL_SIZE, R.CHIPCELL_SIZE];
+//		info = typeof info == 'string' ? [info, R.CHIPCELL_SIZE, R.CHIPCELL_SIZE] : info;
 		info[2] = info[2] == null ? info[1] : info[2];
 		t.onload = function(){
-			r.appendImage(this.name, this, this.sepWidth == null ? this.width | 0 : this.sepWidth, this.sepHeight == null ? this.height | 0 : this.sepHeight);
+			R.appendImage(this.name, this, this.sepWidth == null ? this.width | 0 : this.sepWidth, this.sepHeight == null ? this.height | 0 : this.sepHeight);
 			callback();
 		};
-		t.src = r.dirpath + info[0] + r.extention + '?lrt=' + r.loadRefreshTime;
+		t.src = R.dirpath + info[0] + R.extention + '?lrt=' + R.loadRefreshTime;
 		t.name = info[0];
 		t.sepWidth = info[1] == null ? null : info[1];
 		t.sepHeight = info[2] == null ? null : info[2];
@@ -1330,11 +1373,12 @@ function preLoadImages(imageInfo, func)
 
 }
 
-function setImageLoadRefreshTime(time){
+, setImageLoadRefreshTime = function(time)
+{
 	imageResource.loadRefreshTime = time;
 }
 
-function setLoadImageDir(dir)
+, setLoadImageDir = function(dir)
 {
 	var pre = imageResource.dirpath;
 	imageResource.dirpath = dir;
@@ -1342,62 +1386,67 @@ function setLoadImageDir(dir)
 }
 // var preLoadImageTmp;
 
-function makePoint(name, sprite, size)
+, makePoint = function(name, sprite, size)
 {
 	return imageResource.makePointSprite(name, sprite, size);
-};
-function makeSprite(name, sprite)
+}
+, makeSprite = function(name, sprite)
 {
 	return imageResource.makeSprite(name, sprite);
-};
-function makeSpriteRect(name, rect)
+}
+, makeSpriteRect = function(name, rect)
 {
 	return imageResource.makeSpriteRect(name, rect);
-};
-function resourceSizeByName(name)
+}
+, resourceSizeByName = function(name)
 {
 	return {w: imageResource.data[name].width, h: imageResource.data[name].height};
 }
-function resourceByName(name)
+, resourceByName = function(name)
 {
 	return imageResource.workSpace[name] != null ? imageResource.workSpace[name] : null;
 }
 
-function setResourceSeparate(name, w, h){
+, setResourceSeparate = function(name, w, h)
+{
 	imageResource.separateWidth[name] = w;
 	imageResource.separateHeight[name] = h;
 }
 
-function getResourceChipSize(name){
+, getResourceChipSize = function(name)
+{
 	return {
 		w: imageResource.separateWidth[name]
 		, h: imageResource.separateHeight[name]
 	};
 }
 
-function appendImageOnload(name, func)
+, appendImageOnload = function(name, func)
 {
 	imageResource.onload.push(function(){
 		func(imageResource.workSpace[name]);
 	});
 }
 
-function appendImage(name, img, sepw, seph)
+, appendImage = function(name, img, sepw, seph)
 {
 	imageResource.appendImage(name, img, sepw, seph);
 }
 
-function setResourceFromCanvas(canvasScroll, sepw, seph){
+, setResourceFromCanvas = function(canvasScroll, sepw, seph)
+{
 	var cv = canvasScroll, r = imageResource;
 	r.appendImage(cv.name, cv.canvas, sepw, seph);
 	r.workSpace[cv.name] = r.makeWorkSpace(cv.canvas, sepw, seph);
 }
 
-function resourceDraw(image, scr, x, y){
+, resourceDraw = function(image, scr, x, y)
+{
 	var m = 1;
 	image = (typeof image == 'string') ? resourceByName(name).data : image;
 	scr.ctx.drawImage(image, 0, 0, 0 | image.width, 0 | image.height, 0 | x * m, 0 | y * m, 0 | image.width * m, 0 | image.height * m);
 }
+;
 
 /**
  * @class SpriteQueryCanvas
@@ -1409,14 +1458,16 @@ SpriteQueryCanvas.tmpImageName = 'tmpSpriteQuery';
 //SpriteQueryCanvas.prototype = {
 SpriteQueryCanvas.init = function(){
 	var name = SpriteQueryCanvas.imageName
-		, tname = SpriteQueryCanvas.tmpImageName;
+		, tname = SpriteQueryCanvas.tmpImageName
+		, R = imageResource
+		;
 	this.scroll = makeScroll(name, false);
-	appendImage(name, this.scroll.canvas, CHIPCELL_SIZE, CHIPCELL_SIZE);
+	appendImage(name, this.scroll.canvas, R.CHIPCELL_SIZE, R.CHIPCELL_SIZE);
 	this.tmpScroll = makeScroll(tname, false);
-	appendImage(tname, this.tmpScroll.canvas, CHIPCELL_SIZE, CHIPCELL_SIZE);
+	appendImage(tname, this.tmpScroll.canvas, R.CHIPCELL_SIZE, R.CHIPCELL_SIZE);
 	//convertChunkで使います
 	this.convertScroll = makeScroll(tname, false);
-	appendImage(tname, this.convertScroll.canvas, CHIPCELL_SIZE, CHIPCELL_SIZE);
+	appendImage(tname, this.convertScroll.canvas, R.CHIPCELL_SIZE, R.CHIPCELL_SIZE);
 	
 	this.queries = {};
 	this.rects = {};
@@ -1567,8 +1618,8 @@ function makeSpriteChunk(name, sprect)
 		return c;
 //		return convertChunk(c, '');
 	}catch(e){
-		dulog(name + ": error makeSpriteChunk");
-		dulog(sprect);
+		console.warn(name + ": error makeSpriteChunk");
+		console.warn(sprect);
 	}
 }
 
@@ -2045,7 +2096,7 @@ var SPQ_RCOUNT = 0;
  * @param {string} spq
  * @param {array} nstpat
  */
-function makeSpriteQuery(name, spq, nstpat)
+export function makeSpriteQuery(name, spq, nstpat)
 {
 	var nstMatch, sprite = [], chunkMap = [], rect
 	, spstr, i, j, rw, rh, ofy, chunkMapOfy, s, sst, ilen, jlen, mk, mt, prerect, sprstr
@@ -2270,24 +2321,6 @@ function concatSprite(sprite1, sprite2, row)
 	return sprite1;
 }
 
-function spreadSpriteChunk(name, indexes, w, h)
-{
-	var spArray = [], y, x;
-	try{
-		for(y = 0; y < h; y++){
-			spArray[y] = [];
-			for(x = 0; x < w; x++){
-				spArray[y].push(indexes);
-			}
-		}
-		return imageResource.makeSpriteChunk(name, spArray);
-	}catch(e){
-		dulog(name);
-		dulog(indexes);
-	}
-}
-
-
 function rotSprite(sprite, r)
 {
 	if(sprite.length != null){
@@ -2313,7 +2346,7 @@ function flipSprite(sprite, h, v)
 	return sprite;
 }
 
-function makeSpriteSwapColor(sprite, to, from, type)
+export function makeSpriteSwapColor(sprite, to, from, type)
 {
 	var sqc = SpriteQueryCanvas
 		, resSprites, key, q
@@ -2529,7 +2562,7 @@ CanvasSprite.prototype = {
 		this.chunkMap = [[]]; //ChunkQuery-Position
 		this.chunkIds = null; //CurrentSpriteId
 		this.primary = true; //draw reliably even overdraw
-		this.order = SPRITE_ORDER_DEFAULT; // display order [first << late]
+		this.order = props.SPRITE_ORDER_DEFAULT; // display order [first << late]
 	},
 	
 	drawScroll: function(scroll, x, y)
@@ -2539,9 +2572,9 @@ CanvasSprite.prototype = {
 
 	makeRect: function(x, y)
 	{
-		var rects = new Rect();
-		rects.init(x, y, this.w, this.h);
-		return rects;
+//		var rects = new Rect();
+//		rects.init(x, y, this.w, this.h);
+		return makeRect(x, y, this.w, this.h);
 	},
 	
 	makeSpriteInfo: function(x, y)
@@ -2551,9 +2584,10 @@ CanvasSprite.prototype = {
 
 	getRect: function()
 	{
-		var rects = new Rect();
-		rects.init(this.x, this.y, this.w, this.h);
-		return rects;
+//		var rects = new Rect();
+//		rects.init(this.x, this.y, this.w, this.h);
+//		return rects;
+		return makeRect(this.x, this.y, this.w, this.h);
 	},
 
 	vflip: function(toggle)
@@ -2858,21 +2892,20 @@ CanvasSprite.prototype = {
 
 };
 
-function canvasPalette(){return;}
-canvasPalette.prototype = {
-	init: function(colors, name){
+class canvasPalette{
+	init(colors, name){
 		this.size = colors.length;
 		this.colors = typeof colors[0].length == null ? [colors] : colors;
 //		this.brightLevel = level == null ? 0 : level;
 		this.name = name == null ? colors.map(function(a){return '[' + a.join(',') + ']';}).join(':') : name;
-	},
+	}
 	
-	color: function(id){
+	color(id){
 		return this.colors[id] == null ? COLOR_BLACK : this.colors[id];
-	},
-};
-
-function makeCanvasPalette(color, name){
+	}
+}
+export const
+makeCanvasPalette = function(color, name){
 	var a = new canvasPalette();
 	a.init(color, name);
 	
@@ -2880,598 +2913,66 @@ function makeCanvasPalette(color, name){
 }
 
 //サイズ変換
-function cellto(cell, size, side)
+, cellto = function(cell, size, side)
 {
+	let R = imageResource
+		, C = CanvasScroll
+	;
 	if(size == null){
-		size = CHIPCELL_SIZE;
+		size = R.CHIPCELL_SIZE;
 	}
 	
 	if(side != null && side == "bottom"){
-		return DISPLAY_HEIGHT - (cell * size);
+		return C.DISPLAY_HEIGHT - (cell * size);
 	}else if(side != null && side == "right"){
-		return DISPLAY_WIDTH - (cell * size);
+		return C.DISPLAY_WIDTH - (cell * size);
 	}
 	return cell * size;
 }
-function cellhto(cellh, side)
+, cellhto = function(cellh, side)
 {
+	let R = imageResource
+		, C = CanvasScroll
+	;
 	if(side != null && side == "bottom"){
-		return DISPLAY_HEIGHT - (cellh * CHIPCELL_SIZE);
+		return C.DISPLAY_HEIGHT - (cellh * R.CHIPCELL_SIZE);
 	}else if(side != null && side == "right"){
-		return DISPLAY_WIDTH - (cellh * CHIPCELL_SIZE);
+		return C.DISPLAY_WIDTH - (cellh * R.CHIPCELL_SIZE);
 	}
-	return cellh * CHIPCELL_SIZE;
+	return cellh * R.CHIPCELL_SIZE;
 }
 
-function tocellh(px)
+, tocellh = function(px)
 {
-	return (px / CHIPCELL_SIZE) | 0;
+	return (px / imageResource.CHIPCELL_SIZE) | 0;
 }
 
 /**
  * セルサイズで割り切れる値 
  */
-function parseCell(px, size)
+, parseCell = function(px, size)
 {
-	size = size == null ? CHIPCELL_SIZE : size;
+	size = size == null ? imageResource.CHIPCELL_SIZE : size;
 	px |= 0;
 	return px - (px % size);
 	
 }
 
-function SpriteHandle(imageName, id, scroll){
-	return;
-}
-
-SpriteHandle.prototype = {
-	commonInitialize: function(imageName, id, scroll)
-	{
-	//	alert(imageName);
-		this.x = 0;
-		this.y = 0;
-		this.sprite;
-		this.scroll = 'view';
-		this.disp = true;
-		this.id = null;
-		this.key = null;
-		this.destroy = false;
-		this.imageName = "";
-		this.sortIndex = 0;
-		this.frameAnimation = null;	// = new frameAnimation();
-		this.frameTransition = {x: null, y:null};	// = new frameTransition();
-		this.name = "noname";
-		this.priority = "";//多分使わない方向
-	
-		if(scroll != null){
-			this.scroll = scroll;
-		}
-	
-	//	this.sprite = imageResource.makeSprite(this.imageName, 0);
-		if(imageName != null){
-			this.imageName = imageName;
-		}
-		if(id != null){
-			this.id = id;
-		}
-		//スプライトをつくる
-		if(this.id != null && this.scroll != null){
-			this.sprite = imageResource.makeSprite(this.imageName, this.id);
-		}
-	},
-	
-	initWithResourceSpriteIdScroll: function(resource, id, scroll)
-	{
-		this.commonInitialize(resource, id, scroll);
-		// dulog(resource);
-		this.setImageName(resource);
-		this.setId(id);
-		this.setScroll(scroll);
-		if(this.key == null){
-			this.key = SpriteHandleBundle.stack(this);//
-		}
-		this.sortIndex = 0;
-	},
-	
-	initWithResourceSpriteRectScroll: function(resource, sprRect, scroll)
-	{
-		this.commonInitialize(resource, 0, scroll);
-		this.setImageName(resource);
-		if(sprRect != null){
-			this.sprite = makeSpriteChunk(resource, sprRect);
-		}
-		this.setScroll(scroll);
-		if(this.key == null){
-			this.key = SpriteHandleBundle.stack(this);//
-		}
-		this.sortIndex = 0;
-	},
-	
-	setTransition: function(dist, frame, points, delay, loop, func){
-		var trn = this.frameTransition; 
-		if(trn != null){
-			trn = this.initTransition(trn, dist, points, frame, (delay != null) ? delay : null, (loop != null) ? loop : null, (func != null) ? func : null);
-		}else{
-			trn = this.makeTransition("", dist, points, frame, (delay != null) ? delay : null, (loop != null) ? loop : null, (func != null) ? func : null);
-		}
-		this.frameTransition = trn;
-	},
-
-	setTransition_x: function(dist, frame, points, delay, loop, func){
-		var trn = this.frameTransition.x;
-		if(trn != null){
-			trn = this.initTransition(trn, dist, points, frame, (delay != null) ? delay : null, (loop != null) ? loop : null, (func != null) ? func : null);
-		}else{
-			trn = this.makeTransition(".x", dist, points, frame, (delay != null) ? delay : null, (loop != null) ? loop : null, (func != null) ? func : null);
-		}
-		this.frameTransition.x = trn;
-	},
-	
-	setTransition_y: function(dist, frame, points, delay, loop, func){
-		var trn = this.frameTransition.y;
-		if(trn != null){
-			trn = this.initTransition(trn, dist, points, frame, (delay != null) ? delay : null, (loop != null) ? loop : null, (func != null) ? func : null);
-		}else{
-			trn = this.makeTransition(".y", dist, points, frame, (delay != null) ? delay : null, (loop != null) ? loop : null, (func != null) ? func : null);
-		}
-		this.frameTransition.y = trn;
-
-	},
-	
-	getTransition: function()
-	{
-		return this.frameTransition;
-	},
-
-	makeTransition: function(ext, dist, points, frame, delay, loop, func){
-		var trn = new FrameTransition(this.imageName + "." + this.scroll + "." + this.key + ext);
-		this.initTransition(
-			trn, dist, 
-			(points == null) ? null : points,
-			(frame == null) ? null : frame,
-			(delay == null) ? null : delay,
-			(loop == null) ? null : loop,
-			(func == null) ? null : func
-			
-		);
-		// trn.setFramePoints(dist, frame, (points == null) ? null : points);
-		// if(delay != null){//みしよう？
-			// trn.setDelay(delay);
-		// }
-		// if(func != null){
-			// trn.setCallback(func);
-		// }
-		// // dulog(trn.from)
-		// trn.loop = (loop != null) ? loop : trn.loop;
-
-		return trn;
-	},
-	
-	initTransition: function(trn, dist, points, frame, delay, loop, func){
-		trn.setFramePoints(dist, frame, (points == null) ? null : points);
-		if(delay != null){//みしよう？
-			trn.setDelay(delay);
-		}
-		if(func != null){
-			trn.setCallback(func);
-		}
-		// dulog(trn.from)
-		trn.loop = (loop != null) ? loop : trn.loop;
-
-		return trn;
-	},
-
-	resetTransition_x: function()
-	{
-		this.frameTransition.x.resetCount();
-	},
-	
-	resetTransition_y: function()
-	{
-		this.frameTransition.y.resetCount();
-	},
-	
-	doesTransition: function()
-	{
-		return this.frameTransition == null ? false : !this.frameTransition.isFinish();
-	},
-
-	doesTransition_x: function()
-	{
-		return this.frameTransition.x == null ? false : !this.frameTransition.x.isFinish();
-	},
-
-	doesTransition_y: function()
-	{
-		return this.frameTransition.y == null ? false : !this.frameTransition.y.isFinish();
-	},
-	
-	doesAnimation: function()
-	{
-		return this.frameAnimation == null ? false : !this.frameAnimation.isFinish();
-	},
-
-	setAnimation: function(sprites, frames, delay, loop, func, primary)
-	{
-		// var anm = new FrameAnimation(this.imageName + "." + this.scroll + "." + this.key);
-		var anm, i;
-		if(this.frameAnimation == null){
-			anm = new FrameAnimation(this.priority + this.imageName + "." + this.scroll + "." + this.key);
-		}else{
-			anm = this.frameAnimation;
-		}
-		anm.setSpritesFrames(sprites, frames);
-		this.sprite = [];
-		for(i = 0; i < sprites.length; i++){
-			if(sprites[i].length != null){
-				this.sprite.push(makeSprite(this.imageName, sprites[i]));
-			}else{
-				// this.sprite[sprites[i]] = makeSprite(this.imageName, sprites[i]);
-				this.sprite.push(makeSprite(this.imageName, sprites[i]));
-			}
-		}
-		anm.loop = (loop != null) ? loop : anm.loop;
-			//	dulog(this.sprite);
-
-		this.frameAnimation = anm;
-	},
-
-	setName: function(name){
-		this.name = name;
-	},
-
-	setImageName: function(imageName){
-		this.imageName = imageName;
-	},
-
-	setScroll: function(scroll){
-		if(typeof scroll == "string"){
-			scroll = scrollByName(scroll);
-		}
-		this.scroll = scroll;
-		// dulog(this.scroll)
-	},
-
-	setId: function(id){
-		if(id == null){
-			id = 0;
-		}
-		if(id.length != null){
-			this.setIds(id);
-			return;
-		}
-		
-//		this.sprite = imageResource.makeSprite(this.imageName, this.id);
-		this.id = id;
-		this.sprite = imageResource.makeSprite(this.imageName, this.id);
-		var swap = this.getSwap();
-		this.setSwap(swap);
-	},
-
-	setIds: function(ids){
-		if(ids.length == 0){
-			ids = [[ids]];
-		}
-		if(ids[0].length == 0){
-			ids = [ids];
-		}
-		this.id = ids;
-		// dulog(this.id);
-		this.sprite = makeSpriteChunk(this.imageName, this.id);
-		var swap = this.getSwap();
-		this.setSwap(swap);
-	},
-
-	setPos: function(x, y){
-		if(x != null){
-			this.x = x;
-		}
-		if(y != null){
-			this.y = y;
-		}
-	},
-
-	getPos: function()
-	{
-		var x = this.x, y = this.y;
-		x += (this.frameTransition.x != null) ? this.frameTransition.x.getNowPoint() : 0;
-		y += (this.frameTransition.y != null) ? this.frameTransition.y.getNowPoint() : 0;
-		return {x: x, y: y};
-	},
-	
-	getSprite: function()
-	{
-		// return (this.frameAnimation != null) ? this.sprite[this.frameAnimation.getNowSprite()] : this.sprite;
-		try{
-			return (this.frameAnimation != null) ? this.sprite[this.frameAnimation.getNowSpritePat()] : this.sprite;
-		}catch(e){
-			dulog([this.frameAnimation, this.sprite]);
-			throw 'getSprite error: ';
-		}
-		
-	},
-	
-	setSprite: function(sprite)
-	{
-		this.sprite = sprite;
-	},
-	
-	setSort: function(index)
-	{
-		this.sortIndex = index;
-	},
-	getSortIndex: function(index)
-	{
-		return this.sortIndex;
-	},
-	
-	width: function()
-	{
-		return this.sprite.w;
-	},
-
-	height: function()
-	{
-		return this.sprite.h;
-	},
-
-	visible: function()
-	{
-		this.disp = true;
-	},
-	
-	show: function()
-	{
-		this.disp = true;
-	},
-
-	hide: function()
-	{
-		this.disp = false;
-	},
-
-	//スクロールに書き込む
-	drawScroll: function(scr, x, y){
-		if(scr == null){
-			if(this.scroll == null){return;}
-			scr = this.scroll;
-		}
-		if(this.getSprite() == null){return;}
-		
-		if(!this.disp){return;}
-		var pos;
-		if(x != null && y != null){
-			pos = {x:x, y:y};
-		}else{
-			pos = this.getPos();
-		};
-		if(this.sprite.length == null){
-			scr.drawSprite(this.getSprite(), pos.x, pos.y);
-		}else{
-			scr.drawSpriteChunk(this.getSprite(), pos.x, pos.y);
-		}
-	},
-
-	getSwap: function()
-	{
-		if(this.sprite.length != null){
-			if(this.sprite[0].length != null){
-				return this.sprite[0][0].swaps;
-			}
-			return this.sprite[0].swaps;
-		}
-		return this.sprite.swaps;
-	},
-
-	setSwap: function(swap)
-	{
-		var i, j;
-		if(this.sprite.length != null){
-			if(this.sprite[0].length != null){
-				for(j in this.sprite){
-					for(i in this.sprite[j]){
-						this.sprite[j][i].swaps = swap;
-					}
-				}
-				return;
-			}
-			for(i in this.sprite){
-				this.sprite[i].swaps = swap;
-			}
-			return;
-		}
-		this.sprite.swaps = swap;
-	},
-
-	swapColor: function(to, from)
-	{
-//		alert(from);
-		this.sprite.swapColor(to, from);
-	},
-	swapColorReset: function()
-	{
-		this.sprite.swapColorReset();
-	},
-	//スタックする
-//	stack: function(scroll){
-//		if(scroll != null){
-//			this.scroll = scroll;
-//		}
-////		if(this.sprite == null){return;}alert(scroll);
-//	},
-
-	makeRect: function()
-	{
-		var rect = this.sprite.makeRect();
-		return rect;
-	},
-
-
-	remove: function(){
-		this.destroy = true;
-		this.hide();
-		if(this.frameAnimation != null){
-			this.frameAnimation.remove();
-		}
-		if(this.frameTransition.remove != null){
-			this.frameTransition.remove();
-		}else{
-			if(this.frameTransition.y != null){
-				this.frameTransition.y.remove();
-			}
-			if(this.frameTransition.x != null){
-				this.frameTransition.x.remove();
-			}
-		}
-		delete this.sprite;
-	},
-};
-
-function getScrollNum()
+, getScrollNum = function()
 {
 	return layerScroll.length;
 }
 
-
-/**
- * スプライトハンドルまとめ（DrawEventでまとめてSprite実行）
- */
-
-var SpriteHandleBundle = {};
-
-SpriteHandleBundle.init = function()
-{
-	this.spriteStacks = [getScrollNum()];//sprite Handle
-
-	this.FrameEvent = new FrameEvent("sprite:frame");//FrameEventを先にインスタンスしないとDrawEventがインスタンスできない
-	this.DrawEvent = new DrawEvent("zzzsprite:draw", this);//これでいいのかよくわからない
-//	alert(a_dump(this.DrawEvent));
-	this.DrawEvent.append("draw");
-//	this.FrameEvent.append("ysort");
-
-	this.stack = function(spriteh)
-	{
-		var scroll, returnKey;
-		// if(this.spriteStacks == null){return;}
-		if(spriteh.scroll == null){return;}
-		scroll = spriteh.scroll;
-		if(scroll == null){scroll = 'view';}
-		if(this.spriteStacks[scroll] == null){
-		// alert(scroll);
-			this.spriteStacks[scroll] = [];
-		}
-		// console.dir(spriteh);
-		returnKey =this.spriteStacks[scroll].length;
-		this.spriteStacks[scroll].push(spriteh);
-		// dulog(returnKey);
-		return returnKey;
-//		this.spriteStacks.push = spriteh;
-	};
-
-	this.sort = function()
-	{
-		return;
-	};
-
-	this.ysort = function(stacks)
-	{
-		return;
-	};
-
-	this.draw = function()
-	{
-		var stack, scrName, sorted, sortIndexes, i;
-		if(this.spriteStacks == null){
-			return;
-		}
-		for(scrName in this.spriteStacks){
-			if(this.spriteStacks[scrName] == null){
-				// dulog("Scroll[" + scrName + "] not found");
-				// pauseScript();
-				continue;
-			}
-			 stack = this.spriteStacks[scrName];
-			if(stack.length == 0){continue;}
-// dulog(scrName);
-			sorted = [];
-			sortIndexes = [];
-			// dulog(stack.length);
-				//消す
-			try{
-				for(i = 0; i < stack.length; i++){
-					if(stack[i].destroy){
-						stack[i] = null;
-						delete stack[i];
-						stack.splice(i, 1);
-						// this.spriteStacks[scrName].splice(i, 1);
-//TODO:連続delete 確認
-						i--;
-						// dulog(stack);
-					}
-				}
-			}catch(e){
-				dulog('spriteHandle draw stacks error:');
-				dulog([stack, i]);
-			}
-
-				for(i = 0; i < stack.length; i++){
-					if(stack[i] == null){
-						dulog("sprite handle not found: " + i);
-					}
-					sortIndexes.push(stack[i].sortIndex);
-					sorted.push(stack[i]);
-				}
-				sorted.sort(function(a, b){return a.getSortIndex() - b.getSortIndex();});
-	
-				//表示
-				try{
-					for(i = 0; i < sorted.length; i++){
-						// echoEnable = true;
-						// echo("<br>sprite::" + sorted[i].destroy + "<hr>");
-						// echo("<br>" + sorted.length);
-						
-						sorted[i].drawScroll();
-					}
-				}catch(e2){
-					dulog([stack, sorted[i]]);
-					throw (e2 + ' > spriteHandle sort draw error:');
-				};
-			}
-	};
-
-};
-
-//要makeSprite
-function makeSpriteHandle(sprites, scrollName, x, y)
-{
-	var spritehandle = [[]], handle, j, i;
-	array_squrt(sprites);//2次元
-
-	if(x == null){
-		x = 0;
-	}
-	if(y == null){
-		y = 0;
-	}
-	for(j in sprites)
-		for(i in sprites[j])
-		{
-			handle = new SpriteHandle();
-			handle.commonInitialize(sprites[j][i].image, 0, scrollName);
-			handle.setPos(x + (sprites[j][i].w * i) , y + (sprites[j][i].h * j));
-			spritehandle[j].push(handle);
-		}
-	return spritehandle;
-}
-
-function rectFromSprite(sprite, x, y)
+, rectFromSprite = function(sprite, x, y)
 {
 	if(typeof sprite != "object"){
 		return sprite.makeRect(x, y);
 	}else if(typeof sprite[0] != "object"){
 		sprite = [sprite];
 	}
-	var rects = new Rect(), i, j, w, h;
-	rects.init(0,0,0,0);
+//	var rects = new Rect(), i, j, w, h;
+//	rects.init(0,0,0,0);
+	var rects = makeRect(0, 0, 0, 0), i, j, w, h;
 	for(j = 0; j < sprite.length; j++){
 		for(i = 0; i < sprite[0].length; i++){
 			w = sprite[j][i].w;
@@ -3482,33 +2983,17 @@ function rectFromSprite(sprite, x, y)
 	return rects;
 }
 
-
-//RGBA
-var COLOR_RED = [247, 49, 0, 255];
-var COLOR_FONT8 = [252, 252, 252, 255];
-var COLOR_FONT12 = [181, 247, 214, 255];
-var COLOR_LIGHTBLUE = [60, 188, 252, 255];
-var COLOR_TRANSPARENT = [0, 0, 0, 0];
-var COLOR_ADD = [82, 247, 148, 255];
-var COLOR_SUB = [247, 82, 148, 255];
-// var COLOR_BLACK = [1, 1, 1, 255]; //pallet v
-var COLOR_BLACK = [0, 0, 1, 255]; //pallet: NesPallet_NTSC
-// var COLOR_WHITE = [255, 255, 255, 255];
-var COLOR_WHITE = [252, 252, 252, 255];//nespallette
-var COLOR_REQUID = [0, 140, 140, 255];
-var COLOR_INVALID = [247, 181, 0, 255];
-var COLOR_STAR = [255, 222, 123, 255];
-function makeRGB(color)
+, makeRGB = function(color)
 {
 	var csv = color.slice(0, 3).join(", ");
 	return 'rgb(' + csv + ')';
 }
-function makeRGBA(color)
+, makeRGBA = function(color)
 {
 	var csv = color.join(", ");
 	return 'rgba(' + csv + ')';
 }
-function makeColorArray(str)
+, makeColorArray = function(str)
 {
 	var a = str.slice(1).split(/([0-9a-fA-F]{2})/).filter(Boolean).concat("255");
 	return a.map(function(b){
@@ -3522,36 +3007,17 @@ function makeColorArray(str)
  * @returns {screenScale}
  * @description PointingControll resizeRateも必要に応じて実行
  */
-function screenScale(scaleRate){
+, screenScale = function(scaleRate){
 	if(scaleRate != null){
 		var s;
-		VIEWMULTI = scaleRate;
+		CanvasScroll.SCALE_RATE = scaleRate;
 		s = getDisplaySize();
-		scrollByName(UI_SCREEN_ID).resizeCanvas(s.w | 0, s.h | 0);
-		scrollByName(UI_SCREEN_ID).ctx.imageSmoothingEnabled = false;//アンチ無効
+		scrollByName(props.UI_SCREEN_ID).resizeCanvas(s.w | 0, s.h | 0);
+		scrollByName(props.UI_SCREEN_ID).ctx.imageSmoothingEnabled = false;//アンチ無効
 	}
-	return VIEWMULTI;
+	return CanvasScroll.SCALE_RATE;
 }
-
-/**
- * 拡大縮小済み画面サイズ
- * @returns {___anonymous22047_22111}
- */
-function getDisplaySize()
-{
-	return {w: (VIEWMULTI * DISPLAY_WIDTH), h: (VIEWMULTI * DISPLAY_HEIGHT)};
-//	return {w: (DISPLAY_WIDTH), h: (DISPLAY_HEIGHT)};
-}
-
-/**
- * 拡大縮小なしスクロールサイズ	
- * @returns 
- */
-function getScrollSize()
-{
-	return {w: (DISPLAY_WIDTH), h: (DISPLAY_HEIGHT)};
-}
-
+;
 /**
  * アニメーション用推移
  */
@@ -3638,8 +3104,6 @@ function quadrateCurve(t, pos)
 			
 			//0, 0.1, 0, 0.01
 			//
-			// if(term[j][k] == 0){dulog([j, k])}
-			// if(d==0){dulog("0divide")}
 		}
 		
 		for(l = 0; l < plen; l++){
@@ -3656,10 +3120,8 @@ function quadrateCurve(t, pos)
 	res = 0;
 	for(n= 0; n < plen - 1; n++){
 		res += Math.pow(t, plen - 1 - n) * term[n][tlen - 1];
-		// dulog(res);
 	}
 	// toggleScript()
-	// dulog(res);	
 	return res;
 
 }

@@ -5,21 +5,10 @@
  * @version 0.1.1
  */
 
-function makeCursor(name, x, y, z){
-	var c = new CUCursor();
-	c.init();
-	c.cells.x = x < 1 ? 1 : x;
-	c.cells.y = y < 1 ? 1 : y;
-	c.cells.z = z < 1 ? 1 : z;
-	c.range(x, y, z);
-	c.name = name;
-	return c;
-}
-
-var CUCursor = function(){return;};
-
-CUCursor.prototype = {
-	init: function(){
+import {makeSpriteQuery, makeSpriteSwapColor, cellhto, makeCanvasScroll, getScrolls, loadImages} from './canvasdraw.js';
+import {makeRect, makePosition} from './util.js';
+export class CUCursor{
+	init(){
 		this.pos = {x: 0, y: 0, z: 0};
 		this.pos_pre = {x: 0, y:0, z: 0};
 		this.cells = {x: 0, y: 0, z: 0};
@@ -33,83 +22,83 @@ CUCursor.prototype = {
 		this.ranged = {x: 0, y: 0, z: 0};
 		this.offsetted = {x: 0, y: 0, z: 0};
 		this.rangeovered = {x: 0, y: 0, z: 0}; //未使用？
-	},
+	}
 	
-	copy: function(name){
+	copy(name){
 		var c = makeCursor(name == null ? this.name : name, this.cells.x, this.cells.y, this.cells.z);
 		c.moveTo(this.pos.x, this.pos.y, this.pos.z);
 		return c;
-	},
+	}
 	
-	resize: function(x, y, z){
+	resize(x, y, z){
 		this.cells.x = x;
 		this.cells.y = y;
 		this.cells.z = z;
-	},
+	}
 	
-	right: function(num)
+	right(num)
 	{
 		num = num == null ? 1 : num;
 		this.move(num, 0, 0);
 		return this;
-	},
-	left: function(num)
+	}
+	left(num)
 	{
 		num = num == null ? 1 : num;
 		this.move(-num, 0, 0);
 		return this;
-	},
-	up: function(num)
+	}
+	up(num)
 	{
 		num = num == null ? 1 : num;
 		this.move(0, -num, 0);
 		return this;
-	},
-	down: function(num)
+	}
+	down(num)
 	{
 		num = num == null ? 1 : num;
 		this.move(0, num, 0);
 		return this;
-	},
-	front: function(num)
+	}
+	front(num)
 	{
 		num = num == null ? 1 : num;
 		this.move(0, 0, num);
 		return this;
-	},
-	back: function(num)
+	}
+	back(num)
 	{
 		num = num == null ? 1 : num;
 		this.move(0, 0, -num);
 		return this;
-	},
+	}
 	
-	disable: function(x, y, z){
+	disable(x, y, z){
 		var pos = this.disablePos;
 		if(this.isEnable(x, y, z)){
 			return;
 		}
 		pos.push(this.makePositionStr(x, y, z).join(' '));
-	},
+	}
 	
-	enable: function(x, y, z){
+	enable(x, y, z){
 		var pos = this.disablePos, i, str = this.makePositionStr(x, y, z);;
 		for(i = 0; i < pos.length; i++){
 			if(pos[i] == str){
 				pos.splice(i, 1);
 			}
 		}
-	},
+	}
 	
-	range: function(x, y, z){
+	range(x, y, z){
 		x = x == null ? 1 : x;
 		y = y == null ? 1 : y;
 		z = z == null ? 1 : z;
 		
 		this.ranged = {x: x, y: y, z: z};
-	},
+	}
 	
-	isEnable: function(x, y, z){
+	isEnable(x, y, z){
 		var pos = this.disablePos, i, str = this.makePositionStr(x, y, z);
 		for(i = 0; i < pos.length; i++){
 			if(pos[i] == str){
@@ -117,15 +106,15 @@ CUCursor.prototype = {
 			}
 		}
 		return true; 
-	},
+	}
 	
-	updateIndex: function(){
+	updateIndex(){
 		var pos = this.pos, cells = this.cells;
 		this.index = pos.x + (pos.y * cells.x) + (pos.z * cells.x * cells.y);
 		return this.index;
-	},
+	}
 	
-	positionByIndex: function(index){
+	positionByIndex(index){
 		var cells = this.cells 
 			, pos = {}
 			, p
@@ -139,9 +128,9 @@ CUCursor.prototype = {
 		pos.y = ((index / cells.x) | 0) % cells.y;
 		
 		return pos; 
-	},
+	}
 	
-	valueOf: function(valueArray){
+	valueOf(valueArray){
 		var i = this.updateIndex()
 			, vala = []
 			, func = function(a){
@@ -160,9 +149,9 @@ CUCursor.prototype = {
 		valueArray.forEach(func);
 		
 		return vala[i];
-	},
+	}
 	
-	makePositionStr: function(x, y, z){
+	makePositionStr(x, y, z){
 		var a = [];
 		if(x != null){
 			a.push(x);
@@ -174,16 +163,16 @@ CUCursor.prototype = {
 			a.push(z);
 		}
 		return a.join(' ');
-	},
+	}
 	
 	//他のカーソル切替時、isLoopedと組み合わせる
-	out: function()
+	out()
 	{
 //		this.pos[axis] = this.cells[axis];
 		this.outside = {x: this.looped.x, y: this.looped.y, z: this.looped.z}
 		return this.outside;
-	},
-	in: function(outside)
+	}
+	in(outside)
 	{
 		var cells = this.cells, a, pos = this.pos;
 		for(a in pos){
@@ -193,9 +182,9 @@ CUCursor.prototype = {
 				pos[a] = cells[a] - 1;
 			}
 		}
-	},
+	}
 	
-	undo: function(){
+	undo(){
 		var pos = this.pos, pre = this.pos_pre
 			, a, prepre
 			, loop = this.looped, loopre = this.looped_pre
@@ -209,9 +198,9 @@ CUCursor.prototype = {
 			loopre[a] = prepre;
 		}
 		return this;
-	},
+	}
 
-	move: function(x, y, z)
+	move(x, y, z)
 	{
 		var pos = this.pos, pre = this.pos_pre, cells = this.cells
 		, loop = this.looped, loopre = this.looped_pre, isReturn = this.cellReturn
@@ -238,9 +227,9 @@ CUCursor.prototype = {
 		this.updateIndex();
 		this.rangeOverCheck();
 		return this;
-	},
+	}
 	
-	moveTo: function(x, y, z)
+	moveTo(x, y, z)
 	{
 		var pos = this.pos, pre = this.pos_pre, cells = this.cells
 		, loop = this.looped, loopre = this.looped_pre, isReturn = this.cellReturn
@@ -265,9 +254,9 @@ CUCursor.prototype = {
 		this.updateIndex();
 		this.rangeOverCheck();
 		return this;
-	},
+	}
 	
-	rangeOverCheck: function()
+	rangeOverCheck()
 	{
 		var r = this.ranged, o = this.offsetted
 			, p = this.pos, over = this.rangeovered, a
@@ -280,9 +269,9 @@ CUCursor.prototype = {
 				o[a] = p[a];
 			}
 		}
-	},
+	}
 	
-	isRangeOver: function(axis)
+	isRangeOver(axis)
 	{
 		var over = this.rangeovered;
 		if(axis != null){
@@ -292,9 +281,9 @@ CUCursor.prototype = {
 			return over[axis] != 0;
 		}
 		return null;
-	},
+	}
 	
-	isLooped: function(axis, valued)
+	isLooped(axis, valued)
 	{
 		var l = this.looped;
 		valued = valued == null ? true : valued;
@@ -314,9 +303,9 @@ CUCursor.prototype = {
 			}
 		}
 		return null;
-	},
+	}
 	
-	is: function(x, y, z){
+	is(x, y, z){
 		var p = true;
 		if(x == null && y == null && z == null){
 			return null;
@@ -327,16 +316,9 @@ CUCursor.prototype = {
 		return p;
 	}
 	
-};
-
-function makeSceneOrder(order){
-	var s = new SceneOrder();
-	s.init(order);
-	return s;
 }
-function SceneOrder(){return;}
-SceneOrder.prototype = {
-	init: function(order){
+export class SceneOrder{
+	init(order){
 		this.name = order.name;
 		this.duration = order.duration;
 		this.count = order.count;
@@ -346,37 +328,31 @@ SceneOrder.prototype = {
 		this.remTrigger = order.rem_trig;
 //		this.skipRate = order.skip_rate;
 		this.funcNotFound = false;
-	},
-	isFirst: function(){
+	}
+	isFirst(){
 		return this.count == 0;
-	},
-	isLast: function(){
+	}
+	isLast(){
 		return this.count >= this.duration - 1;
-	},
-	setTrigger: function(scene){
+	}
+	setTrigger(scene){
 		this.trigger = scene;
 		return this;
-	},
-	removeAt: function(scene){
+	}
+	removeAt(scene){
 		this.remTrigger = scene;
 		return this;
-	},
-//	skip: function(){
+	}
+//	skip(){
 //		var skiped = this.isLast() === false;
 //		this.count = this.duration > 0 ? this.duration - 1 : this.count;
 //		return skiped;
 //	}
 	
-};
-
-function makeScene(){
-	var s = new SceneTransition();
-	s.init();
-	return s;
 }
-function SceneTransition(){return;}
-SceneTransition.prototype = {
-	init: function(){
+
+export class SceneTransition{
+	init(){
 		this.transitionClock = 0;
 		this.sceneOrder = [];
 		this.scenePrevious = null;
@@ -388,9 +364,9 @@ SceneTransition.prototype = {
 			return false;
 		};
 		
-	},
+	}
 	
-	makeParams: function(funcName, duration, params, count, remove){
+	makeParams(funcName, duration, params, count, remove){
 		count = count == null ? 0 : count;
 		remove = remove == null ? false : remove;
 		if(typeof funcName == 'object' && funcName != null){
@@ -398,9 +374,9 @@ SceneTransition.prototype = {
 		}
 		var res = {name: funcName, duration: duration, count: count, remove: remove, params: params, trigger: null, rem_trig: null};
 		return makeSceneOrder(res);
-	},
+	}
 	
-	find: function(name, inIndex){
+	find(name, inIndex){
 		var f = [];
 //		inIndex = inIndex == null ? 0 : inIndex;
 		if(this.sceneCurrent != null && this.sceneCurrent.name == name){
@@ -422,10 +398,10 @@ SceneTransition.prototype = {
 		return inIndex != null ? f[inIndex] : f.pop();
 //		return f;
 //		return f[inIndex];
-	},
+	}
 	
 		
-	indexOf: function(name, inIndex){
+	indexOf(name, inIndex){
 		var i = -1;
 		if(this.sceneCurrent != null && this.sceneCurrent.name == name){
 			return this.sceneCurrent;
@@ -437,9 +413,9 @@ SceneTransition.prototype = {
 		
 		this.sceneOrder.reverse();
 		return i;
-	},
+	}
 
-	current: function(name){
+	current(name){
 		var rem, current;
 		if(name != null){
 			rem = this.removeOrder(name);
@@ -456,9 +432,9 @@ SceneTransition.prototype = {
 		
 		
 		return this.sceneCurrent == null ? this.sceneOrder[0] : this.sceneCurrent;
-	},
+	}
 	
-	last: function(){
+	last(){
 		var current = this.sceneCurrent
 			, order = this.sceneOrder
 		;
@@ -477,13 +453,13 @@ SceneTransition.prototype = {
 //			return order[order.length - 1];
 //		}
 		return false;
-	},
+	}
 	
-	isEmpty: function(){
+	isEmpty(){
 		return (this.sceneOrder.length == 0) && (this.sceneCurrent == null);
-	},
+	}
 	
-	sumDuration: function(){
+	sumDuration(){
 		var s = 0;
 		this.sceneOrder.forEach(function(a){
 			s += a.duration;
@@ -492,21 +468,21 @@ SceneTransition.prototype = {
 			s += this.currentOrder.duration - this.currentOrder.count;
 		}
 		return s;
-	},
+	}
 	
-//	pushOrder: function(funcName, duration, params){
-	pushOrder: function(funcName, duration, params){
+//	pushOrder(funcName, duration, params){
+	pushOrder(funcName, duration, params){
 		params = params == null ? {} : params;
 		this.sceneOrder.push(this.makeParams(funcName, duration, params));
 		return this.sceneOrder[this.sceneOrder.length - 1];
-	},
+	}
 	
-	pushOrderFunc: function(funcName, duration, params){
+	pushOrderFunc(funcName, duration, params){
 		params = params == null ? {} : params;
 		this.sceneOrder.push(this.makeParams(funcName, duration, params));
-	},
+	}
 	
-	unshiftOrder: function(funcName, duration, params){
+	unshiftOrder(funcName, duration, params){
 		var current = this.sceneCurrent
 			, order
 		;
@@ -524,9 +500,9 @@ SceneTransition.prototype = {
 		}
 //		console.log(order);
 		return order;
-	},
+	}
 	//transitionのみで使用・
-	removeCurrentOrder: function(){
+	removeCurrentOrder(){
 		var current = this.sceneCurrent, name;
 		if(current != null){
 			//即消し
@@ -547,9 +523,9 @@ SceneTransition.prototype = {
 		}
 		
 		return true;
-	},
+	}
 	
-	removeOrder: function(name){
+	removeOrder(name){
 		var res = null;
 		if(name == null){
 			//全て削除
@@ -584,9 +560,9 @@ SceneTransition.prototype = {
 
 		return res;
 //		return {order: [], current: null};
-	},
+	}
 	
-	setTrigger: function(scene, funcName, index)
+	setTrigger(scene, funcName, index)
 	{
 		var attach = this.last();
 		if(attach == false){
@@ -595,9 +571,9 @@ SceneTransition.prototype = {
 		attach.trigger = scene;
 		return attach;
 //		this.triggerScene = scene;
-	},
+	}
 	
-	removeAt: function(scene)
+	removeAt(scene)
 	{
 		var attach = this.last();
 		if(attach == false){
@@ -605,14 +581,14 @@ SceneTransition.prototype = {
 		}
 		attach.removeAt = scene;
 		return attach;
-	},
+	}
 	
-	skip: function(rate)
+	skip(rate)
 	{
 		this.skipRate = rate;
-	},
+	}
 	
-	transition: function(caller, skipCount){
+	transition(caller, skipCount){
 		var order = this.sceneOrder
 			, current = this.sceneCurrent
 		;
@@ -659,9 +635,9 @@ SceneTransition.prototype = {
 			this.transition(caller, skipCount);
 		}
 		
-	},
+	}
 	
-	print: function(){
+	print(){
 		var p = [];
 		this.sceneOrder.forEach(function(s){
 			p.push(s.name == null ? 'null' : s.name);
@@ -672,62 +648,10 @@ SceneTransition.prototype = {
 		console.log(p.join("\n"));
 //		console.log(p);
 	}
-};
-
-var SPRITEANM_DELIMITER = '][';
-var SPRITEANM_FRAMES = '@'; //[frames, loops]
-var SPRITEANM_LOOPS = /^\/(\d+)/;
-//function makeSpriteAnimation(imageName, query, canvasSprites){
-function makeSpriteAnimation(spriteOrName, query){
-	var i, res = [], qArr, q, spl, frames = [], sprites = [], spa, loops = {}, mat
-		, baseFrame = 1, maked, isReffer
-		, imageName, canvasSprites
-		;
-	
-	//出来上がったスプライトを使用
-	isReffer = typeof spriteOrName == 'object';
-	imageName = isReffer ? null : spriteOrName;
-	canvasSprites = isReffer ? spriteOrName : null ;
-	
-	query = query.replace(/^\[\[\]]+|\[\[\]]+$/g,'');
-	qArr = query.split(SPRITEANM_DELIMITER);
-	for(i = 0; i < qArr.length; i++){
-		q = qArr[i];
-		mat = q.match(SPRITEANM_LOOPS);
-		if(mat != null){
-			loops[sprites.length - 1] = mat[1] | 0;
-			continue;
-		}
-		spl = q.split(SPRITEANM_FRAMES);
-		if(spl[0].trim().length == 0){
-			baseFrame = spl[1];
-			continue;
-		}
-		if(spl[1] == null){
-			spl[1] = baseFrame;
-		}
-		maked = isReffer ? canvasSprites[spl[0]] : makeSpriteQuery(imageName, spl[0]);
-		if(maked == null){
-			console.warn('No Sprite Animation: ', spriteOrName, query);
-		}
-		sprites.push(maked);
-		frames.push(spl[1] | 0);
-	}
-	spa = new SpriteAnimation();
-	spa.init(sprites, frames, loops);
-	spa.query = query;
-	spa.source = spriteOrName;
-	return spa;
-};
-
-function copySpriteAnimation(anim){
-	var make = new SpriteAnimation();
-	make.init(anim.sprites, anim.frames,anim.play);
-	return make;
 }
-function SpriteAnimation(){return;}
-SpriteAnimation.prototype = {
-	init: function(sprites, frames, playCounts){
+
+ export class SpriteAnimation{
+	init(sprites, frames, playCounts){
 		var i, len;
 		this.sprites = sprites;
 		this.frames = frames;
@@ -754,43 +678,43 @@ SpriteAnimation.prototype = {
 		});
 		this.query = '';
 		this.source = sprites;
-	},
+	}
 	
-	hide: function(){
+	hide(){
 		this.visible = false;
-	},
-	show: function(){
+	}
+	show(){
 		this.visible = true;
-	},
+	}
 	
-	reset: function(){
+	reset(){
 		this.init(this.sprites, this.frames, this.play);
-	},
+	}
 	
-	resetLowerPlayed: function(pat){
+	resetLowerPlayed(pat){
 		var i;
 		for(i in this.played){
 			if(pat > i){
 				this.played[i] = 0;
 			}
 		}
-	},
+	}
 	
-	setPattern: function(pattern, frame){
+	setPattern(pattern, frame){
 		this.pattern = pattern != null ? pattern : this.pattern;
 		this.currentCount = frame != null ? frame : this.currentCount;
 		return this.current();
-	},
+	}
 	
-	framesPattern: function(pattern){
+	framesPattern(pattern){
 		if(pattern == null){
 			return this.frames[this.pattern];
 		}else{
 			return this.frames[pattern];
 		}
-	},
+	}
 	
-	isPattern: function(pattern, count){
+	isPattern(pattern, count){
 		if(pattern == null){
 			return this.currentCount == count;
 		}else if(count != null){
@@ -799,9 +723,9 @@ SpriteAnimation.prototype = {
 //			return this.pattern == pattern && this.currentCount == 0;
 			return this.pattern == pattern;
 		}
-	},
+	}
 	
-	isLoop: function(){
+	isLoop(){
 		var pattern = this.pattern
 			, play = this.play[pattern] != null ? this.play[pattern] : null
 		;
@@ -815,42 +739,42 @@ SpriteAnimation.prototype = {
 			}
 		}
 		return true;
-	},
+	}
 	
-	isEnd: function(){
+	isEnd(){
 		var mp = this.lastPattern
 		;
 		return this.play[mp] > 0 && (this.played[mp] >= this.play[mp]);
 //		return (this.pattern >= mp) && (this.currentCount >= this.frames[mp]) && (this.played[mp] >= this.play[mp]);
-	},
+	}
 	
-	getFixed: function(count){
+	getFixed(count){
 		if(!this.fixed){
 			this.skip(count + 1);
 		}
 		return this.sprites[this.fixedPatterns[count % this.fixedPatterns.length]];
-	},
+	}
 	
-	current: function(){
+	current(){
 		return !this.isEnd() ? this.sprites[this.pattern] : this.sprites[this.lastPattern];
-	},
+	}
 	
-	sum: function(start, end){
+	sum(start, end){
 		var duration = this.frames.slice(start, end).reduce(function(a, b){
 			return (a | 0) + (b | 0);
 		});
 		
 		return duration;
-	},
+	}
 	
-	skip: function(count){
+	skip(count){
 		for(var i = 0; i < count; i++){
 			this.next();
 		}
 		return this.current();
-	},
+	}
 	
-	next: function(){
+	next(){
 		var s
 		;
 		
@@ -892,9 +816,329 @@ SpriteAnimation.prototype = {
 		return this.sprites[this.pattern];
 	}
 	
-};
+}
 
-function drawDebugCell(scroll, pointControll, wordprint, color){
+
+export function makeSpritePart(resourceName, params){
+	var part = new SpritePart();
+	if(params.query != null){
+		part.initQueries(resourceName, params.query);
+	}else{
+		part.init();
+	}
+	
+	return part;
+}
+export class SpritePart{
+	init(){
+		this.global = makePosition();
+		this.local = makePosition();
+		this.sprites = [];
+		this.visible = true;
+		this.spriteNum = 0;
+		this.name = '';
+	}
+	
+	initQueries(resourceName, queries){
+		if(this.global == null){
+			this.init();
+		}
+		this.appendSprite(resourceName, queries);
+	}
+	
+	getRect(global){
+		var sp = this.sprites[this.spriteNum]
+			, pos, rect
+		;
+		global = global == null ? true : global;
+		pos = global ? this.global : this.local;
+		rect = makeRect(pos.x, pos.y, sp.w, sp.h);
+		rect.z = pos.z;
+//		rect.d = sp.d;
+		return rect;
+	}
+	
+	appendSprite(resourceName, queries){
+		var sprites = this.sprites;
+		queries = queries instanceof Array ? queries : [queries];
+		
+		queries.forEach(function(q){
+			sprites.push(makeSpriteQuery(resourceName, q));
+		});
+		return this;
+	}
+	
+	setParams(params){
+		var k;
+		for(k in params){
+			this[k] = params[k];
+		}
+		return this;
+	}
+	
+	refreshGlobal(from, to){
+		var gl = this.global
+			, diff = {
+				x: to.x - from.x,
+				y: to.x - from.y,
+				z: to.x - from.z
+			}
+		;
+		this.global.x += diff.x;
+		this.global.y += diff.y;
+		this.global.z += diff.z;
+		return this;
+	}
+	
+	show(){
+		this.visible = true;
+		return this;
+	}
+	
+	hide(){
+		this.visible = false;
+		return this;
+	}
+	
+	pattern(p){
+		this.spriteNum = p;
+		return this;
+	}
+	
+	setnum(num){
+		this.spriteNum = num;
+		return this;
+	}
+	
+	move(posArray){
+		var pos = this.local
+			, back = makePosition(pos.x, pos.y, pos.z)
+		;
+		pos.x += posArray[0] == null ? 0 : posArray[0];
+		pos.y += posArray[1] == null ? 0 : posArray[1];
+		pos.z += posArray[2] == null ? 0 : posArray[2];
+		this.refreshGlobal(back, pos);
+		return this;
+	}
+	
+	setpos(posArray){
+		var pos = this.local
+			, back = makePosition(pos.x, pos.y, pos.z)
+		;
+		pos.x = posArray[0] == null ? pos.x : posArray[0];
+		pos.y = posArray[1] == null ? pos.y : posArray[1];
+		pos.z = posArray[2] == null ? pos.z : posArray[2];
+		this.refreshGlobal(back, pos);
+		return this;
+	}
+	
+	adjoin(rect, align){
+		var r, global = false;
+		r = this.getRect(global).adjoin(rect, align);
+		this.setpos([r.x, r.y, r.z]);
+		return this;
+	}
+	
+	drawTo(scroll, global){
+		if(!this.visible){
+			return this;
+		}
+		if(this.sprites[this.spriteNum] == null){
+			return this;
+		}
+		scroll.drawSprite(this.sprites[this.spriteNum], global.x + this.local.x, global.y + this.local.y);
+		return this;
+	}
+}
+
+export function makeSpriteBone(resourceName, patsParams){
+	var b = new SpriteBone();
+	b.init();
+	b.addPartsBySpriteQuery(resourceName, patsParams);
+	return b;
+}
+export class SpriteBone{
+	init(){
+		this.parts = {};
+		this.partsArray = [];
+		this.local = makePosition();
+		this.global = makePosition();
+		this.visible = true;
+		this.vflip = false;
+		this.hflip = false;
+		this.originPart = '';
+	}
+	//{name: spriteQuery}
+	addPartsBySpriteQuery(resourceName, parts){
+		var k, sp;
+		
+		for(k in parts){
+//			sp = makeSpriteQuery(resourceName, parts[k]);
+			this.parts[k] = makeSpritePart(resourceName, parts[k]);
+			this.parts[k].name = k;
+			this.partsArray.push(this.parts[k]);
+		}
+	}
+	
+	setParams(params){
+		var name, k, p, part = this.parts;
+		for(name in params){
+			parts[name].setParams(params[name]);
+		}
+	}
+	
+	partRect(part, global){
+		var r = this.parts[part].getRect(global);
+		return r;
+	}
+	
+	adjoinPart(a, b, align){
+		var global = false;
+		this.parts[a].adjoin(this.partRect(b, global), align);
+		return this.parts[a];
+	}
+	
+	//com: space delimiter, 0: partName, 1: method
+	com(com, value){
+		var q = com.split(' ')
+		;
+		if(q.length < 2){
+			return this.parts[q[0]];
+		}
+		if(this.parts[q[0]] == null || this.parts[q[0]][q[1]] == null){
+			console.warn('notfound ' + q[0] + ' ' + q[1]);
+			return false;
+		}
+		this.parts[q[0]][q[1]](value);
+		return this.parts[q[0]];
+	}
+	
+	flip(h, v, originPart){
+		this.hflip = h != null ? h : this.hflip;
+		this.vflip = v != null ? v : this.vflip;
+	}
+	
+	drawTo(scroll, x, y){
+		var parts = this.partsArray
+			, sortparts = []
+			, bonepos = this.global
+			, x = x != null ? x : bonepos.x
+			, y = y != null ? y : bonepos.y
+			, z = bonepos.z
+			, vf = this.vflip, hf = this.hflip
+			, op = this.parts[this.originPart]
+			, oname = this.originPart
+			, os = op.sprites[op.spriteNum]
+		;
+		if(this.visible == false){
+			return;
+		}
+		
+		sortparts = parts.slice().sort(function(a, b){
+			var c = a.local.z - b.local.z;
+			return c;
+		});
+		
+		sortparts.forEach(function(a){
+			var s = a.sprites[a.spriteNum];
+			if(s == null){
+				return;
+			}
+			s.vflip(vf);
+			s.hflip(hf);
+			a.drawTo(scroll, {
+				x: hf && oname != a.name ? x + os.w - (a.local.x * 2 + s.w) : x
+				, y: vf && oname != a.name ? y + os.h - s.y : y
+				, z: s.z
+			});
+			s.vflip(false);
+			s.hflip(false);
+		});
+	}
+
+}
+
+
+export const
+makeCursor = function(name, x, y, z){
+	var c = new CUCursor();
+	c.init();
+	c.cells.x = x < 1 ? 1 : x;
+	c.cells.y = y < 1 ? 1 : y;
+	c.cells.z = z < 1 ? 1 : z;
+	c.range(x, y, z);
+	c.name = name;
+	return c;
+}
+
+//, CUCursor = function(){return;};
+
+, makeSceneOrder = function(order){
+	var s = new SceneOrder();
+	s.init(order);
+	return s;
+}
+
+, makeScene = function(){
+	var s = new SceneTransition();
+	s.init();
+	return s;
+}
+
+
+, SPRITEANM_DELIMITER = ']['
+, SPRITEANM_FRAMES = '@' 
+, SPRITEANM_LOOPS = /^\/(\d+)/
+//function makeSpriteAnimation(imageName, query, canvasSprites){
+, makeSpriteAnimation = function(spriteOrName, query){
+	var i, res = [], qArr, q, spl, frames = [], sprites = [], spa, loops = {}, mat
+		, baseFrame = 1, maked, isReffer
+		, imageName, canvasSprites
+		;
+	
+	//出来上がったスプライトを使用
+	isReffer = typeof spriteOrName == 'object';
+	imageName = isReffer ? null : spriteOrName;
+	canvasSprites = isReffer ? spriteOrName : null ;
+	
+	query = query.replace(/^\[\[\]]+|\[\[\]]+$/g,'');
+	qArr = query.split(SPRITEANM_DELIMITER);
+	for(i = 0; i < qArr.length; i++){
+		q = qArr[i];
+		mat = q.match(SPRITEANM_LOOPS);
+		if(mat != null){
+			loops[sprites.length - 1] = mat[1] | 0;
+			continue;
+		}
+		spl = q.split(SPRITEANM_FRAMES);
+		if(spl[0].trim().length == 0){
+			baseFrame = spl[1];
+			continue;
+		}
+		if(spl[1] == null){
+			spl[1] = baseFrame;
+		}
+		maked = isReffer ? canvasSprites[spl[0]] : makeSpriteQuery(imageName, spl[0]);
+		if(maked == null){
+			console.warn('No Sprite Animation: ', spriteOrName, query);
+		}
+		sprites.push(maked);
+		frames.push(spl[1] | 0);
+	}
+	spa = new SpriteAnimation();
+	spa.init(sprites, frames, loops);
+	spa.query = query;
+	spa.source = spriteOrName;
+	return spa;
+}
+
+, copySpriteAnimation = function(anim){
+	var make = new SpriteAnimation();
+	make.init(anim.sprites, anim.frames,anim.play);
+	return make;
+}
+
+, drawDebugCell = function(scroll, pointControll, wordprint, color){
 	var bg = SCROLL.sprite
 		, pos = pointControll.getMovePos()
 		, start = pointControll.getStartPos()
@@ -960,57 +1204,4 @@ function drawDebugCell(scroll, pointControll, wordprint, color){
 	wordprint.setMaxRows(backRow);
 	
 }
-//TODO パレット画像から色配列を取得する仕組みを作る
-//TODO パレットを名前から取得できるようにする
-//TODO パレットを輝度変更できるような２次元配列
-
-var COLOR_BLACK = [0, 0, 1, 255];
-var COLOR_GRAY = [124, 124, 124, 255];
-var COLOR_LGRAY = [188, 188, 188, 255];
-var COLOR_WHITE = [252, 252, 252, 255];
-var COLOR_HLGREEN = [184, 248, 184, 255];
-var COLOR_OCEAN = [0, 64, 88, 255];
-var COLOR_RED = [248, 56, 0, 255]; //canvasdraw.jsを上書き
-
-var COLOR_MIDNIGHT = [0, 0, 188, 255];
-var COLOR_MEDBLUE = [0, 88, 248, 255];
-var COLOR_ROYALBLUE = [104, 136, 252, 255];
-var COLOR_CORNFLOWER = [184, 184, 248, 255];
-
-var COLOR_FOREST = [0, 120, 0, 255];
-var COLOR_LIMEGREEN = [0, 184, 0, 255];
-var COLOR_GREENYELLOW = [184, 248, 24, 255];
-var COLOR_LGREENYELLOW = [216, 248, 120, 255];
-
-var COLOR_BLUE = [0, 0, 252, 255];
-
-var COLOR_WHEAT = [252, 224, 168, 255];
-
-var COLOR_ORANGERED = [248, 56, 0, 255];
-var COLOR_CORAL = [248, 120, 88, 255];
-var COLOR_PEACHPUFF = [240, 208, 176, 255];
-
-var COLOR_CARROT = [228, 92, 16, 255];
-var COLOR_SANDYBROWN = [252, 160, 68, 255];
-var COLOR_MOCCASIN = [252, 224, 168, 255];
-
-var COLOR_DARKGOLDENROD = [172, 124, 0, 255];
-var COLOR_BRIGHTYELLOW = [248, 184, 0, 255];
-var COLOR_KHAKI = [248, 216, 120, 255];
-
-var COLOR_VEGETABLE = [0, 168, 0, 255];
-var COLOR_CREAMGREEN = [88, 216, 84, 255];
-var COLOR_PALEGREEN = [184, 248, 184, 255];
-
-var COLOR_POWDERBLUE = [0, 120, 248, 255];
-var COLOR_DAYFLOWER = [60, 188, 252, 255];
-var COLOR_LBLUE = [164, 228, 252, 255];
-//var COLOR_LBLUE = [164, 228, 252, 255];
-
-var COLOR_SLATEBLUE = [104, 68, 252, 255];
-var COLOR_MEDPURPLE = [152, 120, 248, 255];
-var COLOR_IRISVIOLET = [216, 184, 248, 255];
-
-var COLOR_VIOMAGENTA = [216, 0, 204, 255];
-var COLOR_VIOLET = [248, 120, 248, 255];
-var COLOR_LPLUM = [248, 184, 248, 255];
+;

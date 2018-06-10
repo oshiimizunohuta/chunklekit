@@ -5,9 +5,10 @@
  * @version 0.7.0
  */
 // function wordPrint(scrolls, sizetype)
-function WordPrint(){return;};
-WordPrint.prototype ={
-	init: function(sizetype){
+import {makeSpriteQuery, makeSpriteSwapColor, cellhto, makeCanvasScroll, getScrolls, loadImages, getResourceChipSize, scrollByName} from './canvasdraw.js';
+import * as props from './prop.js'; 
+export default class WordPrint{
+	init(sizetype){
 		this.moji_hira =  "あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやっゆ⼀よらりるれろわ、を。んがぎぐげござじずぜぞだぢづでどばびぶべぼぱぴぷぺぽぁぃぅぇぉゃ！ゅ？ょ・『』◯☓";
 		this.moji_kata = "アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤッユ～ヨラリルレロワ☆ヲ♥ンガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポァィゥェォャ（ュ）ョ＝＋－＊／";
 		this.moji_alph = "ABCDEFGHIJKLMNOPQRSTUVWXYZ,.:;abcdefghijklmnopqrstuvwxyz ^&©";
@@ -84,9 +85,9 @@ WordPrint.prototype ={
 		this.HYPHEN_CODE = 177; //'-'
 		this.ESCAPE_CODE = 254; //$
 		this.imageNames = {
-			'8px': WORDPRINT_FONT8PX
-			, '12px': WORDPRINT_FONT12PX
-			, '4v6px': WORDPRINT_FONT4V6PX
+			'8px':props.WORDPRINT_FONT8PX
+			, '12px': props.WORDPRINT_FONT12PX
+			, '4v6px': props.WORDPRINT_FONT4V6PX
 		};
 		
 		this.chipSize = 8;
@@ -97,9 +98,9 @@ WordPrint.prototype ={
 		
 		
 		this.allWordSprites = {};
-		this.DEFAULT_COLOR = COLOR_FONT8;
-		this.DEFAULT_BGCOLOR = COLOR_TRANSPARENT;
-		this.COLORS = [COLOR_WHITE, COLOR_LGRAY, COLOR_GRAY, COLOR_TRANSPARENT];
+		this.DEFAULT_COLOR = props.COLOR_WHITE;
+		this.DEFAULT_BGCOLOR = props.COLOR_TRANSPARENT;
+		this.COLORS = [props.COLOR_WHITE, props.COLOR_LGRAY, props.COLOR_GRAY, props.COLOR_TRANSPARENT];
 		// this.canvas = null;
 		// this.context = null;
 		this.canvasSpriteSource = {};
@@ -143,9 +144,9 @@ WordPrint.prototype ={
 		
 		this.propKeys = {};
 		this.initPropKeys();
-	},
+	}
 	
-	initCommon: function(){
+	initCommon(){
 		
 //		this.sprtiteID = this.initSpriteID();
 		
@@ -153,7 +154,7 @@ WordPrint.prototype ={
 		this.soundmarkAlign = 'horizon'; // vertical:horizon
 		this.soundmarkPos = []; // {line:line, pos:pos}
 		this.soundmarkEnable = true;
-		this.COLORS = [COLOR_WHITE, COLOR_LGRAY, COLOR_GRAY, COLOR_TRANSPARENT];
+		this.COLORS = [props.COLOR_WHITE, props.COLOR_LGRAY, props.COLOR_GRAY, props.COLOR_TRANSPARENT];
 		this.swapColors = {from: this.COLORS, to: this.COLORS};
 	
 		this.vflip = false;
@@ -195,8 +196,8 @@ WordPrint.prototype ={
 		//TODO 未使用へ移行
 //		this.color;
 //		this.bgcolor;
-//		this.DEFAULT_COLOR = COLOR_WHITE;
-//		this.DEFAULT_BGCOLOR = COLOR_TRANSPARENT;
+//		this.DEFAULT_COLOR = props.COLOR_WHITE;
+//		this.DEFAULT_BGCOLOR = props.COLOR_TRANSPARENT;
 //		this.setColor(this.DEFAULT_COLOR, this.DEFAULT_BGCOLOR);
 		
 		this.wordIds;// = new Array();
@@ -231,9 +232,9 @@ WordPrint.prototype ={
 		
 		this.propKeys = {};
 		this.initPropKeys();		
-	},
+	}
 	
-	initWith: function(fontName, wordStr){
+	initWith(fontName, wordStr){
 		var tag = 'font_'
 			, size
 		;
@@ -251,11 +252,11 @@ WordPrint.prototype ={
 		
 		this.SPACE_CODE = 36; //alphabet+number
 			
-	},
+	}
 	
 	
 	//スプライトの元になるスクロールを生成（基本未使用）
-	initSourceCanvasScroll: function(imageName)
+	initSourceCanvasScroll(imageName)
 	{
 		var w, h
 		, cs = new CanvasSprite()
@@ -272,9 +273,9 @@ WordPrint.prototype ={
 		this.canvasSpriteSource[imageName] = scroll;
 		
 		return scroll;
-	},
+	}
 	
-	initPropKeys: function(){
+	initPropKeys(){
 		var props = {
 			'font-size': 'fontSize'
 			, 'bg-color': 'bgcolor'
@@ -290,9 +291,9 @@ WordPrint.prototype ={
 			, 'h-flip': 'hflip'
 		};
 		this.propKeys = props;
-	},
+	}
 	
-	allocSprites: function(){
+	allocSprites(){
 		var spr = {vertical: {}, horizon: {}}, i, len
 			, w = this.allWordString
 //			, w = this.moji_hira + this.moji_kata + this.moji_alph + this.moji_suji
@@ -305,9 +306,9 @@ WordPrint.prototype ={
 			spr.horizon[str] = null;
 		}
 		return spr;
-	},
+	}
 	
-	initSpriteID: function(wordStr){
+	initSpriteID(wordStr){
 		var i, len
 			, w = wordStr
 //			, w = this.moji_hira + this.moji_kata + this.moji_alph + this.moji_suji
@@ -317,13 +318,13 @@ WordPrint.prototype ={
 			ids[w.substr(i, 1)] = i;
 		}
 		return ids;
-	},
+	}
 	
 	/**
 	 * 文字をスプライト格納
 	 * @returns {undefined}
 	 */
-	initSprite: function(s){
+	initSprite(s){
 		var all = this.allWordSprites
 			, imageName = this.getImageName()
 			, q, space = this.soundmarkEnable ? this.SPACE_CODE + ';' : ''
@@ -356,13 +357,13 @@ WordPrint.prototype ={
 		all[imageName].horizon[s] = spr;
 		
 		return;
-	},
+	}
 	
 	/**
 	 * 全ての文字をスプライト格納（基本未使用）
 	 * @returns {undefined}
 	 */
-	initAllSprites: function()
+	initAllSprites()
 	{
 		var all = this.allWordSprites
 			, w = this.allWordString
@@ -407,17 +408,17 @@ WordPrint.prototype ={
 		}
 		all[imageName].horizon = spr;
 		
-	},
+	}
 
-	setScroll: function(scrollStr)
+	setScroll(scrollStr)
 	{
 		this.scroll  = scrollStr;
-	},
+	}
 	
 	/**
 	 * カラースワップアクセス用連想キー取得
 	 */
-	colorQuery: function()
+	colorQuery()
 	{
 		var colorQuery = []
 			, swaps = this.getSwapColor()
@@ -445,9 +446,9 @@ WordPrint.prototype ={
 //			colorQuery.push(this.bgcolor != null ? this.bgcolor.join(',') : '');
 //		}
 		return colorQuery.join(':');
-	},
+	}
 	
-	getSwapColor: function(){
+	getSwapColor(){
 //		if(this.swapColors == null || this.swapColors.to == null){
 		if(this.getColor() != null){
 			return {to: [this.getColor(), this.getBGColor()], from: [this.DEFAULT_COLOR, this.DEFAULT_BGCOLOR]};
@@ -455,8 +456,8 @@ WordPrint.prototype ={
 			return this.swapColors;
 		}
 		
-	},
-	setSwapColor: function(to){
+	}
+	setSwapColor(to){
 		var i;
 		if(to.length == null){
 			to = [to];
@@ -466,18 +467,18 @@ WordPrint.prototype ={
 			this.swapColors.to[i] = to[i] != null ? to[i] : this.swapColors.from[i];
 		}
 		return this;
-	},
+	}
 	
-	getImageName: function()
+	getImageName()
 	{
 		var name = this.fontSize
 			, cq = this.colorQuery()
 		;
 		name +=  cq.length > 0 ?  ':' + this.colorQuery() :  '';
 		return name;
-	},
+	}
 	
-	getWordSprites: function(imageName, align)
+	getWordSprites(imageName, align)
 	{
 		imageName = imageName == null ? this.getImageName() : imageName;
 		align = align == null ? (this.isHorizon() ? 'horizon' : 'vertical') : align;
@@ -494,42 +495,42 @@ WordPrint.prototype ={
 		}
 		
 		return this.allWordSprites[imageName][align];
-	},
+	}
 	
-	getScroll: function()
+	getScroll()
 	{
 		return this.scroll;
-	},
+	}
 	
 	//TODO 未使用
-	getSpriteHandle: function(str)
+	getSpriteHandle(str)
 	{
 		this.makeStrId(str);
 		var SpriteHandles = makeSpriteHandle(this.spriteArray, this.scrolls);
 		return SpriteHandles;
-	},
+	}
 	
 	//TODO 未使用
-	getSpriteArray: function(str, color, bgColor)
+	getSpriteArray(str, color, bgColor)
 	{
 		this.setColor(color == null ? this.color : color, bgColor == null ? this.bgcolor : bgColor);
 		this.swapColor();
 		this.parse(str);
 		return this.spriteArray;
-	},
+	}
 	
-	isHorizon: function()
+	isHorizon()
 	{
 		return (this.chipSize < 12 && this.soundmarkAlign == 'horizon');
-	},
+	}
 	
-	isVertical: function()
+	isVertical()
 	{
 		return (this.chipSize < 12 && this.soundmarkAlign == 'vertical');
-	},
+	}
 	
 	//TODO 未使用
-	SearchWordNum: function(w){
+	SearchWordNum(w){
 		var match;
 		//ひらがな
 		match = this.moji_hira.indexOf(w);
@@ -545,10 +546,10 @@ WordPrint.prototype ={
 		if(match > -1){return match + 240;}
 
 		return match;
-	},
+	}
 	
 	//TODO 未使用
-	indexOf: function(i){
+	indexOf(i){
 		//ひらがな
 		if(i < 90){return this.moji_hira.substr(i, 1);}
 		//カタカナ
@@ -560,10 +561,10 @@ WordPrint.prototype ={
 
 		// return this.NOTFOUND_CODE;
 		return -1;
-	},
+	}
 
 	//TODO 未使用
-	searchNum: function(w){
+	searchNum(w){
 		var match = -1, ofs = 0, code = w.charCodeAt(0);
 
 		if(w in this.sp_alph){
@@ -600,10 +601,10 @@ WordPrint.prototype ={
 		}
 		
 		return match < 0 ? this.NOTFOUND_CODE : match + ofs;
-	},
+	}
 	
 	//TODO 未使用
-	toStrId: function(str)
+	toStrId(str)
 	{
 		var idstr, baseword, TheWord, baseWords = []
 		;
@@ -612,10 +613,10 @@ WordPrint.prototype ={
 			baseWords.push(baseword);
 		}
 		return baseWords;
-	},
+	}
 	
 	//TODO 未使用
-	makeStrId: function(MS)
+	makeStrId(MS)
 	{
 		var i, j, theWord, baseword = 0, subword = this.SPACE_CODE
 			, baseWords = []//行の文字
@@ -674,10 +675,10 @@ WordPrint.prototype ={
 		}
 
 		return baseWords;
-	},
+	}
 	
 	//濁音、半濁音の後挿入
-	patchSoundmarks: function(){
+	patchSoundmarks(){
 		var subLine = [], smp = []
 		;
 		if(this.isHorizon()){
@@ -702,28 +703,28 @@ WordPrint.prototype ={
 		}
 		this.soundmarkPos = smp;
 		// return subLine;
-	},
+	}
 
-	setFontSize: function(sizetype)
+	setFontSize(sizetype)
 	{
 		if(sizetype == "8px"){
 			// this.imageName = "font8p";
 			this.sourceCanvasName = this.imageNames[sizetype];
-			this.DEFAULT_COLOR = COLOR_FONT8;
+			this.DEFAULT_COLOR = props.COLOR_WHITE;
 			this.chipSize = 8;
 			this.vChipSize = 8;
 			this.soundmarkEnable = true;
 		}else if(sizetype == "4v6px"){
 			// this.imageName = "font4v6p";
 			this.sourceCanvasName = this.imageNames[sizetype];
-			this.DEFAULT_COLOR = COLOR_FONT8;
+			this.DEFAULT_COLOR = props.COLOR_WHITE;
 			this.chipSize = 4;
 			this.vChipSize = 6;
 			this.soundmarkEnable = true;
 		}else if(sizetype == "12px"){
 			// this.imageName = "font12p";
 			this.sourceCanvasName = this.imageNames[sizetype];
-			this.DEFAULT_COLOR = COLOR_FONT8;
+			this.DEFAULT_COLOR = props.COLOR_WHITE;
 			this.chipSize = 12;
 			this.vChipSize = 12;
 			this.soundmarkEnable = false;
@@ -733,25 +734,25 @@ WordPrint.prototype ={
 		}
 		this.fontSize = sizetype;
 //		this.initAllSprites();
-	},
+	}
 	
-	setMarkAlign: function(align)
+	setMarkAlign(align)
 	{
 		this.soundmarkAlign = align;
-	},
+	}
 
 	//TODO 未使用
-	setStr: function(str)
+	setStr(str)
 	{
 		this.str = str;
 		this.parse(str);
-	},
+	}
 	
-	setDrawOrder: function(o){
+	setDrawOrder(o){
 		this.drawOrder = o;
-	},
+	}
 	
-	setStyle: function(prop, value){
+	setStyle(prop, value){
 		var k, propKeys = this.propKeys
 		;
 		if(value != null){
@@ -777,9 +778,9 @@ WordPrint.prototype ={
 			}
 			this[propKeys[k]] = prop[k];
 		}
-	},
+	}
 	
-	getStyle: function(key){
+	getStyle(key){
 		var k, props = this.propKeys
 			, styles = {}
 		;
@@ -791,9 +792,9 @@ WordPrint.prototype ={
 			return this[props[key]];
 		}
 		return styles;
-	},
+	}
 	
-	spriteWordIds_o: function(words)
+	spriteWordIds_o(words)
 	{
 		var len = words.length, sprites = [], i, spr;
 		for(i = 0; i < len; i++){
@@ -803,12 +804,12 @@ WordPrint.prototype ={
 		}
 		this.spriteArray = sprites;
 		return sprites;
-	},	
+	}
 	
 	/**
 	 * カラースワップ済み取得 
 	 */
-	getColoredSprite: function()
+	getColoredSprite()
 	{
 		var q = this.colorQuery();
 //		if(q == ':' || q.length == 0){
@@ -817,9 +818,9 @@ WordPrint.prototype ={
 //		}else{
 			return this.coloredCanvasSprite[q];
 //		}
-	},
+	}
 	
-	spriteWordIds: function(words)
+	spriteWordIds(words)
 	{
 		var len = words.length, sprites = [], i, spr
 			, cv = this.getColoredSprite().image
@@ -834,9 +835,9 @@ WordPrint.prototype ={
 		}
 		this.spriteArray = sprites;
 		return sprites;
-	},
+	}
 	
-	spriteMarkRot: function(sArray, marks)
+	spriteMarkRot(sArray, marks)
 	{
 		var len = sArray.length, i, sumlen = 0, alen;
 		
@@ -851,10 +852,10 @@ WordPrint.prototype ={
 			sumlen += alen;
 		}
 		return sArray;
-	},
+	}
 
 	//TODO 未使用
-	parse: function(MS)// char length, message
+	parse(MS)// char length, message
 	{
 		var ar, spr, isHorizon = this.isHorizon(), subLine, baseWords;
 		this.wordIds = [];//行
@@ -877,13 +878,13 @@ WordPrint.prototype ={
 				// this.spriteArray = this.spriteMarkRot(this.spriteArray, mark);
 			}, this);
 		}
-	},
+	}
 	
-	lineHeight: function(){
+	lineHeight(){
 		return (this.rowSpace + this.vChipSize) * (this.isVertical() ? 2 : 1);
-	},
+	}
 	
-	textScale: function(str)
+	textScale(str)
 	{
 		var i, len, s, sprite, offset
 			, isHorizon =  this.isHorizon(), isVertical = this.isVertical()
@@ -975,15 +976,15 @@ WordPrint.prototype ={
 		}
 		
 		return {w: x, h: y};
-	},
+	}
 	
-	cacheInfo: function(category, key, info){
+	cacheInfo(category, key, info){
 		this.infoCache[category].key = key;
 		this.infoCache[category].info = info;
 		this.infoCache[category].color = this.colorQuery();
-	},
+	}
 	
-	restoreFromCache: function(category, keystr){
+	restoreFromCache(category, keystr){
 		var cache = this.infoCache[category]
 		;
 		if(cache.key == keystr && this.colorQuery() == cache.color){
@@ -991,9 +992,9 @@ WordPrint.prototype ={
 		}else{
 			return false;
 		}
-	},
+	}
 	
-	strReplaceNewLine: function(str){
+	strReplaceNewLine(str){
 		var newLines = []
 			, newWord = this.NEWLINE_WORD
 			, cache, nlstr = ''
@@ -1016,9 +1017,9 @@ WordPrint.prototype ={
 		this.cacheInfo('replaceNewLineStr', str, nlstr);
 		
 		return nlstr;
-	},
+	}
 	
-	strNewLines: function(str){
+	strNewLines(str){
 		var newLines = []
 			, newWord = this.NEWLINE_WORD
 			, cache
@@ -1043,10 +1044,10 @@ WordPrint.prototype ={
 		this.cacheInfo('newLinesPosition', str, newLines);
 		
 		return newLines.slice();
-	},
+	}
 
 	
-	strWordSprites: function(str){
+	strWordSprites(str){
 		var i, len, s
 			, isHorizon =  this.isHorizon(), isVertical = this.isVertical()
 			, sprites = []
@@ -1099,9 +1100,9 @@ WordPrint.prototype ={
 		this.cacheInfo('wordSprites', str, sprites);
 		
 		return sprites;
-	},
+	}
 	
-	makeStrWordSpriteInfo: function(str, x, y){
+	makeStrWordSpriteInfo(str, x, y){
 		var i, len
 			, isHorizon =  this.isHorizon(), isVertical = this.isVertical()
 			, posx, posy
@@ -1165,9 +1166,9 @@ WordPrint.prototype ={
 		}
 		
 		return info;
-	},
+	}
 	
-	drawWord: function(str)
+	drawWord(str)
 	{
 		var i, len, s, sprite, offset
 			, isHorizon =  this.isHorizon(), isVertical = this.isVertical()
@@ -1268,9 +1269,9 @@ WordPrint.prototype ={
 		offset = this.readMode ? this.readChars : 0;
 		return i + offset;
 		
-	},
+	}
 
-	escCommand: function(words, index, lineWords){
+	escCommand(words, index, lineWords){
 		var command = words.substr(index + 1, 1)
 			, result = []
 		;
@@ -1281,18 +1282,18 @@ WordPrint.prototype ={
 		default: result = lineWords; break;
 		}
 		return result;
-	},
+	}
 	
-	exeCommand: function(word, lineWords, left){
+	exeCommand(word, lineWords, left){
 		// console.log(word, lineWords, left, this.wordIds);
 		switch(word){
 			case this.newLineWord: result = this.newLine(lineWords, left);break;
 			default: result = lineWords; break;
 		}
 		return result;
-	},
+	}
 
-	newLine: function(lineWords, left)
+	newLine(lineWords, left)
 	{
 		if(left == null){
 			this.wordIds.push(lineWords);
@@ -1301,9 +1302,9 @@ WordPrint.prototype ={
 			this.wordIds.push(lineWords.slice(0, left));
 			return lineWords.slice(left + 1);
 		}
-	},
+	}
 
-	newLineA: function(lineWords, left)
+	newLineA(lineWords, left)
 	{
 		if(left == null){
 			this.wordIds.push(lineWords);
@@ -1312,21 +1313,21 @@ WordPrint.prototype ={
 			this.wordIds.push(lineWords.slice(0, left));
 			return lineWords.slice(left + 1);
 		}
-	},
+	}
 
-	setPos: function(x, y)
+	setPos(x, y)
 	{
 		if(x != null){this.position_x = x;}
 		if(y != null){this.position_y = y;}
-	},
+	}
 	
-	getPos: function()
+	getPos()
 	{
 		return {x: this.position_x, y: this.position_y};
-	},
+	}
 
 	//DrawEventに登録
-	registDraw: function(str)
+	registDraw(str)
 	{
 		if(str != null){
 			this.setStr(str);
@@ -1335,9 +1336,9 @@ WordPrint.prototype ={
 			this.DrawEvent = new DrawEvent(this.str, this);
 			this.DrawEvent.append("draw");
 		}
-	},
+	}
 	
-	draw: function(scr)
+	draw(scr)
 	{
 		var i, spr, ofs = 0
 		, isHorizon = this.isHorizon()
@@ -1363,45 +1364,45 @@ WordPrint.prototype ={
 			scr.drawSpriteArray(this.spriteArray[i], this.position_x, this.position_y + lineSpace + ofy, cols);
 		}
 		// dulog(this.cols);
-	},
+	}
 
 	//一行の長さ
-	setLineCols: function(num)
+	setLineCols(num)
 	{
 		this.cols = num;
-	},
+	}
 	
-	setMaxRows: function(num)
+	setMaxRows(num)
 	{
 		this.rows = num;
-	},
+	}
 
-	setColor: function(color, bgColor)
+	setColor(color, bgColor)
 	{
 		this.color = color;
 		this.bgcolor = bgColor == null ? this.bgcolor : bgColor;
 		
 		this.setSwapColor([this.color, this.bgcolor]);
 //		this.swapColor();
-	},
+	}
 	
-	getColor: function()
+	getColor()
 	{
 		return this.color == null ? this.DEFAULT_COLOR : this.color;
-	},
+	}
 
-	setBGColor: function(color)
+	setBGColor(color)
 	{
 		this.bgcolor = color;
 //		this.swapColor();
-	},
+	}
 
-	getBGColor: function()
+	getBGColor()
 	{
 		return this.bgcolor == null ? this.DEFAULT_BGCOLOR : this.bgcolor;
-	},
+	}
 	
-	swapColor_o: function()
+	swapColor_o()
 	{
 		// for(var j in this.spriteArray){
 		for(var j = 0; j < this.spriteArray.length; j++){
@@ -1417,19 +1418,19 @@ WordPrint.prototype ={
 			}
 		}
 
-	},
+	}
 
 	
-	swapColor: function(){
+	swapColor(){
 //		this.makeCustomCanvasSprite();
 //		this.initAllSprites();
-	},
+	}
 	
-	resetRead: function(){
+	resetRead(){
 		this.readChars = 0;
-	},
+	}
 	
-	read: function(str, x, y, color, bgcolor)
+	read(str, x, y, color, bgcolor)
 	{
 		var cnt, noRead = false;
 		
@@ -1444,9 +1445,9 @@ WordPrint.prototype ={
 		this.readChars = cnt;
 		
 		return noRead;
-	},
+	}
 
-	print: function(str, x, y, color, bgcolor)
+	print(str, x, y, color, bgcolor)
 	{
 		if(x != null){this.position_x = x;}
 		if(y != null){this.position_y = y;}
@@ -1454,14 +1455,14 @@ WordPrint.prototype ={
 		if(bgcolor != null){this.bgcolor = bgcolor;}
 //		this.swapColor();
 		return this.drawWord(str);
-	},
+	}
 	
-	hide: function(){
+	hide(){
 		this.disp = false;
-	},
+	}
 	
-	visible: function()
+	visible()
 	{
 		this.disp = true;
-	},
-};
+	}
+}

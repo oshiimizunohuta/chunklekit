@@ -9,11 +9,8 @@
  * 矩形クラス 
  */
 
-function Rect(){
-	return null;
-}
-Rect.prototype = {
-	init: function (x, y, w, h)
+export class Rect{
+	init(x, y, w, h)
 	{
 		this.x = x;
 		this.y = y;
@@ -31,13 +28,13 @@ Rect.prototype = {
 		this.SORTSOLID = ['w', 'h', 'd'];
 //		this.SORTAXIS = ['x', 'y'];
 //		this.SORTSOLID = ['w', 'h'];
-	},
+	}
 	
-	center: function(){
+	center(){
 		return {x: this.x + (this.w / 2), y: this.y + (this.h / 2), z: this.z + (this.d / 2)};
-	},
+	}
 
-	isContain: function(x, y)
+	isContain(x, y)
 	{
 		//OR//
 		var orResult = false, i, len;
@@ -61,10 +58,10 @@ Rect.prototype = {
 		//OR//
 
 		return orResult;
-	},
+	}
 	
 	// r in this
-	isContainRect: function(r)
+	isContainRect(r)
 	{
 //		this.reculc();
 		var orResult = false, i, len;
@@ -82,9 +79,9 @@ Rect.prototype = {
 		}
 
 		return orResult;		
-	},
+	}
 	
-	isOverlap: function(r)
+	isOverlap(r)
 	{
 //		this.reculc();
 		var orResult = false, i, len;
@@ -102,9 +99,9 @@ Rect.prototype = {
 		}
 
 		return orResult;
-	},
+	}
 	
-	isFit: function(r)
+	isFit(r)
 	{
 		this.reculc();
 		var orResult = false, i, len;
@@ -122,13 +119,13 @@ Rect.prototype = {
 		}
 		
 		return orResult;
-	},
+	}
 	
 	//align(outer): lower higher
 	//align(inner): low middle high
 	//align(keep): keep
 	//'x y z'
-	adjoin: function(rect, align)
+	adjoin(rect, align)
 	{
 		var self = this, axis = this.SORTAXIS, solid = this.SORTSOLID;
 		align = typeof align == 'string' ? align.split(' ') : align;
@@ -157,9 +154,9 @@ Rect.prototype = {
 			self[axis[i]] = p;
 		});
 		return this;
-	},
+	}
 
-	reculc: function(x, y, w, h)
+	reculc(x, y, w, h)
 	{
 		var mul = 1;
 		if(typeof x == 'string'){
@@ -182,23 +179,23 @@ Rect.prototype = {
 //		this.toArray = this.convertArray();
 
 		return this;
-	},
+	}
 	
-	toString: function(){
+	toString(){
 		return this.convertString();
-	},
+	}
 	
-	convertString: function()
+	convertString()
 	{
 		var s = ' ';
 		return this.x + s + this.y + s +  this.w + s + this.h;
-	},
+	}
 	
-	toArray: function(){
+	toArray(){
 		return this.convertArray(null);
-	},
+	}
 	
-	convertArray: function(fillValue)
+	convertArray(fillValue)
 	{
 		var x, y, r = [];
 		fillValue = fillValue == null ? undefined : fillValue;
@@ -209,12 +206,12 @@ Rect.prototype = {
 			}
 		}
 		return r;
-	},
+	}
 	
-	append: function(add)
+	append(add)
 	{
 		this.appendRect.push(add);
-	},
+	}
 };
 
 /**
@@ -228,7 +225,7 @@ Rect.prototype = {
  * @param {int} w
  * @param {int} h
  */
-function makeRect(x, y, w, h)
+export function makeRect(x, y, w, h)
 {
 	var rects, m = 1, ptp = false, opt
 		, reg  = /[x*]([0-9]+)/, c, xf, yf
@@ -276,25 +273,24 @@ function makeRect(x, y, w, h)
  * @param {value} t Duration frame count
  * @returns {Ease}
  */
-function Ease(){
-	this.count;
-	this.range;
-	this.start = 0;
-	this.division;
-	this.duration;
-	this.func;
-}
-
-Ease.prototype = {
-	init: function(s, e, d){
+export class Ease{
+	construcrot(){
+		this.count;
+		this.range;
+		this.start = 0;
+		this.division;
+		this.duration;
+		this.func;
+	}
+	init(s, e, d){
 		this.count = 0;
 		this.start = s;
 		this.end = e;
 		this.range = e - s;
 		this.duration = d;
-	},
+	}
 	
-	linear: function(e_in, e_out){
+	linear(e_in, e_out){
 		var self = this;
 //		this.division = t * 0.01;
 		func = function(){
@@ -303,32 +299,32 @@ Ease.prototype = {
 		
 		return func;
 		
-	},
+	}
 	
 	// TODO 削除
-	exp: function(s, e, d){
+	exp(s, e, d){
 		var self = this;
 		this.init(s, e, d);
 		this.division = d * 0.01;
 		this.func = function(){
 			return 1 / Math.exp(self.division / (self.count + 0.001));
 		};
-	},
+	}
 	// TODO 削除
-	swing: function(s, e, d){
+	swing(s, e, d){
 		var self = this;
 		this.init(s, e, d);
 		this.division = d;
 		this.func = function(){
 			return 0.5 - Math.cos(self.count * (Math.PI / self.division)) / 2;
 		};
-	},
+	}
 	
-	setFunction: function(fin, fout, finout){
+	setFunction(fin, fout, finout){
 		
-	},
+	}
 	
-	sinusoidal: function(e_in, e_out){
+	sinusoidal(e_in, e_out){
 		var func, self = this;
 		if(e_in && !e_out){
 			func = function(){
@@ -344,9 +340,9 @@ Ease.prototype = {
 			};
 		}
 		return func;
-	},
+	}
 	
-	cubic: function(e_in, e_out){
+	cubic(e_in, e_out){
 		var func, self = this;
 		if(e_in && !e_out){
 			func = function(){
@@ -365,9 +361,9 @@ Ease.prototype = {
 			};
 		}
 		return func;
-	},
+	}
 	
-	quartic: function(e_in, e_out){
+	quartic(e_in, e_out){
 		var func, self = this;
 		if(e_in && !e_out){
 			func = function(){
@@ -386,9 +382,9 @@ Ease.prototype = {
 			};
 		}
 		return func;
-	},
+	}
 	
-	in: function(s, e, d, type){
+	in(s, e, d, type){
 		var self = this;
 		this.init(s, e, d);
 		this.division = d;
@@ -398,9 +394,9 @@ Ease.prototype = {
 			this.func = this.cubic(true, false);
 		}
 		
-	},
+	}
 	
-	out: function(s, e, d, type){
+	out(s, e, d, type){
 		var self = this;
 		this.init(s, e, d);
 		this.division = d;
@@ -413,9 +409,9 @@ Ease.prototype = {
 //			};
 		}
 		
-	},
+	}
 	
-	inout: function(s, e, d, type){
+	inout(s, e, d, type){
 		var self = this;
 		this.init(s, e, d);
 		this.division = d;
@@ -426,9 +422,9 @@ Ease.prototype = {
 				return 1 - Math.exp(-8 * Math.pow(self.count / self.division, 3));
 			};
 		}
-	},
+	}
 	
-	current: function(){
+	current(){
 		if(this.func == null){
 			return this.start;
 		}
@@ -437,9 +433,9 @@ Ease.prototype = {
 		}else{
 			return this.range + this.start;
 		}
-	},
+	}
 
-	next: function(){
+	next(){
 		if(this.func == null){
 			return this.start;
 		}
@@ -449,14 +445,15 @@ Ease.prototype = {
 		}else{
 			return this.range + this.start;
 		}
-	},
+	}
 	
-	isFin: function(){
+	isFin(){
 		return this.count >= this.duration;
 	}
 };
 
-function makeEaseTri(){
+export const
+makeEaseTri = function(){
 	var ease = {
 			x: new Ease()
 			, y: new Ease()
@@ -467,11 +464,11 @@ function makeEaseTri(){
 	ease.y.in(0, 0, 1);
 	ease.z.in(0, 0, 1);
 	return ease;
-};
+}
+;
 
-function Position(){return null;}
-Position.prototype = {
-	init: function(x, y, z){
+export class Position{
+	init(x, y, z){
 		var p
 		;
 		if((x + '').indexOf(' ') >= 0){
@@ -486,255 +483,16 @@ Position.prototype = {
 		}
 		
 		this.arrayTo = [this.x, this.y, this.z];
-	},
+	}
 	
-};
-function makePosition(x, y, z){
+}
+
+export const
+makePosition = function(x, y, z){
 	var p = new Position();
 	p.init(x, y, z);
 	return p;
 }
-
-function makeSpritePart(resourceName, params){
-	var part = new SpritePart();
-	if(params.query != null){
-		part.initQueries(resourceName, params.query);
-	}else{
-		part.init();
-	}
-	
-	return part;
-}
-function SpritePart(){return null;}
-SpritePart.prototype = {
-	init: function(){
-		this.global = makePosition();
-		this.local = makePosition();
-		this.sprites = [];
-		this.visible = true;
-		this.spriteNum = 0;
-		this.name = '';
-	},
-	
-	initQueries: function(resourceName, queries){
-		if(this.global == null){
-			this.init();
-		}
-		this.appendSprite(resourceName, queries);
-	},
-	
-	getRect: function(global){
-		var sp = this.sprites[this.spriteNum]
-			, pos, rect
-		;
-		global = global == null ? true : global;
-		pos = global ? this.global : this.local;
-		rect = makeRect(pos.x, pos.y, sp.w, sp.h);
-		rect.z = pos.z;
-//		rect.d = sp.d;
-		return rect;
-	},
-	
-	appendSprite: function(resourceName, queries){
-		var sprites = this.sprites;
-		queries = queries instanceof Array ? queries : [queries];
-		
-		queries.forEach(function(q){
-			sprites.push(makeSpriteQuery(resourceName, q));
-		});
-		return this;
-	},
-	
-	setParams: function(params){
-		var k;
-		for(k in params){
-			this[k] = params[k];
-		}
-		return this;
-	},
-	
-	refreshGlobal: function(from, to){
-		var gl = this.global
-			, diff = {
-				x: to.x - from.x,
-				y: to.x - from.y,
-				z: to.x - from.z
-			}
-		;
-		this.global.x += diff.x;
-		this.global.y += diff.y;
-		this.global.z += diff.z;
-		return this;
-	},
-	
-	show: function(){
-		this.visible = true;
-		return this;
-	},
-	
-	hide: function(){
-		this.visible = false;
-		return this;
-	},
-	
-	pattern: function(p){
-		this.spriteNum = p;
-		return this;
-	},
-	
-	setnum: function(num){
-		this.spriteNum = num;
-		return this;
-	},
-	
-	move: function(posArray){
-		var pos = this.local
-			, back = makePosition(pos.x, pos.y, pos.z)
-		;
-		pos.x += posArray[0] == null ? 0 : posArray[0];
-		pos.y += posArray[1] == null ? 0 : posArray[1];
-		pos.z += posArray[2] == null ? 0 : posArray[2];
-		this.refreshGlobal(back, pos);
-		return this;
-	},
-	
-	setpos: function(posArray){
-		var pos = this.local
-			, back = makePosition(pos.x, pos.y, pos.z)
-		;
-		pos.x = posArray[0] == null ? pos.x : posArray[0];
-		pos.y = posArray[1] == null ? pos.y : posArray[1];
-		pos.z = posArray[2] == null ? pos.z : posArray[2];
-		this.refreshGlobal(back, pos);
-		return this;
-	},
-	
-	adjoin: function(rect, align){
-		var r, global = false;
-		r = this.getRect(global).adjoin(rect, align);
-		this.setpos([r.x, r.y, r.z]);
-		return this;
-	},
-	
-	drawTo: function(scroll, global){
-		if(!this.visible){
-			return this;
-		}
-		if(this.sprites[this.spriteNum] == null){
-			return this;
-		}
-		scroll.drawSprite(this.sprites[this.spriteNum], global.x + this.local.x, global.y + this.local.y);
-		return this;
-	},
-};
-
-function makeSpriteBone(resourceName, patsParams){
-	var b = new SpriteBone();
-	b.init();
-	b.addPartsBySpriteQuery(resourceName, patsParams);
-	return b;
-}
-function SpriteBone(){return null;}
-SpriteBone.prototype = {
-	init: function(){
-		this.parts = {};
-		this.partsArray = [];
-		this.local = makePosition();
-		this.global = makePosition();
-		this.visible = true;
-		this.vflip = false;
-		this.hflip = false;
-		this.originPart = '';
-	},
-	//{name: spriteQuery}
-	addPartsBySpriteQuery: function(resourceName, parts){
-		var k, sp;
-		
-		for(k in parts){
-//			sp = makeSpriteQuery(resourceName, parts[k]);
-			this.parts[k] = makeSpritePart(resourceName, parts[k]);
-			this.parts[k].name = k;
-			this.partsArray.push(this.parts[k]);
-		}
-	},
-	
-	setParams: function(params){
-		var name, k, p, part = this.parts;
-		for(name in params){
-			parts[name].setParams(params[name]);
-		}
-	},
-	
-	partRect: function(part, global){
-		var r = this.parts[part].getRect(global);
-		return r;
-	},
-	
-	adjoinPart: function(a, b, align){
-		var global = false;
-		this.parts[a].adjoin(this.partRect(b, global), align);
-		return this.parts[a];
-	},
-	
-	//com: space delimiter, 0: partName, 1: method
-	com: function(com, value){
-		var q = com.split(' ')
-		;
-		if(q.length < 2){
-			return this.parts[q[0]];
-		}
-		if(this.parts[q[0]] == null || this.parts[q[0]][q[1]] == null){
-			console.warn('notfound ' + q[0] + ' ' + q[1]);
-			return false;
-		}
-		this.parts[q[0]][q[1]](value);
-		return this.parts[q[0]];
-	},
-	
-	flip: function(h, v, originPart){
-		this.hflip = h != null ? h : this.hflip;
-		this.vflip = v != null ? v : this.vflip;
-	},
-	
-	drawTo: function(scroll, x, y){
-		var parts = this.partsArray
-			, sortparts = []
-			, bonepos = this.global
-			, x = x != null ? x : bonepos.x
-			, y = y != null ? y : bonepos.y
-			, z = bonepos.z
-			, vf = this.vflip, hf = this.hflip
-			, op = this.parts[this.originPart]
-			, oname = this.originPart
-			, os = op.sprites[op.spriteNum]
-		;
-		if(this.visible == false){
-			return;
-		}
-		
-		sortparts = parts.slice().sort(function(a, b){
-			var c = a.local.z - b.local.z;
-			return c;
-		});
-		
-		sortparts.forEach(function(a){
-			var s = a.sprites[a.spriteNum];
-			if(s == null){
-				return;
-			}
-			s.vflip(vf);
-			s.hflip(hf);
-			a.drawTo(scroll, {
-				x: hf && oname != a.name ? x + os.w - (a.local.x * 2 + s.w) : x
-				, y: vf && oname != a.name ? y + os.h - s.y : y
-				, z: s.z
-			});
-			s.vflip(false);
-			s.hflip(false);
-		});
-	},
-
-};
 
 /**
  * 0で桁埋め
@@ -742,8 +500,7 @@ SpriteBone.prototype = {
  * @param num
  * @returns {String}
  */
-
-function formatNum(num, keta)
+, formatNum = function(num, keta)
 {
 
 	var src = num + ''
@@ -764,7 +521,7 @@ function formatNum(num, keta)
  * @param pad_type
  * @returns
  */
-function str_pad(input, pad_length, pad_string, pad_type)
+, str_pad = function(input, pad_length, pad_string, pad_type)
 {
 	if(typeof(input) == "number"){
 		input = input + "";
@@ -811,7 +568,7 @@ function str_pad(input, pad_length, pad_string, pad_type)
  * @param pad_string
  * @returns
  */
-function strpad(input, padstring, length){
+, strpad = function(input, padstring, length){
 	var addcount, i;
 	input = input + '';
 	addcount = length - input.length;
@@ -822,7 +579,7 @@ function strpad(input, padstring, length){
 	return input;
 }
 
-function numFormat(num, length)
+, numFormat = function(num, length)
 {
 	var addcount, i;
 	num = parseInt(num) + '';
@@ -834,7 +591,7 @@ function numFormat(num, length)
 	return num.slice(num.length - length);
 }
 
-function hexFormat(num, length)
+, hexFormat = function(num, length)
 {
 	var addcount, i;
 	num = num.toString(16);
@@ -846,7 +603,7 @@ function hexFormat(num, length)
 	return num.slice(num.length - length);
 }
 
-function clone(src){
+, clone = function(src){
 	var dst, k
 	;
 	if(typeof src != 'object'){
@@ -859,7 +616,7 @@ function clone(src){
 	return dst;
 }
 
-function merge(a, b){
+, merge = function(a, b){
 	if(typeof a != 'object' || typeof b != 'object'){
 		return false;
 	}
@@ -875,7 +632,7 @@ function merge(a, b){
  * @param {array} keys
  * @returns {object}
  */
-function objectForKeys(obj, keys){
+, objectForKeys = function(obj, keys){
 	var i, res = {}, k;
 	for(i = 0; i < keys.length; i++){
 		k = keys[i];
@@ -885,7 +642,7 @@ function objectForKeys(obj, keys){
 	return res;
 }
 
-function arrayToObject(a){
+, arrayToObject = function(a){
 	var i, o = {};
 	for(i = 0; i < a.length; i++){
 		if(a[i] == undefined){
@@ -896,7 +653,7 @@ function arrayToObject(a){
 	return o;
 }
 
-function bubbleSort(data, order, k){
+, bubbleSort = function(data, order, k){
 	var i, j, n, len
 	, len = data.length
 	, diff = order == null || order == 'asc' 
@@ -932,26 +689,42 @@ function bubbleSort(data, order, k){
 	}
 }
 
+, timetoYmdHis = function(timestamp){
+	var d = new Date(timestamp | 0 == 0 ? timestamp : timestamp * 1000)
+		, dstr
+	;
+	dstr = {
+		y: formatNum(d.getFullYear(), 4)
+		, m: formatNum(d.getMonth() + 1, 2)
+		, d: formatNum(d.getDate(), 2)
+		, h: formatNum(d.getHours(), 2)
+		, i: formatNum(d.getMinutes(), 2)
+		, s: formatNum(d.getSeconds(), 2)
+	};
+
+	return dstr;
+}
+;
+
 /**
  * APIインターフェース 
  */
-var APIServer = {url: null};
-var CKAPIServer = function(){return;};
-CKAPIServer.prototype = {
-	init: function(apiUrl){
+export let APIServer = {url: null};
+export class CKAPIServer{
+	init(apiUrl){
 		this.serverUrl = apiUrl;
 		this.filterFunc = function(j){return j;};
 		this.error = null;
-	},
+	}
 	
-	post: function(api, params, func, errorFunc){
+	post(api, params, func, errorFunc){
 		this.send('post', api, params, func, errorFunc);
-	},
-	get: function(api, params, func, errorFunc){
+	}
+	get(api, params, func, errorFunc){
 		this.send('get', api, params, func, errorFunc);
-	},
+	}
 	
-	send: function(method, api, params, func, errorFunc){
+	send(method, api, params, func, errorFunc){
 		var data, query = [], key, x = new XMLHttpRequest()
 			, self = this
 		;
@@ -975,7 +748,7 @@ CKAPIServer.prototype = {
 					console.error(x.statusText);
 				}
 			}
-		} : function () {
+		} : function() {
 			return false;
 		};
 
@@ -1017,12 +790,12 @@ CKAPIServer.prototype = {
 
 		x.send(data);
 	}
-};
+}
 
-function initAPIServer(apiUrl)
+export function initAPIServer(apiUrl)
 {
 	APIServer.url = apiUrl;
-};
+}
 
 function CKServers(name){
 	
@@ -1036,9 +809,9 @@ function CKServers(name){
  * @param {function} errorFunc
  * @returns {undefined}
  */
-function sendToAPIServer(method, api, params, func, errorFunc)
+export function sendToAPIServer(method, api, params, func, errorFunc)
 {
-	var query = [], key, x = new XMLHttpRequest();
+	var query = [], key, x = new XMLHttpRequest(), str;
 	if(APIServer.url == null){console.error('not initialize api server'); return;}
 
 	x.timeout = 5000;
@@ -1058,7 +831,7 @@ function sendToAPIServer(method, api, params, func, errorFunc)
 				console.error(x.statusText);
 			}
 		}
-	} : function () {
+	} : function() {
 		return false;
 	};
 	
@@ -1095,7 +868,7 @@ function sendToAPIServer(method, api, params, func, errorFunc)
 	x.send(str);
 };
 
-function checkAPIReceive(data){
+export function checkAPIReceive(data){
 	if(data == null){
 		console.error('server error');
 		return false;
@@ -1104,20 +877,4 @@ function checkAPIReceive(data){
 		return false;
 	}
 	return true;
-}
-
-function timetoYmdHis(timestamp){
-	var d = new Date(timestamp | 0 == 0 ? timestamp : timestamp * 1000)
-		, dstr
-	;
-	dstr = {
-		y: formatNum(d.getFullYear(), 4)
-		, m: formatNum(d.getMonth() + 1, 2)
-		, d: formatNum(d.getDate(), 2)
-		, h: formatNum(d.getHours(), 2)
-		, i: formatNum(d.getMinutes(), 2)
-		, s: formatNum(d.getSeconds(), 2)
-	};
-
-	return dstr;
 }
