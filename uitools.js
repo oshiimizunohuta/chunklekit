@@ -8,6 +8,9 @@
 import {makeSpriteQuery, makeSpriteSwapColor, cellhto, makeCanvasScroll, getScrolls, loadImages} from './canvasdraw.js';
 import {makeRect, makePosition} from './util.js';
 export class CUCursor{
+	construcror(){
+		
+	}
 	init(){
 		this.pos = {x: 0, y: 0, z: 0};
 		this.pos_pre = {x: 0, y:0, z: 0};
@@ -1061,7 +1064,7 @@ export class SpriteBone{
 
 export const
 makeCursor = function(name, x, y, z){
-	var c = new CUCursor();
+	let c = new CUCursor();
 	c.init();
 	c.cells.x = x < 1 ? 1 : x;
 	c.cells.y = y < 1 ? 1 : y;

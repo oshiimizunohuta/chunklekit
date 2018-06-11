@@ -1452,138 +1452,140 @@ loadImages = function(imageInfo, func)
  * @class SpriteQueryCanvas
  * sprite query用スクロールの管理
  */
-var SpriteQueryCanvas = {};
-SpriteQueryCanvas.imageName = 'spriteQuery';
-SpriteQueryCanvas.tmpImageName = 'tmpSpriteQuery';
+export class SpriteQueryCanvas{
 //SpriteQueryCanvas.prototype = {
-SpriteQueryCanvas.init = function(){
-	var name = SpriteQueryCanvas.imageName
-		, tname = SpriteQueryCanvas.tmpImageName
-		, R = imageResource
+	static init(){
+		SpriteQueryCanvas.imageName = 'spriteQuery';
+		SpriteQueryCanvas.tmpImageName = 'tmpSpriteQuery';
+		var name = SpriteQueryCanvas.imageName
+			, tname = SpriteQueryCanvas.tmpImageName
+			, R = imageResource
+			;
+		this.scroll = makeScroll(name, false);
+		appendImage(name, this.scroll.canvas, R.CHIPCELL_SIZE, R.CHIPCELL_SIZE);
+		this.tmpScroll = makeScroll(tname, false);
+		appendImage(tname, this.tmpScroll.canvas, R.CHIPCELL_SIZE, R.CHIPCELL_SIZE);
+		//convertChunkで使います
+		this.convertScroll = makeScroll(tname, false);
+		appendImage(tname, this.convertScroll.canvas, R.CHIPCELL_SIZE, R.CHIPCELL_SIZE);
+
+		this.queries = {};
+		this.rects = {};
+		this.rowRects = [];
+		this.position = {x: 0, y: 0};
+		this.nullRect = makeRect(0, 0, 0, 0);
+	}
+	static getBlankRect(rect){
+		var scrRect = this.scroll.getRect()
+		, rows = this.rowRects
+		, rowRect, x, y
+		, ex, ey = rows.length
 		;
-	this.scroll = makeScroll(name, false);
-	appendImage(name, this.scroll.canvas, R.CHIPCELL_SIZE, R.CHIPCELL_SIZE);
-	this.tmpScroll = makeScroll(tname, false);
-	appendImage(tname, this.tmpScroll.canvas, R.CHIPCELL_SIZE, R.CHIPCELL_SIZE);
-	//convertChunkで使います
-	this.convertScroll = makeScroll(tname, false);
-	appendImage(tname, this.convertScroll.canvas, R.CHIPCELL_SIZE, R.CHIPCELL_SIZE);
-	
-	this.queries = {};
-	this.rects = {};
-	this.rowRects = [];
-	this.position = {x: 0, y: 0};
-	this.nullRect = makeRect(0, 0, 0, 0);
-};
-SpriteQueryCanvas.getBlankRect = function(rect){
-	var scrRect = this.scroll.getRect()
-	, rows = this.rowRects
-	, rowRect, x, y
-	, ex, ey = rows.length
-	;
-	for(y = 0; y < ey; y++){
-		rowRect = rows[y][0];
-		rowRect = rows[y].pop();
-		rows[y].push(rowRect);
-		ex = rows[y].length;
-		rect.reculc(rowRect.ex, rowRect.y);
-		if(rowRect.h != rect.h){
-			continue;
-		}
-		
-		if(scrRect.isContain(rect)){
-			this.position.x = ex;
-			this.position.y = y;
-			return rect;
-		}
-	}
-	if(rowRect != null){
-		rect.reculc(0, rowRect.y + rowRect.h);
-	}else{
-		rect.reculc(0, rect.y);
-	}
-	this.position.x = 0;
-	this.position.y = y;
-	this.resizeScroll(scrRect.w, rect.y + rect.h);
-	return rect;
-};
-	
-SpriteQueryCanvas.resizeScroll = function(w, h){
-	var s = this.scroll
-		, t = this.tmpScroll
-	;
-	if(s.canvas.width == w && s.canvas.height == h){
-		return;
-	}
-//	if(s.canvas.width > t.canvas.width || s.canvas.height > t.canvas.height){
-//		t.resizeCanvas(s.canvas.width, s.canvas.height);
-//	}
-	s.drawto(t);
-	s.resizeCanvas(w, h);
-	t.drawto(s);
-	t.resizeCanvas(w, h);
-};
-	
-SpriteQueryCanvas.registQuery = function(name, rect)
-{
-	this.rects[name] = rect;
-	this.queries[rect.toString()] = name;
-};
-	
-SpriteQueryCanvas.registRowRect = function(x, y, size)
-{
-	var s = this.rowRects
-	;
-	s[y] = s[y] != null ? s[y] : s[y] = [];
-	s[y][x] = size;
-};
-	
-SpriteQueryCanvas.makeSpriteFromScroll = function(scroll){
-	var rect, find = this.rects[scroll.name] != null
-	;
-	rect = find ? this.rects[scroll.name] : this.getBlankRect(scroll.getRect());
+		for(y = 0; y < ey; y++){
+			rowRect = rows[y][0];
+			rowRect = rows[y].pop();
+			rows[y].push(rowRect);
+			ex = rows[y].length;
+			rect.reculc(rowRect.ex, rowRect.y);
+			if(rowRect.h != rect.h){
+				continue;
+			}
 
-	scroll.drawto(this.scroll, rect.x, rect.y, rect.w, rect.h);
-	
-	if(!find){
-		this.registQuery(scroll.name, rect);
+			if(scrRect.isContain(rect)){
+				this.position.x = ex;
+				this.position.y = y;
+				return rect;
+			}
+		}
+		if(rowRect != null){
+			rect.reculc(0, rowRect.y + rowRect.h);
+		}else{
+			rect.reculc(0, rect.y);
+		}
+		this.position.x = 0;
+		this.position.y = y;
+		this.resizeScroll(scrRect.w, rect.y + rect.h);
+		return rect;
+	}
+
+	static resizeScroll(w, h){
+		var s = this.scroll
+			, t = this.tmpScroll
+		;
+		if(s.canvas.width == w && s.canvas.height == h){
+			return;
+		}
+	//	if(s.canvas.width > t.canvas.width || s.canvas.height > t.canvas.height){
+	//		t.resizeCanvas(s.canvas.width, s.canvas.height);
+	//	}
+		s.drawto(t);
+		s.resizeCanvas(w, h);
+		t.drawto(s);
+		t.resizeCanvas(w, h);
+	}
+
+	static registQuery(name, rect)
+	{
+		this.rects[name] = rect;
+		this.queries[rect.toString()] = name;
+	}
+
+	static registRowRect(x, y, size)
+	{
+		var s = this.rowRects
+		;
+		s[y] = s[y] != null ? s[y] : s[y] = [];
+		s[y][x] = size;
+	}
+
+	static makeSpriteFromScroll(scroll){
+		var rect, find = this.rects[scroll.name] != null
+		;
+		rect = find ? this.rects[scroll.name] : this.getBlankRect(scroll.getRect());
+
+		scroll.drawto(this.scroll, rect.x, rect.y, rect.w, rect.h);
+
+		if(!find){
+			this.registQuery(scroll.name, rect);
+			this.registRowRect(this.position.x, this.position.y, rect);
+		}
+
+		return makeSpriteRect(SpriteQueryCanvas.imageName, rect);
+	}
+
+	static copySprite(sprite, indexkey){
+		var rect, name = this.convertSpriteName(sprite, indexkey == null ? '' : indexkey)
+		;
+		if(indexkey != null && (name in this.rects)){
+			return makeSpriteRect(SpriteQueryCanvas.imageName, this.rects[name]);
+		}
+		//新しい領域を探す
+		rect = this.getBlankRect(sprite.getRect());
+		//領域に描画
+		this.scroll.drawSpriteInfo(sprite.makeSpriteInfo(rect.x, rect.y));
+
+		//領域を登録
+		this.registQuery(name, rect);
 		this.registRowRect(this.position.x, this.position.y, rect);
-	}
-	
-	return makeSpriteRect(SpriteQueryCanvas.imageName, rect);
-};
 
-SpriteQueryCanvas.copySprite = function(sprite, indexkey){
-	var rect, name = this.convertSpriteName(sprite, indexkey == null ? '' : indexkey)
-	;
-	if(indexkey != null && (name in this.rects)){
-		return makeSpriteRect(SpriteQueryCanvas.imageName, this.rects[name]);
+		//領域からスプライトを作成
+		return makeSpriteRect(SpriteQueryCanvas.imageName, rect);
 	}
-	//新しい領域を探す
-	rect = this.getBlankRect(sprite.getRect());
-	//領域に描画
-	this.scroll.drawSpriteInfo(sprite.makeSpriteInfo(rect.x, rect.y));
-	
-	//領域を登録
-	this.registQuery(name, rect);
-	this.registRowRect(this.position.x, this.position.y, rect);
-	
-	//領域からスプライトを作成
-	return makeSpriteRect(SpriteQueryCanvas.imageName, rect);
-};
 
-SpriteQueryCanvas.exists = function(sprite, indexkey){
-	var name = this.convertSpriteName(sprite, indexkey == null ? '' : indexkey)	
-	;
-	if(name in this.rects){
-		return this.rects[name];
+	static exists(sprite, indexkey){
+		var name = this.convertSpriteName(sprite, indexkey == null ? '' : indexkey)	
+		;
+		if(name in this.rects){
+			return this.rects[name];
+		}
+		return false;
 	}
-	return false;
-};
 
-SpriteQueryCanvas.convertSpriteName = function(sprite, key){
-	return sprite.name + '[' + sprite.getRect().toString() + ']' + key;
-};
+	static convertSpriteName(sprite, key){
+		return sprite.name + '[' + sprite.getRect().toString() + ']' + key;
+	}
+
+}
 
 
 function getSQCSprite(name){
@@ -2492,28 +2494,27 @@ function swapColorQuery(swaps)
 ////////
 ////////
 
-function CanvasSprite(){return;}
-CanvasSprite.prototype = {
+export class CanvasSprite{
 
 	// init: function(img, x, y, w, h)
 /**
  * キャンバススプライト
- * @param img
+ * @param name 取り込んだ画像の名前
  * @param x imageのX座標
  * @param y imageのY座標
  * @param w spriteの幅
  * @param h spriteの高さ
  * @returns
  */
-	init: function(name, x, y, w, h)
+	init(name, x, y, w, h)
 	{
 		this.image = imageResource.data[name];
 		this.ctx = imageResource.ctx[name];
 		this.workSpace = imageResource.workSpace[name];
 		this.initCommon(name, x, y, w, h);
-	},
+	}
 	
-	initInCanvas: function(canvas, x, y, w, h)
+	initInCanvas(canvas, x, y, w, h)
 	{
 		var name = canvas.name != null ? canvas.name :  'incanvas_' + Object.keys(imageResource.data).length;
 		this.image = canvas;
@@ -2522,10 +2523,10 @@ CanvasSprite.prototype = {
 		imageResource.appendImage(name, this.image, w, h);
 		this.workSpace = {canvas: this.image, ctx: this.ctx, data: this.image};
 		this.initCommon(name, x, y, w, h);
-	},
+	}
 	
 	// TODO 使用しなくなるかも
-	copySprite: function(sprite)
+	copySprite(sprite)
 	{
 		var name = 'copySprite_' + Object.keys(imageResource.data).length;
 		this.image = createCanvas(sprite.image.width, sprite.image.height);
@@ -2538,9 +2539,9 @@ CanvasSprite.prototype = {
 		this.hFlipFlag =  sprite.hFlipFlag;
 		this.vFlipFlag =  sprite.vFlipFlag;
 		this.rotFlag = sprite.rotFlag;
-	},
+	}
 	
-	initCommon: function(canvas, x, y, w, h)
+	initCommon(canvas, x, y, w, h)
 	{
 		this.x = x; this.y = y;
 		this.w = w; this.h = h;
@@ -2563,56 +2564,56 @@ CanvasSprite.prototype = {
 		this.chunkIds = null; //CurrentSpriteId
 		this.primary = true; //draw reliably even overdraw
 		this.order = props.SPRITE_ORDER_DEFAULT; // display order [first << late]
-	},
+	}
 	
-	drawScroll: function(scroll, x, y)
+	drawScroll(scroll, x, y)
 	{
 		scroll.drawSprite(this, 0 | x, 0 | y);
-	},
+	}
 
-	makeRect: function(x, y)
+	makeRect(x, y)
 	{
 //		var rects = new Rect();
 //		rects.init(x, y, this.w, this.h);
 		return makeRect(x, y, this.w, this.h);
-	},
+	}
 	
-	makeSpriteInfo: function(x, y)
+	makeSpriteInfo(x, y)
 	{
 		return {sprite: this, x: x, y: y, vflip: this.vFlipFlag, hflip: this.hFlipFlag, rot: this.rotFlag, order: this.order};
-	},
+	}
 
-	getRect: function()
+	getRect()
 	{
 //		var rects = new Rect();
 //		rects.init(this.x, this.y, this.w, this.h);
 //		return rects;
 		return makeRect(this.x, this.y, this.w, this.h);
-	},
+	}
 
-	vflip: function(toggle)
+	vflip(toggle)
 	{
 		this.vFlipFlag = toggle == null ? !this.vFlipFlag : toggle;
 		return this;
-	},
+	}
 	
-	hflip: function(toggle)
+	hflip(toggle)
 	{
 		this.hFlipFlag = toggle == null ? !this.hFlipFlag : toggle;
 		
 		return this;
-	},
+	}
 	
-	flip: function()
+	flip()
 	{
 		var h = (-sprite.hFlipFlag + !sprite.hFlipFlag) | 0, v = (-sprite.hFlipFlag + !sprite.hFlipFlag) | 0;
 		this.ctx.translate(this.x, 0);
 		this.ctx.scale(-1, 1);
 		this.ctx.drawImage(this.image, this.x, 0);
-	},
+	}
 	
 	//回転非対応
-	rot: function(trbl)
+	rot(trbl)
 	{
 		var pr = this.rotFlag, ph;
 		this.rotFlag = trbl == null ? (trbl + 1) % 4 : trbl;
@@ -2625,13 +2626,13 @@ CanvasSprite.prototype = {
 		}
 		
 		return this;
-	},
+	}
 
 	/**
 	 * スクロール側で実行
 	 * カラーを変更を実行する
 	 */
-	swapStart: function()
+	swapStart()
 	{
 		var tmp, data, bgdata, index = 0
 			, from , to, pixels = this.w * this.h, p, slen, i, swaps = this.swaps, swap
@@ -2651,22 +2652,22 @@ CanvasSprite.prototype = {
 		
 		return swapColorImageData(this.ctx, swaps, this.getRect());
 		
-	},
+	}
 	/**
 	 * 色を交換
 	 * ※連続的に変更する場合は
 	 * swapColorReset
 	 * も合わせて使うこと
 	 */
-	swapColor: function(to, from)
+	swapColor(to, from)
 	{
 		if(this.swaps == null){this.swaps = [];}
 		
 		this.swaps.push([from, to]);
 		return this;
-	},
+	}
 
-	setSwapColor: function(to, from)
+	setSwapColor(to, from)
 	{
 		var self = this;
 		this.swaps = [];
@@ -2681,8 +2682,8 @@ CanvasSprite.prototype = {
 		this.swaps.push([from, to]);
 		this.swapStart();
 		return this;
-	},
-	pushSwapColor: function(to, from)
+	}
+	pushSwapColor(to, from)
 	{
 		if(this.swaps == null){this.swaps = [];}
 		if(this.isSwapColor(to, from)){
@@ -2690,9 +2691,9 @@ CanvasSprite.prototype = {
 		};
 		this.swaps.push([from, to]);
 		return this;
-	},
+	}
 	
-	isSwapColor: function(to, from)
+	isSwapColor(to, from)
 	{
 		var i, fromto = from.join(',') + ':' + to.join(',');
 		if(this.swaps == null){this.swaps = [];}
@@ -2702,25 +2703,25 @@ CanvasSprite.prototype = {
 			}
 		}
 		return false;
-	},
+	}
 	
-	getBufferOriginal: function(){
+	getBufferOriginal(){
 		if(this.bufferOriginal == null){
 			this.bufferOriginal = this.ctx.getImageData(this.x, this.y, this.w, this.h);
 		}
 		return this.bufferOriginal;
-	},
+	}
 	
-	resetShiftBuffer: function(){
+	resetShiftBuffer(){
 //		this.bfsx = x;
 //		this.bfsy = y;
 		if(this.bufferOriginal != null){
 			this.ctx.putImageData(this.bufferOriginal, this.x, this.y);
 		}
-	},
+	}
 	
 	//TODO 未使用？
-	shiftBufferRotate: function(x, y, append1, append2, append3){
+	shiftBufferRotate(x, y, append1, append2, append3){
 		var dat1, dat2, dat3, dat4
 			, sx = this.x
 			, sy = this.y
@@ -2778,7 +2779,7 @@ CanvasSprite.prototype = {
 		}
 		return this;
 		
-	},
+	}
 	/**
 	 * @name shiftBuffer
 	 * @param {unsigned Number} x
@@ -2787,7 +2788,7 @@ CanvasSprite.prototype = {
 	 * @returns {this}
 	 * @description スプライト情報の上書き
 	 */
-	shiftBuffer: function(x, y, append1, append2, append3){
+	shiftBuffer(x, y, append1, append2, append3){
 		var dat4, dat2, dat3, dat1
 			, w = this.w
 			, h = this.h
@@ -2825,8 +2826,8 @@ CanvasSprite.prototype = {
 		this.shiftBufferSub(x, y + this.h, dat3);
 		this.shiftBufferSub(x + this.w, y + this.h, dat4);
 		return this;
-	},
-	shiftBufferSub: function(x, y, dat){
+	}
+	shiftBufferSub(x, y, dat){
 		var
 			 sx = this.x
 			, sy = this.y
@@ -2872,27 +2873,27 @@ CanvasSprite.prototype = {
 			this.ctx.fillRect(sx + x, sy + y, slicewR, slicehB);
 		}
 
-	},
+	}
 	
-	show: function(){
+	show(){
 		this.x = this.x < 0 ? - this.x - this.w : this.x;
-	},
+	}
 
-	hide: function(){
+	hide(){
 		this.x = this.x >= 0 ? - this.x - this.w : this.x;
-	},
+	}
 
 	/**
 	 * 色交換をリセット
 	 */
-	resetSwapColor: function()
+	resetSwapColor()
 	{
 		this.swaps = null;
-	},
+	}
 
 };
 
-class canvasPalette{
+export class canvasPalette{
 	init(colors, name){
 		this.size = colors.length;
 		this.colors = typeof colors[0].length == null ? [colors] : colors;
@@ -3040,32 +3041,30 @@ function setTransition(transition, value, delay, from)
 /**
  * 分割して何節目か
  */
-function dividePattern(pattern, division)
-{
-	this.count = 0;
-	this.pattern = pattern;
-	this.division = division;
-	this.max = this.pattern * this.division;
-}
-dividePattern.prototype = {
-	init: function(division, pattern)
+export class dividePattern{
+	constructor(pattern, division){
+		this.count = 0;
+		this.pattern = pattern;
+		this.division = division;
+		this.max = this.pattern * this.division;
+	}
+	init(division, pattern)
 	{
 		this.count = 0;
 		this.pattern = pattern;
 		this.division = division;
-	},
-		
-	now: function()
+	}
+	now()
 	{
 		var d = ((this.count / this.division) | 0) % this.pattern;
 		return d;
-	},
+	}
 	
-	next: function()
+	next()
 	{
 		this.count = (this.count + 1) % (this.max);
-	},
-};
+	}
+}
 
 
 /**
@@ -3073,7 +3072,7 @@ dividePattern.prototype = {
  * @param {Object} t->x
  * @param {Object} pos->y
  */
-function quadrateCurve(t, pos)
+export function quadrateCurve(t, pos)
 {
 	var term = []//ax^2 + bx + c = y
 		, plen = pos.length

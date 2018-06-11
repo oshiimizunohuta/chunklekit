@@ -5,13 +5,19 @@
  * @version 0.4.0
  */
 //TODO jslint
-var ALLCONTROLLS = {};
-var ALLCONTROLLSKEYS = [];
-var nowkey;
-var ELSE_LOCK = false;
-var GAMEPAD_DELIMITER = '@';
+let ALLCONTROLLS = {};
+let ALLCONTROLLSKEYS = [];
+let nowkey;
+let ELSE_LOCK = false;
+let GAMEPAD_DELIMITER = '@';
+
+function resetAllControlls(){
+	ALLCONTROLLS = {};
+	ALLCONTROLLSKEYS = [];
+}
+	
 window.addEventListener('keydown', function(e){
-	var enabled = true, i, c, indexes = ALLCONTROLLSKEYS, len = indexes.length;
+	let enabled = true, i, c, indexes = ALLCONTROLLSKEYS, len = indexes.length;
 	for(i = 0; i < len; i++){
 		c = ALLCONTROLLS[indexes[i]];
 		if(!(e.keyCode in c.code2name)){
@@ -31,7 +37,7 @@ window.addEventListener('keydown', function(e){
 	return enabled;//false: 他の処理が無効
 }, false);
 window.addEventListener('keyup', function(e){
-	var enabled = true, i, c, indexes = ALLCONTROLLSKEYS, len = indexes.length;
+	let enabled = true, i, c, indexes = ALLCONTROLLSKEYS, len = indexes.length;
 	for(i = 0; i < len; i++){
 		c = ALLCONTROLLS[indexes[i]];
 		if(!(e.keyCode in c.code2name)){
@@ -57,8 +63,8 @@ window.addEventListener('keyup', function(e){
  * ゲームパッド対応
  * @type Array
  */
-var CKGAMEPADS = [];
-var CKGAMEPADSPREVKEYSTATE = {};
+let CKGAMEPADS = [];
+let CKGAMEPADSPREVKEYSTATE = {};
 window.addEventListener('gamepadconnected', function(e){
 	gamepadConnect(e, true);
 }, false);
@@ -73,7 +79,7 @@ window.addEventListener("webkitgamepaddisconnected", function(e){
 }, false);
 
 function gamepadConnect(e, connect){
-	var pads = navigator.getGamepads != null ? navigator.getGamepads() : []
+	let pads = navigator.getGamepads != null ? navigator.getGamepads() : []
 		, i
 	;
 	if(e == null){
@@ -93,7 +99,7 @@ function gamepadConnect(e, connect){
 	}
 }
 function gamepadState(){
-	var i, j
+	let i, j
 		, pad, len
 		, buttons, blen
 		, axes, alen, id, v
@@ -129,7 +135,7 @@ function gamepadState(){
 	return state;
 }
 function applyGamepadKeys(state){
-	var i, j
+	let i, j
 		, pad, len = CKGAMEPADS.length
 		, cont, c, clen = ALLCONTROLLSKEYS.length
 		, buttons, blen
@@ -167,7 +173,7 @@ window.addEventListener('mousedown', function(e){
 
 //ウィンドウ離れた
 window.addEventListener('blur', function(){
-	var enabled = true, i, c, indexes = ALLCONTROLLSKEYS, len = indexes.length;
+	let enabled = true, i, c, indexes = ALLCONTROLLSKEYS, len = indexes.length;
 	for(i = 0; i < len; i++){
 		ALLCONTROLLS[indexes[i]].allReset();
 	}
@@ -199,10 +205,10 @@ function debugLock()
 /**
  * キーのトリガとホールドのチェック（設置はmainの後ろ）
  */
-var KEYSTATE_CHECKFUNC = function(){return;};
+let KEYSTATE_CHECKFUNC = function(){return;};
 function keyStateCheck()
 {
-	var i, j, c, indexes = ALLCONTROLLSKEYS, len = indexes.length, codes, clen, cindex, state;
+	let i, j, c, indexes = ALLCONTROLLSKEYS, len = indexes.length, codes, clen, cindex, state;
 	KEYSTATE_CHECKFUNC();
 	state = gamepadState();
 
@@ -224,15 +230,13 @@ function keyStateCheck()
 function setKeySetCheck(func){
 	KEYSTATE_CHECKFUNC = func != null ? func : function(){return;};
 }
-
 /**
  * キー操作クラス
  * @param idname
  * @returns
  */
-function KeyControll(){return;}
-KeyControll.prototype = {
-	initCommon: function(idname){
+class KeyControll{
+	initCommon(idname){
 		if(this.idname != null){
 			return;
 		}
@@ -251,30 +255,30 @@ KeyControll.prototype = {
 			console.warn(e);
 			console.log('key controll set hold on time: 20');
 		}		
-	},
+	}
 	
-	resetControlls: function(){
+	resetControlls(){
 		this.controlls = {};//操作名に対する状態
 		this.code2name = {};//codeに対応する操作名
 		this.name2code = {};//操作名に対応するcode
-	},
+	}
 	/**
 	 * 関数を登録
 	 * @param name
 	 * @param function f
 	 */
-	setAction: function(f){
+	setAction(f){
 		this.action = f;
 		this.action.prototype.action = this.action;
 //		allcontrolls[this.idname] = this;
-	},
+	}
 
 	/**
 	 * 操作名でキーコードを登録
 	 * @param name
 	 * @param code
 	 */
-	setKey: function(name, code)
+	setKey(name, code)
 	{
 		this.code2name[code + ""] = name;
 		this.name2code[name] = code;
@@ -285,11 +289,11 @@ KeyControll.prototype = {
 		this.controlls[name].hold = false;
 		this.controlls[name].time = 0;
 		this.controlls[name].func = null;
-	},
+	}
 	
-	unsetKey: function(name)
+	unsetKey(name)
 	{
-		var code;
+		let code;
 		
 		for(code in this.code2name){
 			if(this.code2name[code + ""] == name){
@@ -298,21 +302,21 @@ KeyControll.prototype = {
 		}
 		delete this.name2code[name];
 		delete this.controlls[name];
-	},
+	}
 	
-	setKeydown: function(name, func){
-		var controll = this.controlls[name]
+	setKeydown(name, func){
+		let controll = this.controlls[name]
 		;
 		controll.func = func;
-	},
+	}
 
 	/**
 	 * キーが押された瞬間の挙動
 	 * @param code
 	 */
-	stateDown: function(code, event)
+	stateDown(code, event)
 	{
-		var controll = this.code2name[code]
+		let controll = this.code2name[code]
 			, state = this.controlls[controll].state;
 
 		if(state){
@@ -328,15 +332,15 @@ KeyControll.prototype = {
 			};
 		}
 
-	},
+	}
 
 	/**
 	 * キーを離した瞬間の挙動
 	 * @param code
 	 */
-	stateUp: function(code)
+	stateUp(code)
 	{
-		var controll = this.code2name[code]
+		let controll = this.code2name[code]
 			, state = this.controlls[controll].state;
 		;
 		this.controlls[controll].off = true;
@@ -346,15 +350,15 @@ KeyControll.prototype = {
 		if(state && this.controlls[controll].func != null){
 //			this.controlls[controll].func();
 		};
-	},
+	}
 	
 	/**
 	 * キーのホールドを確認
 	 * @param code
 	 */
-	holdon: function(code)
+	holdon(code)
 	{
-		var controll = this.code2name[code]
+		let controll = this.code2name[code]
 			, state = this.controlls[controll].state;
 
 		if(state){
@@ -368,45 +372,45 @@ KeyControll.prototype = {
 			this.controlls[controll].time = 0;
 		}
 
-	},
+	}
 
 	/**
 	 * キーのトリガを解除
 	 * @param code
 	 */
-	untrig: function(code)
+	untrig(code)
 	{
-		var name = this.code2name[code];
+		let name = this.code2name[code];
 		this.controlls[name].trig = false;
 		this.controlls[name].off = false;
-	},
+	}
 
-	allReset: function()
+	allReset()
 	{
-		for(idname in this.code2name){
+		for(let idname in this.code2name){
 			this.stateUp(idname);
 			this.untrig(idname);
 		}
-	},
+	}
 	
-	allState: function()
+	allState()
 	{
-		var name, states = {};
+		let name, states = {};
 		for(name in this.controlls){
 			states[name] = this.controlls[name].state;
 		}
 		return states;
-	},
+	}
 	/**
 	 * キーの状態を取得
 	 * @param name
 	 * @returns
 	 */
-	getState: function(name)
+	getState(name)
 	{
-		var i;
+		let i;
 		if(typeof name == "object"){
-			var states = {}, cont = this.controlls, nIndex = Object.keys(name), len = nIndex.length, n;
+			let states = {}, cont = this.controlls, nIndex = Object.keys(name), len = nIndex.length, n;
 			for(i = 0; i < len; i++){
 				n = name[i];
 				states[n] = cont[n].state;
@@ -416,18 +420,18 @@ KeyControll.prototype = {
 			if(this.controlls[name] == null){return false;}
 			return this.controlls[name].state;
 		}
-	},
+	}
 
 	/**
 	 * キーの入力した瞬間を取得
 	 * @param name
 	 * @returns
 	 */
-	getTrig: function(name)
+	getTrig(name)
 	{
-		var i;
+		let i;
 		if(typeof name == "object"){
-			var trigs = {}, cont = this.controlls, nIndex = Object.keys(name), len = nIndex.length, n;
+			let trigs = {}, cont = this.controlls, nIndex = Object.keys(name), len = nIndex.length, n;
 			for(i = 0; i < len; i++){
 				n = name[i];
 				trigs[n] = cont[n].trig;
@@ -436,18 +440,18 @@ KeyControll.prototype = {
 		}else{
 			return this.controlls[name].trig;
 		}
-	},
+	}
 
 	/**
 	 * キーをはなした瞬間を取得
 	 * @param name
 	 * @returns
 	 */
-	getUntrig: function(name)
+	getUntrig(name)
 	{
-		var i;
+		let i;
 		if(typeof name == "object"){
-			var unTrigs = {}, cont = this.controlls, nIndex = Object.keys(name), len = nIndex.length, n;
+			let unTrigs = {}, cont = this.controlls, nIndex = Object.keys(name), len = nIndex.length, n;
 			for(i = 0; i < len; i++){
 				n = name[i];
 				unTrigs[n] = cont[n].off;
@@ -456,18 +460,18 @@ KeyControll.prototype = {
 		}else{
 			return this.controlls[name].off;
 		}
-	},
+	}
 
 	/**
 	 * キーの固定判定を取得
 	 * @param name
 	 * @returns
 	 */
-	getHold: function(name)
+	getHold(name)
 	{
-		var i;
+		let i;
 		if(typeof name == "object"){
-			var holds = {}, cont = this.controlls, nIndex = Object.keys(name), len = nIndex.length, n;
+			let holds = {}, cont = this.controlls, nIndex = Object.keys(name), len = nIndex.length, n;
 			for(i = 0; i < len; i++){
 				n = name[i];
 				holds[n] = cont[n].hold;
@@ -476,13 +480,13 @@ KeyControll.prototype = {
 		}else{
 			return this.controlls[name].hold;
 		}
-	},
+	}
 	
-	getHoldTime: function(name)
+	getHoldTime(name)
 	{
-		var i;
+		let i;
 		if(typeof name == "object"){
-			var holds = {}, cont = this.controlls, nIndex = Object.keys(name), len = nIndex.length, n;
+			let holds = {}, cont = this.controlls, nIndex = Object.keys(name), len = nIndex.length, n;
 			for(i = 0; i < len; i++){
 				n = name[i];
 				holds[n] = cont[n].time;
@@ -491,10 +495,10 @@ KeyControll.prototype = {
 		}else{
 			return this.controlls[name].time;
 		}
-	},
+	}
 	
-	applyKeys: function(keys, padButtons, gamepadIndex){
-		var keycodes = []
+	applyKeys(keys, padButtons, gamepadIndex){
+		let keycodes = []
 			, name, button, code
 			, i, index
 			, indexes = []
@@ -521,9 +525,9 @@ KeyControll.prototype = {
 			}
 			this.setKey(name, convertGamePadKey(index, button));
 		}
-	},
+	}
 	
-	initGamepad: function(gamepad){
+	initGamepad(gamepad){
 		//USB Gamepad (Vendor: 04b4 Product: 010a)
 		if(gamepad == null){
 			gamepadConnect();
@@ -532,7 +536,7 @@ KeyControll.prototype = {
 				return false;
 			}
 		}
-		var index = gamepad.index
+		let index = gamepad.index
 			, conv = convertGamePadKey
 		;
 //		console.log(gamepad);
@@ -547,9 +551,9 @@ KeyControll.prototype = {
 		this.setKey('space', conv(index, '0'));
 		this.setKey('debug', conv(index, '6'));
 		return true;
-	},
+	}
 
-	initDefaultKey: function(type)
+	initDefaultKey(type)
 	{
 		this.initCommon();
 		if(type == "left"){
@@ -570,9 +574,9 @@ KeyControll.prototype = {
 		this.setKey('select', 9);
 		this.setKey('space', 32);
 		this.setKey('debug', 16);
-	},
+	}
 
-	initCommonKey: function()
+	initCommonKey()
 	{
 		this.initCommon();
 
@@ -595,16 +599,15 @@ KeyControll.prototype = {
 		this.setKey('space', 32);
 		this.setKey('debug', 16);
 		
-	},
+	}
 
 }
 //TODO 右クリック判定確認
 /**
  * ポインティング(マウス・タッチ)コントロール
  */
-function PointingControll(){return;}
-PointingControll.prototype ={
-	init: function(screenScroll, baseScroll){
+class PointingControll{
+	init(screenScroll, baseScroll){
 		this.tapStartPos = {
 			common: {x: -1, y: -1},
 			left: {x: -1, y: -1},
@@ -645,9 +648,9 @@ PointingControll.prototype ={
 		this.initFlickables();
 		this.initTappables();
 		this.initMenuables();
-	},
+	}
 	
-	resizeRate: function(screenScroll){
+	resizeRate(screenScroll){
 		if(screenScroll == null){
 			return this.sizeRate;
 		}
@@ -656,13 +659,13 @@ PointingControll.prototype ={
 			h: screenScroll.canvas.height / this.baseScroll.canvas.height
 		};
 		return this.sizeRate;
-	},
+	}
 	
-	initTappables: function()
+	initTappables()
 	{
-		var self = this
+		let self = this
 			, tsfunc = function(e){
-				var pos = self.getClientPos(e);
+				let pos = self.getClientPos(e);
 				
 				switch(e.which){
 					case 1: self.button = 'left'; break;
@@ -683,7 +686,7 @@ PointingControll.prototype ={
 				return false;
 			}
 			, tefunc = function(e){
-				var pos = self.getClientPos(e);
+				let pos = self.getClientPos(e);
 				self.button = 'common';
 				switch(e.which){
 					case 1: self.button = 'left'; break;
@@ -708,23 +711,23 @@ PointingControll.prototype ={
 		scr.canvas.addEventListener('mouseup', tefunc, false);
 		scr.canvas.addEventListener('touchstart', tsfunc, false);
 		scr.canvas.addEventListener('touchend', tefunc, false);
-	},
+	}
 	
-	initMenuables: function()
+	initMenuables()
 	{
-		var self = this
+		let self = this
 			, scr = this.screenScroll
 		;
 		scr.canvas.addEventListener('contextmenu', function(e){
 			e.preventDefault();
 		}, false);
-	},
+	}
 	
-	initFlickables: function()
+	initFlickables()
 	{
-		var self = this
+		let self = this
 			, mvfunc =  function(e){
-				var pos = self.getClientPos(e);
+				let pos = self.getClientPos(e);
 				self.button = 'common';
 				switch(e.which){
 					case 1: self.button = 'left'; break;
@@ -746,35 +749,35 @@ PointingControll.prototype ={
 		
 		scr.canvas.addEventListener('mousemove', mvfunc, false);
 		scr.canvas.addEventListener('touchmove', mvfunc, false);
-	},
+	}
 	
-	getState: function(button)
+	getState(button)
 	{
 		button = button == null ? 'common' : button;
 		return this.state[button];
-	},
+	}
 	
-	getTrig: function(button)
+	getTrig(button)
 	{
 		button = button == null ? 'common' : button;
 		return this.trig[button];
-	},
+	}
 	
-	getMovePos: function(button)
+	getMovePos(button)
 	{
 		button = button == null ? 'common' : button;
 		return this.tapMovePos[button];
-	},
+	}
 	
-	getStartPos: function(button)
+	getStartPos(button)
 	{
 		button = button == null ? 'common' : button;
 		return this.tapStartPos[button];
-	},
+	}
 	
-	getClientPos: function(e)
+	getClientPos(e)
 	{
-		var me = e.changedTouches != null ? e.changedTouches[0] : e
+		let me = e.changedTouches != null ? e.changedTouches[0] : e
 			, view = this.baseScroll
 			, scr = this.screenScroll
 			, bounds = scr.canvas.getBoundingClientRect(), w = view.canvas.width, h = view.canvas.height
@@ -784,11 +787,11 @@ PointingControll.prototype ={
 		x = view.mirrorH ? (x + w) % w : x | 0;
 		y = view.mirrorV ? (y + h) % h: y | 0;
 		return {x: x, y: y};
-	},
+	}
 	
-	clearEventItem: function(items, name)
+	clearEventItem(items, name)
 	{
-		var rep = [], i;
+		let rep = [], i;
 		if(name == null){
 			return [];
 		}
@@ -801,9 +804,9 @@ PointingControll.prototype ={
 		items = [];
 		items = rep;
 		return items;
-	},
+	}
 	
-	makeTapEvent: function(rect, func, cancel, name, button){
+	makeTapEvent(rect, func, cancel, name, button){
 		return {
 			rect: rect
 			, func: func
@@ -812,7 +815,7 @@ PointingControll.prototype ={
 			, pos:{x:-1, y:-1}
 			, button: button
 		};
-	},
+	}
 	/**
 	 * 各種イベントを登録する
 	 * @param {Object} rect
@@ -821,49 +824,49 @@ PointingControll.prototype ={
 	 * @param {Object} name
 	 * @param {Object} button
 	 */
-	appendTappableItem: function(rect, func, cancel, name, button)
+	appendTappableItem(rect, func, cancel, name, button)
 	{
 		button = button == null ? 'left' : button;
-		var item = this.makeTapEvent(rect,func, cancel == null ? null : cancel, name == null ? this.tappableItems.lengh : name, button);
+		let item = this.makeTapEvent(rect,func, cancel == null ? null : cancel, name == null ? this.tappableItems.lengh : name, button);
 		this.clearTappableItem(name);
 		this.tappableItems.push(item);
 		return this.tappableItems.length;
-	},
+	}
 	
-	clearTappableItem: function(name){
+	clearTappableItem(name){
 		this.tappableItems = this.clearEventItem(this.tappableItems, name);
 		return this.tappableItems.length;
-	},
+	}
 	
-	appendFlickableItem: function(rect, func, cancel, name, button)
+	appendFlickableItem(rect, func, cancel, name, button)
 	{
 		button = button == null ? 'left' : button;
-		var item = this.makeTapEvent(rect,func, cancel == null ? null : cancel, name == null ? this.tappableItems.lengh : name, button);
+		let item = this.makeTapEvent(rect,func, cancel == null ? null : cancel, name == null ? this.tappableItems.lengh : name, button);
 		this.clearFlickableItem(name);
 		this.flickableItems.push(item);
 		return this.flickableItems.length;
-	},
+	}
 	
-	clearFlickableItem: function(name){
+	clearFlickableItem(name){
 		this.flickableItems = this.clearEventItem(this.flickableItems, name);
 		return this.flickableItems.length;
-	},
+	}
 	
-	setStartPos: function(x, y, button)
+	setStartPos(x, y, button)
 	{
 		this.tapStartPos[button].x = x;
 		this.tapStartPos[button].y = y;
-	},
+	}
 	
-	setMovePos: function(x, y, button)
+	setMovePos(x, y, button)
 	{
 		this.tapMovePos[button].x = x;
 		this.tapMovePos[button].y = y;
-	},
+	}
 	
-	tapStartEvent: function(x, y, e)
+	tapStartEvent(x, y, e)
 	{
-		var i, item, pos, items, b = this.button
+		let i, item, pos, items, b = this.button
 		;
 		this.setStartPos(x, y, b);
 		this.setMovePos(x, y, b);
@@ -882,11 +885,11 @@ PointingControll.prototype ={
 			}
 		}
 		
-	},
+	}
 	
-	tapEndEvent: function(x, y, e)
+	tapEndEvent(x, y, e)
 	{
-		var i, item
+		let i, item
 			, base = this.baseScroll.canvas
 			, gx = x + base.x, gy = y + base.y
 			, b = this.button
@@ -908,11 +911,11 @@ PointingControll.prototype ={
 		}
 		this.setStartPos(-1, -1, b);
 		this.setMovePos(x, y, b);
-	},
+	}
 	
-	tapMoveEvent: function(x, y, e)
+	tapMoveEvent(x, y, e)
 	{
-		var i, item, isContain
+		let i, item, isContain
 			, base = this.baseScroll.canvas
 			, gx = x + base.x, gy = y + base.y
 			, b = this.button
@@ -942,5 +945,6 @@ PointingControll.prototype ={
 			}
 		}
 		this.setMovePos(x, y, b);
-	},
+	}
 };
+export {KeyControll, PointingControll, clickLock, debugLock, resetAllControlls, keyStateCheck};

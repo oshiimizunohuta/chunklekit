@@ -274,7 +274,7 @@ export function makeRect(x, y, w, h)
  * @returns {Ease}
  */
 export class Ease{
-	construcrot(){
+	constructor(){
 		this.count;
 		this.range;
 		this.start = 0;
@@ -291,7 +291,7 @@ export class Ease{
 	}
 	
 	linear(e_in, e_out){
-		var self = this;
+		var self = this, func;
 //		this.division = t * 0.01;
 		func = function(){
 			return self.range * self.count / self.duration;
@@ -609,6 +609,11 @@ makePosition = function(x, y, z){
 	if(typeof src != 'object'){
 		return src;
 	}
+	
+	if(src.constructor != null){
+		return Object.assign(Object.create(src), src);
+	}
+		
 	dst = src instanceof Array ? [] : {};
 	for(k in src) {
 		dst[k] = typeof src[k] == 'object' && (k != 'prototype' || k != '__proto__') ? clone(src[k]) : src[k];
