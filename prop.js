@@ -44,20 +44,20 @@ DISPLAY_SCALERATE = 2//キャンバス基本サイズ拡大倍数
  * 拡大縮小済み画面サイズ
  * @returns {___anonymous22047_22111}
  */
-, getDisplaySize = function()
-{
-	return {w: (VIEWMULTI * DISPLAY_WIDTH), h: (VIEWMULTI * DISPLAY_HEIGHT)};
-//	return {w: (DISPLAY_WIDTH), h: (DISPLAY_HEIGHT)};
-}
+//, getDisplaySize = function()
+//{
+//	return {w: (VIEWMULTI * DISPLAY_WIDTH), h: (VIEWMULTI * DISPLAY_HEIGHT)};
+////	return {w: (DISPLAY_WIDTH), h: (DISPLAY_HEIGHT)};
+//}
 
 /**
  * 拡大縮小なしスクロールサイズ	
  * @returns 
  */
-, getScrollSize = function()
-{
-	return {w: (DISPLAY_WIDTH), h: (DISPLAY_HEIGHT)};
-}
+//, getScrollSize = function()
+//{
+//	return {w: (DISPLAY_WIDTH), h: (DISPLAY_HEIGHT)};
+//}
 
 
 //TODO パレット画像から色配列を取得する仕組みを作る

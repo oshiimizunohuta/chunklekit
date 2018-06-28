@@ -45,14 +45,15 @@ function screenViewScroll(){
  * 拡大縮小済み画面サイズ
  * @returns {___anonymous22047_22111}
  */
-function getDisplaySize()
+export function getDisplaySize()
 {
 //	let s = screenViewScroll();
 //	return s.getRect();
 	let r = CanvasScroll.scaleRate()
 		, c = CanvasScroll
+		, size = getScrollSize()
 	;
-	return {w: r * c.DISPLAY_WIDTH, h: r * c.DISPLAY_HEIGHT};
+	return {w: r * size.w, h: r * size.h};
 }
 
 function getScrollSize()
@@ -937,7 +938,7 @@ function SSImgRemove(obj)
  */
 export function screenView(to, from, multi)
 {
-	from.nearestTo(to, multi == null ? props.VIEWMULTI : multi);
+	from.nearestTo(to, multi == null ? CanvasScroll.scaleRate() : multi);
 }
 
 export function scrollByName(name)
@@ -3011,12 +3012,13 @@ makeCanvasPalette = function(color, name){
 , screenScale = function(scaleRate){
 	if(scaleRate != null){
 		var s;
-		CanvasScroll.SCALE_RATE = scaleRate;
+//		CanvasScroll.SCALE_RATE = scaleRate;
+		CanvasScroll.scaleRate(scaleRate);
 		s = getDisplaySize();
 		scrollByName(props.UI_SCREEN_ID).resizeCanvas(s.w | 0, s.h | 0);
 		scrollByName(props.UI_SCREEN_ID).ctx.imageSmoothingEnabled = false;//アンチ無効
 	}
-	return CanvasScroll.SCALE_RATE;
+	return CanvasScroll.scaleRate();
 }
 ;
 /**

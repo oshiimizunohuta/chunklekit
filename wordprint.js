@@ -936,7 +936,7 @@ export default class WordPrint{
 		for(i = 0; i < len; i++){
 //			s = inSP(str.substr(i, 1));
 			s = str.substr(i, 1);
-			s = s != null ? sp_alph[s] : s;
+			s = sp_alph[s] != null ? sp_alph[s] : s;
 			s = s !== false ? s : this.NOTFOUND_WORD; //TODO 不要???
 			if(all[s] == null){
 				// make colored sprite v and h
