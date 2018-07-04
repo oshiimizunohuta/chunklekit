@@ -720,6 +720,9 @@ export class CKAPIServer{
 		this.serverUrl = apiUrl;
 		this.filterFunc = function(j){return j;};
 		this.error = null;
+		this.errorFunc = function(e){
+			console.error(e);
+		};
 	}
 	
 	post(api, params, func, errorFunc){
@@ -760,17 +763,17 @@ export class CKAPIServer{
 		if(errorFunc != null){
 			x.ontimeout = function(e){
 				self.error = e.data != null ? e.data.error : null;
-				errorFunc(e, error_code);
+				errorFunc(e);
 				return false;
 			};
 			x.onerror = function(e){
 				self.error = e.data != null ? e.data.error : null;
-				errorFunc(e, error_code);
+				errorFunc(e);
 				return false;
 			};
 			x.onabort = function(e){
 				self.error = e.data != null ? e.data.error : null;
-				errorFunc(e, error_code);
+				errorFunc(e);
 				return false;
 			};
 		}

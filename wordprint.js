@@ -9,56 +9,73 @@ import {makeSpriteQuery, makeSpriteSwapColor, cellhto, makeCanvasScroll, getScro
 import * as props from './prop.js'; 
 export default class WordPrint{
 	init(sizetype){
-		this.moji_hira =  "あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやっゆ⼀よらりるれろわ、を。んがぎぐげござじずぜぞだぢづでどばびぶべぼぱぴぷぺぽぁぃぅぇぉゃ！ゅ？ょ・『』◯☓";
-		this.moji_kata = "アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤッユ～ヨラリルレロワ☆ヲ♥ンガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポァィゥェォャ（ュ）ョ＝＋－＊／";
-		this.moji_alph = "ABCDEFGHIJKLMNOPQRSTUVWXYZ,.:;abcdefghijklmnopqrstuvwxyz ^&©";
+		this.moji_hira = "あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやっゆ⼀よらりるれろわ、を。んぁぃぅぇぉゃ゛ゅ゜ょ";
+		this.moji_hira_daku = "がぎぐげござじずぜぞだぢづでどばびぶべぼ";
+		this.moji_hira_han = "ぱぴぷぺぽ";
+//		this.moji_hira_sm = "ぁぃぅぇぉゃ゛ゅ゜ょ";
+		//・『』◯☓
+		this.moji_kata = "アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤッユ～ヨラリルレロワ☆ヲ♥ンァィゥェォャ（ュ）ョ";
+		this.moji_kata_daku = "ガギグゲゴザジズゼゾダヂヅデドバビブベボ";
+		this.moji_kata_han = "パピプペポ";
+//		this.moji_kata_sm = "ァィゥェォャ（ュ）ョ";
+		//＝＋－＊／
+		this.moji_alph = "ABCDEFGHIJKLMNOPQRSTUVWXYZ,.:;abcdefghijklmnopqrstuvwxyz" + "'" + '"[]';
 		this.moji_suji = "0123456789";
+		this.moji_kigo = '!?#%&=+-*/◯☓「」・_^@©＄＄＄＄＄￥￥￥￥￥＄＄＄＄＄￥￥￥￥￥＄＄＄＄＄￥￥￥￥￥＄＄＄＄＄￥￥￥￥ ';
 		
 		//文字コード群から離れているモノ、間違えやすいモノ
-		this.sp_alph = {
-			',': ',', '.': '.', ':': ':', ';': ';' , ' ': ' ', '^': '^', '&': '&', '©': '©'
-			,'，': ',', '．': '.', '：': ':', '；': ';' , '　': ' ', '＾': '^', '＆': '&', '@': '©', '＠': '©', '™': '©'
-		};
-		this.sp_kata = {
-			'＝':'＝', '＋': '＋', '－': '－', '＊': '＊', '／': '／'
-			,'=':'＝', '+': '＋', '-': '－', '*': '＊', '/': '／'
-			, '_': '－', '～': '～', '(':  '（', ')': '）'
-			, '♥':'♥', '♡':'♥', '❤':'♡' 
-			, '☆':'☆', '★':'☆'
-		};
-		this.sp_hira = {
-			'、': '、', '。': '。'  
-			, 'ー': '⼀', '？': '？', '！': '！', '・':'・', '『': '『', '』': '』', '◯': '◯', '☓': '☓'
-			,'･':'・', '?': '？', '!': '！',  '「': '『', '」': '』', '○': '◯', '×': '☓'
-		};
-		
 		this.swapWords = {
-			',': ',', '.': '.', ':': ':', ';': ';' , ' ': ' ', '^': '^', '&': '&', '©': '©'
-			,'，': ',', '．': '.', '：': ':', '；': ';' , '　': ' ', '＾': '^', '＆': '&', '@': '©', '＠': '©', '™': '©'
-			,
-			'＝':'＝', '＋': '＋', '－': '－', '＊': '＊', '／': '／'
-			,'=':'＝', '+': '＋', '-': '－', '*': '＊', '/': '／'
-			, '_': '－', '～': '～', '(':  '（', ')': '）'
+			'　': ' ', '，': ',', '．': '.', '：': ':', '；': ';' , '　': ' ', '＾': '^', '＆': '&', '™': '©', '＿': '_'
+			,'=':'=', '+': '+', '－': '-', '＊': '*', '／': '/'
+			, '~': '～', '(':  '（', ')': '）'
 			, '♥':'♥', '♡':'♥', '❤':'♡' 
 			, '☆':'☆', '★':'☆'
 			,
 			'、': '、', '。': '。'  
-			, 'ー': '⼀', '？': '？', '！': '！', '・':'・', '『': '『', '』': '』', '◯': '◯', '☓': '☓'
-			,'･':'・', '?': '？', '!': '！',  '「': '『', '」': '』', '○': '◯', '×': '☓'
+			, 'ー': '⼀', '？': '?', '！': '!', '・':'・', '『': '「', '』': '」', '◯': '◯', '☓': '☓'
+			,'･':'・', '○': '◯', '×': '☓'
 		};
+//		this.swapWords = {
+//			',': ',', '.': '.', ':': ':', ';': ';' , ' ': ' ', '^': '^', '&': '&', '©': '©'
+//			,'，': ',', '．': '.', '：': ':', '；': ';' , '　': ' ', '＾': '^', '＆': '&', '@': '©', '＠': '©', '™': '©'
+//			,
+//			'＝':'＝', '＋': '＋', '－': '－', '＊': '＊', '／': '／'
+//			,'=':'＝', '+': '＋', '-': '－', '*': '＊', '/': '／'
+//			, '_': '－', '～': '～', '(':  '（', ')': '）'
+//			, '♥':'♥', '♡':'♥', '❤':'♡' 
+//			, '☆':'☆', '★':'☆'
+//			,
+//			'、': '、', '。': '。'  
+//			, 'ー': '⼀', '？': '？', '！': '！', '・':'・', '『': '『', '』': '』', '◯': '◯', '☓': '☓'
+//			,'･':'・', '?': '？', '!': '！',  '「': '『', '」': '』', '○': '◯', '×': '☓'
+//		};
 		
-		this.soundmarks = {
-			50: 5, 51: 6, 52: 7, 53: 8, 54: 9, 55: 10, 56: 11, 57: 12, 58: 13, 59: 14
-			, 60: 15, 61: 16, 62: 17, 63: 18, 64: 19, 65: 25, 66: 26, 67: 27, 68: 28, 69: 29
-			, 70: 25, 71: 26, 72: 27, 73: 28, 74: 29
-			, 140: 95, 141: 96, 142: 97, 143: 98, 144: 99, 145: 100, 146: 101, 147: 102, 148: 103, 149: 104
-			, 150: 105, 151: 106, 152: 107, 153: 108, 154: 109, 155: 115, 156: 116, 157: 117, 158: 118, 159: 119
-			, 160: 115, 161: 116, 162: 117, 163: 118, 164: 119
-		};
+		this.soundmarkQueries = [
+			'56;5', '56;6', '56;7', '56;8', '56;9', 
+			'56;10', '56;11', '56;12', '56;13', '56;14', 
+			'56;15', '56;16', '56;17', '56;18', '56;19',
+			'56;25', '56;26', '56;27', '56;28', '56;29',
+			'58;25', '58;26', '58;27', '58;28', '58;29', 
+			'56;65', '56;66', '56;67', '56;68', '56;69', 
+			'56;70', '56;71', '56;72', '56;73', '56;74', 
+			'56;75', '56;76', '56;77', '56;78', '56;79',
+			'56;85', '56;86', '56;87', '56;88', '56;89',
+			'58;85', '58;86', '58;87', '58;88', '58;89', 
+		];
+//		this.soundmarks = {
+//			50: 5, 51: 6, 52: 7, 53: 8, 54: 9, 55: 10, 56: 11, 57: 12, 58: 13, 59: 14
+//			, 60: 15, 61: 16, 62: 17, 63: 18, 64: 19, 65: 25, 66: 26, 67: 27, 68: 28, 69: 29
+//			, 70: 25, 71: 26, 72: 27, 73: 28, 74: 29
+//			, 140: 95, 141: 96, 142: 97, 143: 98, 144: 99, 145: 100, 146: 101, 147: 102, 148: 103, 149: 104
+//			, 150: 105, 151: 106, 152: 107, 153: 108, 154: 109, 155: 115, 156: 116, 157: 117, 158: 118, 159: 119
+//			, 160: 115, 161: 116, 162: 117, 163: 118, 164: 119
+//		};
 		
-		this.allWordString = this.moji_hira + this.moji_kata + this.moji_alph + this.moji_suji;
+		this.spriteWordString = this.moji_hira + this.moji_kata + this.moji_alph + this.moji_suji + this.moji_kigo;
+		this.allWordString = this.moji_hira + this.moji_kata + this.moji_alph + this.moji_suji + this.moji_kigo + this.moji_hire_daku + this.moji_hira_han + this.moji_kata_daku + this.moji_kata_han;
 		
-		this.sprtiteID = this.initSpriteID(this.allWordString);
+		this.sprtiteID = this.initSpriteID(this.spriteWordString);
+		this.soundMarkSpriteID = this.initSpriteID(this.moji_hira_daku + this.moji_hira_han + this.moji_kata_daku + this.moji_kata_han);
 		
 		this.soundmarkAlign = 'horizon'; // vertical:horizon
 		this.soundmarkPos = []; // {line:line, pos:pos}
@@ -80,8 +97,10 @@ export default class WordPrint{
 		this.rows = 0; //文字表示行数
 		this.rowSpace = 0; //改行幅
 		
-		this.NOTFOUND_CODE = 83; //'？'
-		this.SPACE_CODE = 236; //'　'
+		this.NOTFOUND_CODE = 191; //'？'
+		this.SPACE_CODE = 249; //'　'
+//		this.NOTFOUND_CODE = 83; //'？'
+//		this.SPACE_CODE = 236; //'　'
 		this.HYPHEN_CODE = 177; //'-'
 		this.ESCAPE_CODE = 254; //$
 		this.imageNames = {
@@ -193,12 +212,6 @@ export default class WordPrint{
 		this.coloredCanvasSprite = {};
 		this.scroll;
 		
-		//TODO 未使用へ移行
-//		this.color;
-//		this.bgcolor;
-//		this.DEFAULT_COLOR = props.COLOR_WHITE;
-//		this.DEFAULT_BGCOLOR = props.COLOR_TRANSPARENT;
-//		this.setColor(this.DEFAULT_COLOR, this.DEFAULT_BGCOLOR);
 		
 		this.wordIds;// = new Array();
 		this.readMode = false; //外部から弄らない
@@ -296,7 +309,6 @@ export default class WordPrint{
 	allocSprites(){
 		var spr = {vertical: {}, horizon: {}}, i, len
 			, w = this.allWordString
-//			, w = this.moji_hira + this.moji_kata + this.moji_alph + this.moji_suji
 			, len = w.length
 			, str 
 		;
@@ -311,7 +323,6 @@ export default class WordPrint{
 	initSpriteID(wordStr){
 		var i, len
 			, w = wordStr
-//			, w = this.moji_hira + this.moji_kata + this.moji_alph + this.moji_suji
 			, len = w.length, ids = {}
 		;
 		for(i = 0; i < len; i++){
@@ -327,8 +338,9 @@ export default class WordPrint{
 	initSprite(s){
 		var all = this.allWordSprites
 			, imageName = this.getImageName()
-			, q, space = this.soundmarkEnable ? this.SPACE_CODE + ';' : ''
-			, smark = this.soundmarkEnable ? this.soundmarks : {}
+			, qh, qv, space = this.soundmarkEnable ? this.SPACE_CODE + ';' : ''
+//			, smark = this.soundmarkEnable ? this.soundmarks : {}
+			, smarkStr =  this.soundmarkEnable ? this.soundmarkQueries : []
 			, spr, id, swaps = this.getSwapColor()
 		;
 		
@@ -337,23 +349,31 @@ export default class WordPrint{
 			all[imageName] = this.allocSprites();
 		}
 		
-		if(this.sprtiteID[s] == null){
+		if(this.sprtiteID[s] != null){
+			id = this.sprtiteID[s];
+			qv = space + id;
+			qh = id + '';
+		}else if(this.soundMarkSpriteID[s] != null){
+			id = this.soundMarkSpriteID[s];
+			qv = smarkStr[id];
+			qh = qv.split(';');
+			qh = qh[1] + ' ' + qh[0] + '|r2';
+		}else{
 			id = this.NOTFOUND_CODE;
 			s = this.NOTFOUND_WORD;
-		}else{
-			id = this.sprtiteID[s];
+			qv = space + id;
+			qh = id + '';
 		}
 		
-		q = id in smark == false ? space + id : id + ';' + smark[id];
-		spr = makeSpriteQuery(this.sourceCanvasName, q);
+//		q = id in smark == false ? space + id : id + ';' + smark[id];
+		spr = makeSpriteQuery(this.sourceCanvasName, qv);
 		spr = makeSpriteSwapColor(spr, swaps.to, swaps.from);
-//		spr = makeSpriteSwapColor(spr, [this.getColor(), this.getBGColor()], [this.DEFAULT_COLOR, this.DEFAULT_BGCOLOR]);
 		all[imageName].vertical[s] = spr;
 		
-		q = id in smark == false ? id + '': smark[id] + ' ' + id + '|r2';
-		spr = makeSpriteQuery(this.sourceCanvasName, q);
+//		qh = id in smark == false ? id + '': smark[id] + ' ' + id + '|r2';
+		spr = makeSpriteQuery(this.sourceCanvasName, qh);
+			console.log(qh)
 		spr = makeSpriteSwapColor(spr, swaps.to, swaps.from);
-//		spr = makeSpriteSwapColor(spr, [this.getColor(), this.getBGColor()], [this.DEFAULT_COLOR, this.DEFAULT_BGCOLOR]);
 		all[imageName].horizon[s] = spr;
 		
 		return;
@@ -367,7 +387,6 @@ export default class WordPrint{
 	{
 		var all = this.allWordSprites
 			, w = this.allWordString
-//			, w = this.moji_hira + this.moji_kata + this.moji_alph + this.moji_suji
 			, spr = {}, i, len = w.length
 			, imageName = this.getImageName()
 			, q, space = this.soundmarkEnable ? this.SPACE_CODE + ';' : ''
@@ -501,24 +520,6 @@ export default class WordPrint{
 	{
 		return this.scroll;
 	}
-	
-	//TODO 未使用
-	getSpriteHandle(str)
-	{
-		this.makeStrId(str);
-		var SpriteHandles = makeSpriteHandle(this.spriteArray, this.scrolls);
-		return SpriteHandles;
-	}
-	
-	//TODO 未使用
-	getSpriteArray(str, color, bgColor)
-	{
-		this.setColor(color == null ? this.color : color, bgColor == null ? this.bgcolor : bgColor);
-		this.swapColor();
-		this.parse(str);
-		return this.spriteArray;
-	}
-	
 	isHorizon()
 	{
 		return (this.chipSize < 12 && this.soundmarkAlign == 'horizon');
@@ -529,153 +530,6 @@ export default class WordPrint{
 		return (this.chipSize < 12 && this.soundmarkAlign == 'vertical');
 	}
 	
-	//TODO 未使用
-	SearchWordNum(w){
-		var match;
-		//ひらがな
-		match = this.moji_hira.indexOf(w);
-		if(match > -1){return match;}
-		//カタカナ
-		match = this.moji_kata.indexOf(w);
-		if(match > -1){return match + 90;}
-		//アルファベット
-		match = this.moji_alph.indexOf(w);
-		if(match > -1){return match + 180;}
-		//数字
-		match = this.moji_suji.indexOf(w);
-		if(match > -1){return match + 240;}
-
-		return match;
-	}
-	
-	//TODO 未使用
-	indexOf(i){
-		//ひらがな
-		if(i < 90){return this.moji_hira.substr(i, 1);}
-		//カタカナ
-		if(i < 180){return this.moji_kata.substr(i - 90, 1);}
-		//アルファベット
-		if(i < 240){return this.moji_alph.substr(i - 180, 1);}
-		//数字
-		if(i < 250){return this.moji_suji.substr(i - 240, 1);}
-
-		// return this.NOTFOUND_CODE;
-		return -1;
-	}
-
-	//TODO 未使用
-	searchNum(w){
-		var match = -1, ofs = 0, code = w.charCodeAt(0);
-
-		if(w in this.sp_alph){
-			match = this.moji_alph.indexOf(this.sp_alph[w]);
-			ofs = 180;
-		}else if(w in this.sp_hira){
-			match = this.moji_hira.indexOf(this.sp_hira[w]);
-			ofs = 0;
-		}else if(w in this.sp_kata){
-			match = this.moji_kata.indexOf(this.sp_kata[w]);
-			ofs = 90;
-		}
-		else if(code < 65){
-			match = this.moji_suji.indexOf(w);
-			ofs = 240;
-		}else if(code < 8000){
-			//アルファベット
-			match = this.moji_alph.indexOf(w);
-			ofs = 180;
-		// }else if(code < 12450 && code > 9829){
-		}else if(code >= 12353 && code <= 12438){
-			//ひらがな
-			match = this.moji_hira.indexOf(w);
-			ofs = 0;
-		// }else{
-		}else if(code >= 12448 && code <= 12538){
-			//カタカナ
-			match = this.moji_kata.indexOf(w);
-			ofs = 90;
-		}
-// console.log(match);
-		if(w == this.escapeWord){
-			return this.ESCAPE_CODE;
-		}
-		
-		return match < 0 ? this.NOTFOUND_CODE : match + ofs;
-	}
-	
-	//TODO 未使用
-	toStrId(str)
-	{
-		var idstr, baseword, TheWord, baseWords = []
-		;
-		for(i = 0; i < MS.length; i++){
-			baseword = this.searchNum(MS.substr(i, 1));
-			baseWords.push(baseword);
-		}
-		return baseWords;
-	}
-	
-	//TODO 未使用
-	makeStrId(MS)
-	{
-		var i, j, theWord, baseword = 0, subword = this.SPACE_CODE
-			, baseWords = []//行の文字
-			, subWords = []//上段行の文字
-			, isHorizon =  this.isHorizon(), isVertical = this.isVertical(), isSoundmark
-			, str, len , w, ccnt, nlcnt
-			, isDirectNum = typeof MS != 'string' && typeof MS != 'number'
-			, spritStr = !isDirectNum ? MS.split(this.escapeWord + this.newLineWord) : (MS[0].length != null ? MS : [MS])
-			, linelen = spritStr.length
-			;
-		for(j = 0; j < linelen; j++){
-			str = spritStr[j];
-			len = str.length;
-			for(i = 0; i < len; i++){
-				baseword = isDirectNum ? str[i] : this.searchNum(str.substr(i, 1));
-
-				isSoundmark = baseword in this.soundmarks;//濁点半濁点
-				if(isSoundmark && (isHorizon || isVertical)){
-					subword = baseword;
-					baseword = this.soundmarks[baseword];
-				}else{
-					subword = this.SPACE_CODE;
-					isSoundmark = false;
-				}
-				
-				if(baseword == -1){
-					baseword = 179;
-					subword = this.SPACE_CODE;
-				}else if(baseword == this.ESCAPE_CODE){//特殊
-					baseWords.push(str[i + 1]);
-					i += 1;
-					continue;
-				}
-				
-				baseWords.push(baseword);
-				if(isSoundmark){
-					if(isHorizon){
-						baseWords.push(subword);
-					}
-					this.soundmarkPos.push({pos: baseWords.length - 1, line:this.wordIds.length, left:baseWords.length - 1, word: subword});
-				}
-				
-				if((baseWords.length >= this.cols) && (this.cols > 0)){
-					baseWords.splice(this.cols, 0, this.newLineWord);
-					baseWords = this.newLineA(baseWords, this.cols);
-					continue;
-				}
-				
-			}
-			baseWords = this.newLineA(baseWords);
-			// baseWords = [];
-		}
-
-		if(baseWords.length > 0){
-			baseWords = this.newLine(baseWords);
-		}
-
-		return baseWords;
-	}
 	
 	//濁音、半濁音の後挿入
 	patchSoundmarks(){
@@ -741,12 +595,6 @@ export default class WordPrint{
 		this.soundmarkAlign = align;
 	}
 
-	//TODO 未使用
-	setStr(str)
-	{
-		this.str = str;
-		this.parse(str);
-	}
 	
 	setDrawOrder(o){
 		this.drawOrder = o;
@@ -837,6 +685,7 @@ export default class WordPrint{
 		return sprites;
 	}
 	
+	//TODO 未使用？
 	spriteMarkRot(sArray, marks)
 	{
 		var len = sArray.length, i, sumlen = 0, alen;
@@ -852,32 +701,6 @@ export default class WordPrint{
 			sumlen += alen;
 		}
 		return sArray;
-	}
-
-	//TODO 未使用
-	parse(MS)// char length, message
-	{
-		var ar, spr, isHorizon = this.isHorizon(), subLine, baseWords;
-		this.wordIds = [];//行
-		this.soundmarkPos = [];
-		
-		
-		if(typeof MS == "number"){
-			MS += "";
-		}
-		baseWords = this.makeStrId(MS);
-		this.patchSoundmarks();
-
-		this.spriteArray =[];
-		
-		this.spriteWordIds(this.wordIds);
-			
-		if(isHorizon){
-			this.soundmarkPos.forEach(function(mark, i){
-				this.spriteArray[mark.line][mark.pos].rot(2);
-				// this.spriteArray = this.spriteMarkRot(this.spriteArray, mark);
-			}, this);
-		}
 	}
 	
 	lineHeight(){
