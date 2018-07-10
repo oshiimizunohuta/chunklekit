@@ -33,7 +33,9 @@ export default class WordPrint{
 			,
 			'、': '、', '。': '。'  
 			, 'ー': '⼀', '？': '?', '！': '!', '・':'・', '『': '「', '』': '」', '◯': '◯', '☓': '☓'
-			,'･':'・', '○': '◯', '×': '☓'
+			,'･':'・', '·': '・', '○': '◯', '×': '☓'
+			
+			, '’': "'", '"': '"', '”': '"', '“': '"'
 		};
 //		this.swapWords = {
 //			',': ',', '.': '.', ':': ':', ';': ';' , ' ': ' ', '^': '^', '&': '&', '©': '©'
@@ -76,7 +78,6 @@ export default class WordPrint{
 		
 		this.sprtiteID = this.initSpriteID(this.spriteWordString);
 		this.soundMarkSpriteID = this.initSpriteID(this.moji_hira_daku + this.moji_hira_han + this.moji_kata_daku + this.moji_kata_han);
-		
 		this.soundmarkAlign = 'horizon'; // vertical:horizon
 		this.soundmarkPos = []; // {line:line, pos:pos}
 		this.soundmarkEnable = true;
@@ -372,7 +373,6 @@ export default class WordPrint{
 		
 //		qh = id in smark == false ? id + '': smark[id] + ' ' + id + '|r2';
 		spr = makeSpriteQuery(this.sourceCanvasName, qh);
-			console.log(qh)
 		spr = makeSpriteSwapColor(spr, swaps.to, swaps.from);
 		all[imageName].horizon[s] = spr;
 		
