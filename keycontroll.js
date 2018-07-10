@@ -162,6 +162,10 @@ function applyGamepadKeys(state){
 
 }
 
+function getGamepadPrevKeyState(){
+	return CKGAMEPADSPREVKEYSTATE;
+}
+
 function convertGamePadKey(index, button){
 	return index + GAMEPAD_DELIMITER + button;
 }
@@ -947,4 +951,4 @@ class PointingControll{
 		this.setMovePos(x, y, b);
 	}
 };
-export {KeyControll, PointingControll, clickLock, debugLock, resetAllControlls, keyStateCheck};
+export {KeyControll, PointingControll, clickLock, debugLock, resetAllControlls, keyStateCheck, getGamepadPrevKeyState};
