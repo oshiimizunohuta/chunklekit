@@ -632,13 +632,17 @@ class CanvasScroll{
 		if(rect == null){
 			rect = {x: 0, y: 0, w: (0 | this.canvas.width), h: (0 | this.canvas.height)};
 		}
+		this.contextClear(rect.x, rect.y, rect.w, rect.h, color);
+	}
+	
+	contextClear(x, y, w, h, color){
 		if(color != null){
-			//this.canvas.style.backgroundColor = color;
 			this.ctx.fillStyle = makeRGB(color);
-			this.ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
+			this.ctx.fillRect(x, y, w, h);
 		}else{
-			this.ctx.clearRect(rect.x, rect.y, rect.w, rect.h);
+			this.ctx.clearRect(x, y, w, h);
 		}
+		
 	}
 	
 	debugRect(rect, color)
@@ -967,14 +971,20 @@ export function getScrolls()
 
 export function drawCanvasStacks(max)
 {
-	var cnt = 0, k, scr = canvasScrollBundle == null ? layerScroll : canvasScrollBundle, complete = true;
-	max = max == null ? props.SCROLL_MAX_SPRITES_DRAW * canvasScrollBundle.length : max;
+	let cnt = 0, k, scr = canvasScrollBundle == null ? layerScroll : canvasScrollBundle, complete = true
+		, scroll
+	;
+	max = max == null ? props.SCROLL_MAX_SPRITES_DRAW * canvasScrollBundle.length : max
+	;
 	for(k in scr){
-		if(scr[k].isVolatile()){
-			scr[k].clear(scr[k].defaultColor);
-			scr[k].drawnInfoHistory = {};
+		scroll = scr[k];
+		if(scroll.isVolatile()){
+//			scr[k].clear(scr[k].defaultColor);
+			//優先で矩形削除
+			scroll.contextClear(0, 0, scroll.canvas.width, scroll.canvas.height, scroll.defaultColor);
+			scroll.drawnInfoHistory = {};
 		}
-		complete &= scr[k].drawDrawInfoStack();
+		complete &= scroll.drawDrawInfoStack();
 		if(max <= cnt++){
 			break;
 		}
