@@ -886,3 +886,17 @@ export function checkAPIReceive(data){
 	}
 	return true;
 }
+
+export function getQueries(){
+	let q = window.location.search
+		, gets = {}
+	;
+	if(q == ''){
+		return gets;
+	}
+	q.slice(1).split('&').foreach(function(a){
+		let s = a.split('=');
+		gets[s[0]] = s[1];
+	});
+	return gets;
+}
