@@ -848,6 +848,15 @@ class CanvasScroll{
 			return CanvasScroll.SCALSE_RATE;
 		}
 	}
+	
+	getCenter(target){
+		return (this.getSize().w - target) / 2;
+	}
+	
+	getMiddle(target){
+		return (this.getSize().h - target) / 2;
+	}
+	
 	static displaySize(){
 		
 	}
