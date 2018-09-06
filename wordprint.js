@@ -37,20 +37,6 @@ export default class WordPrint{
 			
 			, '’': "'", '"': '"', '”': '"', '“': '"'
 		};
-//		this.swapWords = {
-//			',': ',', '.': '.', ':': ':', ';': ';' , ' ': ' ', '^': '^', '&': '&', '©': '©'
-//			,'，': ',', '．': '.', '：': ':', '；': ';' , '　': ' ', '＾': '^', '＆': '&', '@': '©', '＠': '©', '™': '©'
-//			,
-//			'＝':'＝', '＋': '＋', '－': '－', '＊': '＊', '／': '／'
-//			,'=':'＝', '+': '＋', '-': '－', '*': '＊', '/': '／'
-//			, '_': '－', '～': '～', '(':  '（', ')': '）'
-//			, '♥':'♥', '♡':'♥', '❤':'♡' 
-//			, '☆':'☆', '★':'☆'
-//			,
-//			'、': '、', '。': '。'  
-//			, 'ー': '⼀', '？': '？', '！': '！', '・':'・', '『': '『', '』': '』', '◯': '◯', '☓': '☓'
-//			,'･':'・', '?': '？', '!': '！',  '「': '『', '」': '』', '○': '◯', '×': '☓'
-//		};
 		
 		this.soundmarkQueries = [
 			'56;5', '56;6', '56;7', '56;8', '56;9', 
@@ -64,14 +50,6 @@ export default class WordPrint{
 			'56;85', '56;86', '56;87', '56;88', '56;89',
 			'58;85', '58;86', '58;87', '58;88', '58;89', 
 		];
-//		this.soundmarks = {
-//			50: 5, 51: 6, 52: 7, 53: 8, 54: 9, 55: 10, 56: 11, 57: 12, 58: 13, 59: 14
-//			, 60: 15, 61: 16, 62: 17, 63: 18, 64: 19, 65: 25, 66: 26, 67: 27, 68: 28, 69: 29
-//			, 70: 25, 71: 26, 72: 27, 73: 28, 74: 29
-//			, 140: 95, 141: 96, 142: 97, 143: 98, 144: 99, 145: 100, 146: 101, 147: 102, 148: 103, 149: 104
-//			, 150: 105, 151: 106, 152: 107, 153: 108, 154: 109, 155: 115, 156: 116, 157: 117, 158: 118, 159: 119
-//			, 160: 115, 161: 116, 162: 117, 163: 118, 164: 119
-//		};
 		
 		this.spriteWordString = this.moji_hira + this.moji_kata + this.moji_alph + this.moji_suji + this.moji_kigo;
 		this.allWordString = this.moji_hira + this.moji_kata + this.moji_alph + this.moji_suji + this.moji_kigo + this.moji_hire_daku + this.moji_hira_han + this.moji_kata_daku + this.moji_kata_han;
@@ -190,22 +168,6 @@ export default class WordPrint{
 		this.cols = 0; //自動改行までの文字数
 		this.rows = 0; //文字表示行数
 		this.rowSpace = 0; //改行幅
-		
-//		this.NOTFOUND_CODE = 83; //'？'
-//		this.SPACE_CODE = 236; //'　'
-//		this.HYPHEN_CODE = 177; //'-'
-//		this.ESCAPE_CODE = 254; //$
-//		this.imageNames = {
-//			'8px': WORDPRINT_FONT8PX
-//			, '12px': WORDPRINT_FONT12PX
-//			, '4v6px': WORDPRINT_FONT4V6PX
-//		};
-		
-//		this.chipSize = 8;
-//		this.vChipSize = 8;
-//		this.fontSize = '8px';
-//		sizetype = sizetype != null ? sizetype : '8px';
-//		this.sourceCanvasName = this.imageNames[sizetype];
 		
 		
 		this.allWordSprites = {};
@@ -505,12 +467,6 @@ export default class WordPrint{
 			this.allWordSprites[imageName] = this.allocSprites();
 			this.initSprite(this.NOTFOUND_WORD);
 //
-//			console.warn('notFound ColorQuery: ' + imageName);
-//			return null;
-//		}
-//		if(this.allWordSprites[imageName][align] == null){
-//			console.warn('notFound align: ' + align);
-//			return null;
 		}
 		
 		return this.allWordSprites[imageName][align];
@@ -710,7 +666,7 @@ export default class WordPrint{
 	textScale(str)
 	{
 		var i, len, s, sprite, offset
-			, isHorizon =  this.isHorizon(), isVertical = this.isVertical()
+			, isVertical = this.isVertical()
 			, sprites = []
 			, all = this.getWordSprites()
 			, posx = 0
@@ -722,24 +678,12 @@ export default class WordPrint{
 			, enableMaxRow = this.rows > 0
 			, rowHeight = (this.rowSpace + this.vChipSize) * (isVertical ? 2 : 1)
 			, maxRowPos = (rowHeight * this.rows) + posy
-			, sp_alph = this.swapWords
-//			, sp_alph = this.sp_alph, sp_hira = this.sp_hira, sp_kata = this.sp_kata
 			, newline = function(){
 				y += rowHeight;
 //				y += s.h;
 				x = posx;
 			}
-//			, inSP = function(w){
-//				if(sp_alph[w] != null){
-//					return sp_alph[w];
-//				}else if(sp_kata[w] != null){
-//					return sp_kata[w];
-//				}else if(sp_hira[w] != null){
-//					return sp_hira[w];
-//				}
-//				
-//				return w;
-//			}
+			, info
 		;
 		if(!this.disp){
 			return 0;
@@ -749,32 +693,39 @@ export default class WordPrint{
 		}
 		str += '';
 		
-		str = str.replace(/\r?\n/g, newWord);
-		while(str.indexOf(newWord) >= 0){
-			newLines.push(str.indexOf(newWord));
-			str = str.replace(newWord, '');
-		}
-		len = str.length;
-		sprites = [];
-		for(i = 0; i < len; i++){
-//			s = inSP(str.substr(i, 1));
-			s = str.substr(i, 1);
-			s = sp_alph[s] != null ? sp_alph[s] : s;
-			s = s !== false ? s : this.NOTFOUND_WORD; //TODO 不要???
-			if(all[s] == null){
-				// make colored sprite v and h
-				this.initSprite(s);
-				all = this.getWordSprites();
-				if(all[s] == null){
-					all[s] = all[this.NOTFOUND_WORD];
-				}
-			}
-			sprites.push(all[s]);
-		}
+		info = this.processWordSpriteInfo(str, posx, posy);
+		return {w: info.w, h: info.h};
 		
-		len = sprites.length;
+		
+//		str = str.replace(/\r?\n/g, newWord);
+//		while(str.indexOf(newWord) >= 0){
+//			newLines.push(str.indexOf(newWord));
+//			str = str.replace(newWord, '');
+//		}
+//		len = str.length;
+		
+//		sprites = [];
+//		for(i = 0; i < len; i++){
+//			s = str.substr(i, 1);
+//			s = sp_alph[s] != null ? sp_alph[s] : s;
+//			s = s !== false ? s : this.NOTFOUND_WORD; //TODO 不要???
+//			if(all[s] == null){
+//				// make colored sprite v and h
+//				this.initSprite(s);
+//				all = this.getWordSprites();
+//				if(all[s] == null){
+//					all[s] = all[this.NOTFOUND_WORD];
+//				}
+//			}
+//			sprites.push(all[s]);
+//		}
+		
 		x = 0;
 		y = 0;
+		newLines = this.strNewLines(str);
+		sprites = this.strWordSprites(str);
+		
+		len = sprites.length;
 		offset = this.readMode ? this.readChars : 0;
 		i = newLines.indexOf(offset);
 		if(i >= 0){
@@ -856,11 +807,6 @@ export default class WordPrint{
 		}
 		
 		this.strReplaceNewLine(str);
-//		nlstr = str.replace(/\r?\n/g, newWord);
-//		while(nlstr.indexOf(newWord) >= 0){
-//			newLines.push(nlstr.indexOf(newWord));
-//			nlstr = nlstr.replace(newWord, '');
-//		}
 		newLines = this.restoreFromCache('newLinesPosition', str);
 		
 		//現在の改行情報に追加
@@ -877,18 +823,6 @@ export default class WordPrint{
 			, all = this.getWordSprites()
 			, newWord = this.NEWLINE_WORD
 			, sp_alph = this.swapWords
-//			, sp_alph = this.sp_alph, sp_hira = this.sp_hira, sp_kata = this.sp_kata
-//			, inSP = function(w){
-//				if(sp_alph[w] != null){
-//					return sp_alph[w];
-//				}else if(sp_kata[w] != null){
-//					return sp_kata[w];
-//				}else if(sp_hira[w] != null){
-//					return sp_hira[w];
-//				}
-//				
-//				return w;
-//			}
 			, cache, nlstr
 		;
 		str += '';
@@ -903,7 +837,6 @@ export default class WordPrint{
 		len = nlstr.length;
 		sprites = [];
 		for(i = 0; i < len; i++){
-//			s = inSP(nlstr.substr(i, 1));
 			s = nlstr.substr(i, 1);
 			s = sp_alph[s] != null ? sp_alph[s] : s;
 			s = s !== false ? s : this.NOTFOUND_WORD;
@@ -923,6 +856,69 @@ export default class WordPrint{
 		this.cacheInfo('wordSprites', str, sprites);
 		
 		return sprites;
+	}
+	
+	processWordSpriteInfo(str, posx, posy){
+		var i, len, x, y
+			, isVertical = this.isVertical()
+			, info = {sprites: [], w: 0, h: 0}
+			, sprites, newLines
+			, offset, s
+			, nlWord = this.newLineWord
+			, all = this.getWordSprites()
+			, enableNewLine = this.cols > 0
+			, enableMaxRow = this.rows > 0
+			, rowHeight = (this.rowSpace + this.vChipSize) * (isVertical ? 2 : 1)
+			, newLinePos = (this.chipSize * this.cols) + posx
+			, maxRowPos = (rowHeight * this.rows) + posy
+			, newline = function(){
+				y += rowHeight;
+				x = posx;
+			}			
+		;
+		str += '';
+		x = posx;
+		y = posy;
+		newLines = this.strNewLines(str);
+		sprites = this.strWordSprites(str);
+
+		len = sprites.length;
+		offset = this.readMode ? this.readChars : 0;
+		i = newLines.indexOf(offset);
+		if(i >= 0){
+			delete newLines[i];
+		}
+		for(i = offset; i < len; i++){
+			s = sprites[i];
+			if(s == null){
+				s = all[this.NOTFOUND_WORD];
+			}
+			
+			
+			if(enableNewLine && x + s.w > newLinePos){
+				newline();
+			}
+			if(newLines.indexOf(i) >= 0){
+				if(x != posx){
+					newline();
+				}
+				newLines.shift();
+			}
+			if(enableMaxRow && y >= maxRowPos){
+				info.w = x + s.w;
+				info.h = y + rowHeight;
+				return info;
+			}
+			s.order = this.drawOrder;
+			s.vflip(this.vflip);
+			s.hflip(this.hflip);
+			info.sprites.push(s.makeSpriteInfo(x, y));
+			x += s.w;
+		}
+		
+		info.w = x;
+		info.h = y;
+		return info;
 	}
 	
 	makeStrWordSpriteInfo(str, x, y){
@@ -952,15 +948,21 @@ export default class WordPrint{
 		this.position_y = y == null ? this.position_y : y;
 		posx = this.position_x;
 		posy = isVertical && this.soundmarkEnable ? this.position_y - this.vChipSize : this.position_y;
+		
+		return this.processWordSpriteInfo(str, posx, posy).sprites;
+		///////////////
+		///////////////
+		///////////////
+		
 		newLinePos = (this.chipSize * this.cols) + posx;
 		maxRowPos = (rowHeight * this.rows) + posy;
 		
+		x = posx;
+		y = posy;
 		newLines = this.strNewLines(str);
 		sprites = this.strWordSprites(str);
 
 		len = sprites.length;
-		x = posx;
-		y = posy;
 		offset = this.readMode ? this.readChars : 0;
 		i = newLines.indexOf(offset);
 		if(i >= 0){
@@ -995,37 +997,8 @@ export default class WordPrint{
 	{
 		var i, len, s, sprite, offset
 			, isHorizon =  this.isHorizon(), isVertical = this.isVertical()
-//			, isSoundmark
 			, sprites = []
-//			, all = this.getWordSprites()
-//			, posx = this.position_x
-//			, posy = isVertical && this.soundmarkEnable ? this.position_y - this.vChipSize : this.position_y, x, y
-//			, newLines = []
-//			, newWord = this.NEWLINE_WORD
-//			, newLinePos = (this.chipSize * this.cols) + posx
 			, scr = this.scroll
-//			, enableNewLine = this.cols > 0
-//			, enableMaxRow = this.rows > 0
-//			, rowHeight = (this.rowSpace + this.vChipSize) * (isVertical ? 2 : 1)
-//			, maxRowPos = (rowHeight * this.rows) + posy
-//			, sp_alph = this.sp_alph
-//			, sp_hira = this.sp_hira
-//			, sp_kata = this.sp_kata
-//			, newline = function(){
-//				y += rowHeight;
-//				x = posx;
-//			}
-//			, inSP = function(w){
-//				if(sp_alph[w] != null){
-//					return sp_alph[w];
-//				}else if(sp_kata[w] != null){
-//					return sp_kata[w];
-//				}else if(sp_hira[w] != null){
-//					return sp_hira[w];
-//				}
-//				
-//				return w;
-//			}
 		;
 		if(!this.disp){
 			return 0;
@@ -1033,60 +1006,14 @@ export default class WordPrint{
 		if(typeof scr == "string"){
 			scr = getScrolls()[scr];
 		}
-//		str += '';
-//		
-//		str = str.replace(/\r?\n/g, newWord);
-//		while(str.indexOf(newWord) >= 0){
-//			newLines.push(str.indexOf(newWord));
-//			str = str.replace(newWord, '');
-//		}
-//		len = str.length;
-//		sprites = [];
-//		for(i = 0; i < len; i++){
-//			s = inSP(str.substr(i, 1));
-//			s = s !== false ? s : this.NOTFOUND_WORD;
-//			if(all[s] == null){
-//				// make colored sprite v and h
-//				this.initSprite(s);
-//				all = this.getWordSprites();
-//				if(all[s] == null){
-//					all[s] = all[this.NOTFOUND_WORD];
-//				}
-//			}
-//			sprites.push(all[s]);
-//		}
 		
 		sprites = this.makeStrWordSpriteInfo(str);
 //		newLines = this.strNewLines(str);
 		
 		len = sprites.length;
-//		x = posx;
-//		y = posy;
-//		offset = this.readMode ? this.readChars : 0;
-//		i = newLines.indexOf(offset);
-//		if(i >= 0){
-//			delete newLines[i];
-//		}
 		for(i = 0; i < len; i++){
 			s = sprites[i];
-//			if(s == null){
-//				s = all[this.NOTFOUND_WORD];
-//			}
-//			if(enableNewLine && x + s.w > newLinePos){
-//				newline();
-//			}
-//			if(newLines.indexOf(i) >= 0){
-//				newline();
-//				newLines.shift();
-//			}
-//			if(enableMaxRow && y >= maxRowPos){
-//				return i;
-//			}
-//			s.order = this.drawOrder;
-//			s.vflip(this.vflip);
-//			s.hflip(this.hflip);
 			scr.drawSprite(s.sprite, s.x, s.y);
-//			x += s.w;
 		}
 		
 		offset = this.readMode ? this.readChars : 0;
