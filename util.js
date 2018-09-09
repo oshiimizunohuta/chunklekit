@@ -887,16 +887,19 @@ export function checkAPIReceive(data){
 	return true;
 }
 
-export function getQueries(){
+export function getQueries(k){
 	let q = window.location.search
 		, gets = {}
+		, ret
 	;
 	if(q == ''){
 		return gets;
 	}
-	q.slice(1).split('&').foreach(function(a){
+	console.log(q.slice(1).split('&'))
+	q.slice(1).split('&').forEach(function(a){
 		let s = a.split('=');
 		gets[s[0]] = s[1];
 	});
-	return gets;
+	ret = k == null ? gets : gets[k];
+	return ret != null ? ret : '';
 }
