@@ -893,7 +893,7 @@ export function getQueries(k){
 		, ret
 	;
 	if(q == ''){
-		return gets;
+		return k != null ? '' : gets;
 	}
 	console.log(q.slice(1).split('&'))
 	q.slice(1).split('&').forEach(function(a){
