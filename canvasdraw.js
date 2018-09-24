@@ -1023,7 +1023,7 @@ function createCanvas(w, h)
 	}
 	return c;
 }
-function initContext(canvas, clear)
+export function initContext(canvas, clear)
 {
 	var ctx
 	;
