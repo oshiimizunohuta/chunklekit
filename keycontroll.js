@@ -112,6 +112,9 @@ function gamepadState(){
 	for(i = 0; i < len; i++){
 		pad = CKGAMEPADS[i];
 //		id = pad.id;
+		if(pad == null){
+			continue;
+		}
 		id = pad.index;
 		buttons = pad.buttons;
 		blen = buttons.length;
