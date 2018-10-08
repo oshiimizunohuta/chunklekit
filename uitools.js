@@ -346,6 +346,10 @@ export class SceneOrder{
 		this.remTrigger = scene;
 		return this;
 	}
+	
+	reset(count){
+		this.count = count == null ? 0 : count;
+	}
 //	skip(){
 //		var skiped = this.isLast() === false;
 //		this.count = this.duration > 0 ? this.duration - 1 : this.count;
