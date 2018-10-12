@@ -12,7 +12,7 @@ import {makeRect, CKAPIServer, initAPIServer, bubbleSort} from './util.js';
 //キャンバスことスクロール
 var canvasScrollBundle = {};
 
-function makeScroll(name, mainFlag, width, height){
+export function makeScroll(name, mainFlag, width, height){
 	var scr = new CanvasScroll();
 	scr.init(name, mainFlag, width, height);
 	return scr;
@@ -1012,7 +1012,7 @@ function captureScreen(scrollName)
 	scrollByName(scrollName).screenShot();
 }
 
-function createCanvas(w, h)
+export function createCanvas(w, h)
 {
 	var c = document.createElement('canvas');
 	if(w != null){
@@ -1043,6 +1043,14 @@ function contextInit(canvas)
 {
 	return initContext(canvas);
 }
+
+//function resizeImage(){
+//	
+//}
+//function trimImage(){
+//	
+//}
+
 ////////
 ////////
 ////////
@@ -2538,12 +2546,23 @@ export class CanvasSprite{
 	{
 		var name = canvas.name != null ? canvas.name :  'incanvas_' + Object.keys(imageResource.data).length;
 		this.image = canvas;
-		this.ctx = canvas.getContext('2d');
+		this.ctx = initContext(canvas);
+//		this.ctx = canvas.getContext('2d');
 		// this.workSpace = imageResource.makeWorkSpace(this.image, sprite.w, sprite.h);
 		imageResource.appendImage(name, this.image, w, h);
 		this.workSpace = {canvas: this.image, ctx: this.ctx, data: this.image};
 		this.initCommon(name, x, y, w, h);
 	}
+	
+//	initInImage(image, x, y, w, h, dx, dy, dw, dh, func)
+//	{
+//		var name = image.name != null ? image.name : image.src;
+//		this.image = image;
+//		this.ctx = this.image.getContext('2d');
+//		imageResource.appendImage(name, this.image, w, h);
+//		this.workSpace = {canvas: createCanvas(image.width, image.height), ctx: this.ctx, data: this.image};
+//		this.initCommon(name, x, y, w, h);
+//	}
 	
 	// TODO 使用しなくなるかも
 	copySprite(sprite)
