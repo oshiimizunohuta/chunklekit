@@ -98,7 +98,8 @@ export default class WordPrint{
 		this.allWordSprites = {};
 		this.DEFAULT_COLOR = props.COLOR_WHITE;
 		this.DEFAULT_BGCOLOR = props.COLOR_TRANSPARENT;
-		this.COLORS = [props.COLOR_WHITE, props.COLOR_LGRAY, props.COLOR_GRAY, props.COLOR_TRANSPARENT];
+		this.COLORS = props.PALETTE_GRAYSCALE_TP;
+//		this.COLORS = [props.COLOR_WHITE, props.COLOR_LGRAY, props.COLOR_GRAY, props.COLOR_TRANSPARENT];
 		// this.canvas = null;
 		// this.context = null;
 		this.canvasSpriteSource = {};
@@ -152,7 +153,7 @@ export default class WordPrint{
 		this.soundmarkAlign = 'horizon'; // vertical:horizon
 		this.soundmarkPos = []; // {line:line, pos:pos}
 		this.soundmarkEnable = true;
-		this.COLORS = [props.COLOR_WHITE, props.COLOR_LGRAY, props.COLOR_GRAY, props.COLOR_TRANSPARENT];
+		this.COLORS = props.PALETTE_GRAYSCALE_TP;
 		this.swapColors = {from: this.COLORS, to: this.COLORS};
 	
 		this.vflip = false;
