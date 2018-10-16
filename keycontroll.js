@@ -5,11 +5,12 @@
  * @version 0.4.0
  */
 //TODO jslint
-let ALLCONTROLLS = {};
-let ALLCONTROLLSKEYS = [];
-let nowkey;
-let ELSE_LOCK = false;
-let GAMEPAD_DELIMITER = '@';
+export let ALLCONTROLLS = {}
+, ALLCONTROLLSKEYS = []
+, nowkey
+,  ELSE_LOCK = false
+//,  GAMEPAD_DELIMITER = '@'
+;
 
 function resetAllControlls(){
 	ALLCONTROLLS = {};
@@ -170,7 +171,7 @@ function getGamepadPrevKeyState(){
 }
 
 function convertGamePadKey(index, button){
-	return index + GAMEPAD_DELIMITER + button;
+	return index + KeyControll.GAMEPAD_DELIMITER + button;
 }
 
 //選択しない
@@ -521,7 +522,7 @@ class KeyControll{
 //		}
 		for(i = 0; i < keycodes.length; i++){
 			if(padButtons == null && gamepadIndex == null){
-				code = keycodes[i].trim().split(GAMEPAD_DELIMITER);
+				code = keycodes[i].trim().split(KeyControll.GAMEPAD_DELIMITER);
 				name = code[0];
 				index = code[1];
 				button = code[2];
@@ -607,8 +608,10 @@ class KeyControll{
 		this.setKey('debug', 16);
 		
 	}
-
 }
+KeyControll.GAMEPAD_DELIMITER = '@';
+
+
 //TODO 右クリック判定確認
 /**
  * ポインティング(マウス・タッチ)コントロール
