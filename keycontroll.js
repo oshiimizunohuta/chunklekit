@@ -105,7 +105,8 @@ function gamepadState(){
 		, buttons, blen
 		, axes, alen, id, v
 		, dir = ['right', 'left', 'down', 'up']
-		, state = {}
+		, state = {}, st
+		, isAnalog
 	;
 	gamepadConnect();
 	len = CKGAMEPADS.length;
@@ -116,24 +117,43 @@ function gamepadState(){
 			continue;
 		}
 		id = pad.index;
+		id = id % KeyControll.MAXPLAYERS;// 最大プレイヤー数で除算
+		
 		buttons = pad.buttons;
 		blen = buttons.length;
 		for(j = 0; j < blen; j++){
-			state[convertGamePadKey(id, j)] = buttons[j].value > 0.5;
+			st = convertGamePadKey(id, j);
+			state[st] |= buttons[j].value > 0.5;
 		}
 		axes = pad.axes;
 		alen = dir.length;
-		for(j = 0; j < alen; j++){
-			switch(dir[j]){
-				case 'right': v = axes[0] > 0.5; break;
-				case 'left': v = axes[0] < -0.5; break;
-				case 'down': v = axes[1] > 0.5; break;
-				case 'up': v = axes[1] < -0.5; break;
+		isAnalog = axes[2] != null;
+		if(isAnalog){
+			for(j = 0; j < alen; j++){
+				switch(dir[j]){
+					case 'right': v = axes[0] + axes[2] > 0.5 | buttons[15].pressed; break;
+					case 'left': v = axes[0] + axes[2] < -0.5 | buttons[14].pressed; break;
+					case 'down': v = axes[1] + axes[3] > 0.5 | buttons[13].pressed; break;
+					case 'up': v = axes[1] + axes[3] < -0.5 | buttons[12].pressed; break;
+				}
+
+				st = convertGamePadKey(id, dir[j]);
+				state[st] |= v;
+			}
+		}else{
+			for(j = 0; j < alen; j++){
+				switch(dir[j]){
+					case 'right': v = axes[0] > 0.5; break;
+					case 'left': v = axes[0] < -0.5; break;
+					case 'down': v = axes[1] > 0.5; break;
+					case 'up': v = axes[1] < -0.5; break;
+				}
+
+				st = convertGamePadKey(id, dir[j]);
+				state[st] |= v;
 			}
 			
-			state[convertGamePadKey(id, dir[j])] = v;
 		}
-		
 	}
 //	CKGAMEPADSKEYSTATE = state;
 	return state;
@@ -610,6 +630,7 @@ class KeyControll{
 	}
 }
 KeyControll.GAMEPAD_DELIMITER = '@';
+KeyControll.MAXPLAYERS = 1;
 
 
 //TODO 右クリック判定確認
