@@ -573,11 +573,16 @@ class KeyControll{
 		this.setKey('up', conv(index, 'up'));
 		this.setKey('right', conv(index, 'right'));
 		this.setKey('down', conv(index, 'down'));
-		this.setKey('<', conv(index, '1'));
-		this.setKey('>', conv(index, '2'));
+		this.setKey('<', conv(index, '2'));
+		this.setKey('>', conv(index, '0'));
 		this.setKey('select', conv(index, '8'));
-		this.setKey('space', conv(index, '0'));
+		this.setKey('space', conv(index, '9'));
 		this.setKey('debug', conv(index, '6'));
+//		this.setKey('<', conv(index, '1'));
+//		this.setKey('>', conv(index, '2'));
+//		this.setKey('select', conv(index, '8'));
+//		this.setKey('space', conv(index, '0'));
+//		this.setKey('debug', conv(index, '6'));
 		return true;
 	}
 
