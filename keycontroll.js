@@ -983,4 +983,4 @@ class PointingControll{
 		this.setMovePos(x, y, b);
 	}
 };
-export {KeyControll, PointingControll, clickLock, debugLock, resetAllControlls, keyStateCheck, getGamepadPrevKeyState};
+export {KeyControll, PointingControll, clickLock, debugLock, resetAllControlls, keyStateCheck, getGamepadPrevKeyState, convertGamePadKey};

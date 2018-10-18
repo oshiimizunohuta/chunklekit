@@ -895,7 +895,7 @@ export function getQueries(k){
 	if(q == ''){
 		return k != null ? '' : gets;
 	}
-	console.log(q.slice(1).split('&'))
+//	console.log(q.slice(1).split('&'))
 	q.slice(1).split('&').forEach(function(a){
 		let s = a.split('=');
 		gets[s[0]] = s[1];
