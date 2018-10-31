@@ -9,6 +9,8 @@
 export const
 DISPLAY_SCALERATE = 2//キャンバス基本サイズ拡大倍数
 , VIEWMULTI = DISPLAY_SCALERATE
+, SYSTEM_FRAME_RATE = 60 //システムのフレームレート
+, MILLISECOND = 1000 //1秒のミリ秒
 , CHIPCELL_SIZE = 8//基本サイズ1辺り 8*8
 , DISPLAY_WIDTH = 320//キャンバス表示基本幅
 , DISPLAY_HEIGHT = 240//キャンバス表示基本高
