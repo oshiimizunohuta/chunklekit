@@ -255,7 +255,7 @@ function keyStateCheck()
 //	keyHold();
 }
 
-function setKeySetCheck(func){
+export function setKeySetCheck(func){
 	KEYSTATE_CHECKFUNC = func != null ? func : function(){return;};
 }
 /**
@@ -269,8 +269,12 @@ class KeyControll{
 			return;
 		}
 		this.controlls = {};//操作名に対する状態
+		this.statuses = {};//状態名をキーにした状態
 		this.code2name = {};//codeに対応する操作名
 		this.name2code = {};//操作名に対応するcode
+		
+		this.resetControlls();
+		
 		this.idname = idname == null ? Object.keys(ALLCONTROLLS).length : idname;
 		this.action; //カスタム関数
 		ALLCONTROLLS[this.idname] = ALLCONTROLLS[this.idname] == null ? this : ALLCONTROLLS[this.idname];
@@ -287,8 +291,16 @@ class KeyControll{
 	
 	resetControlls(){
 		this.controlls = {};//操作名に対する状態
+		this.statuses = {};//状態名をキーにした状態
 		this.code2name = {};//codeに対応する操作名
 		this.name2code = {};//操作名に対応するcode
+		
+		this.statuses.state = {};
+		this.statuses.trig = {};
+		this.statuses.off = {};
+		this.statuses.hold = {};
+		this.statuses.time = {};
+		this.statuses.func = {};
 	}
 	/**
 	 * 関数を登録
@@ -317,6 +329,13 @@ class KeyControll{
 		this.controlls[name].hold = false;
 		this.controlls[name].time = 0;
 		this.controlls[name].func = null;
+		
+		this.statuses.state[name] = this.controlls[name].state;
+		this.statuses.trig[name] = this.controlls[name].trig;
+		this.statuses.off[name] = this.controlls[name].off;
+		this.statuses.hold[name] = this.controlls[name].hold;
+		this.statuses.time[name] = this.controlls[name].time;
+		this.statuses.func[name] = this.controlls[name].func;
 	}
 	
 	unsetKey(name)
@@ -437,7 +456,9 @@ class KeyControll{
 	getState(name)
 	{
 		let i;
-		if(typeof name == "object"){
+		if(name == null){
+			return this.controlls
+		}else if(typeof name == "object"){
 			let states = {}, cont = this.controlls, nIndex = Object.keys(name), len = nIndex.length, n;
 			for(i = 0; i < len; i++){
 				n = name[i];
@@ -983,4 +1004,16 @@ class PointingControll{
 		this.setMovePos(x, y, b);
 	}
 };
+
+export function CKSETUPKEYS(){
+	let k = new KeyControll();
+	k.initCommonKey();
+	k.initGamepad();
+	setInterval(function(){
+		keyStateCheck();
+	}, 16);
+	
+	return k
+}
+
 export {KeyControll, PointingControll, clickLock, debugLock, resetAllControlls, keyStateCheck, getGamepadPrevKeyState, convertGamePadKey};

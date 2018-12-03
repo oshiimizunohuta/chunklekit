@@ -35,31 +35,46 @@ THE SOFTWARE.
 					<h3>Gamepad test</h3>
 					<p></p>
 					<script type='module'>
-						
+						import * as keycont from './keycontroll.js'
+						let k
+						k = keycont.CKSETUPKEYS()
+						keycont.setKeySetCheck(function(){
+							let keys = k.getState(['left', 'right', 'up', 'down', '<', '>', 'select', 'space'])
+								, elm=document.querySelector('#gamepad p'), st
+								, str = []
+							;
+							for(st in keys){
+								if(keys[st]){
+									str.push(st);
+								}
+							}
+							elm.textContent = str.join(' ');
+						})
+						console.log(k, keycont)
 //						import {KeyControll, PointingControll, clickLock, debugLock, resetAllControlls, keyStateCheck, getGamepadPrevKeyState, convertGamePadKey} from './keycontroll.js';
-						function CKSETUPKEYS(){
-							import('./keycontroll.js').then((mod)=>{
-								let k = new mod.KeyControll();
-								let keys, elm=document.querySelector('#gamepad p'), st;
-								k.initCommonKey();
-								k.initGamepad();
-
-								setInterval(function(){
-									mod.keyStateCheck();
-									keys = k.getState(['left', 'right', 'up', 'down', '<', '>', 'select', 'space']);
-									let str = [];
-									for(st in keys){
-										if(keys[st]){
-											str.push(st);
-										}
-									}
-									elm.textContent = str.join(' ');
-
-								}, 16);
-							});
+//						function CKSETUPKEYS(){
+//							import('./keycontroll.js').then((mod)=>{
+//								let k = new mod.KeyControll();
+//								let keys, elm=document.querySelector('#gamepad p'), st;
+//								k.initCommonKey();
+//								k.initGamepad();
+//
+//								setInterval(function(){
+//									mod.keyStateCheck();
+//									keys = k.getState(['left', 'right', 'up', 'down', '<', '>', 'select', 'space']);
+//									let str = [];
+//									for(st in keys){
+//										if(keys[st]){
+//											str.push(st);
+//										}
+//									}
+//									elm.textContent = str.join(' ');
+//
+//								}, 16);
+//							});
 //							let k = new KeyControll()
-						}
-						CKSETUPKEYS()
+//						}
+//						CKSETUPKEYS()
 					</script>
 				</article>
 			</section>
