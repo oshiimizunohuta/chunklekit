@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<!--
+The MIT License
+
+Copyright 2018 bitchunk.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+-->
+<html lang="ja">
+	<head>
+		<title>chunklekit sample</title>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	</head>
+	<body>
+		<div>
+			<section id='keycontroll'>
+				<article id='gamepad'>
+					<h3>Gamepad test</h3>
+					<p></p>
+					<script type='module'>
+						
+//						import {KeyControll, PointingControll, clickLock, debugLock, resetAllControlls, keyStateCheck, getGamepadPrevKeyState, convertGamePadKey} from './keycontroll.js';
+						function CKSETUPKEYS(){
+							import('./keycontroll.js').then((mod)=>{
+								let k = new mod.KeyControll();
+								let keys, elm=document.querySelector('#gamepad p'), st;
+								k.initCommonKey();
+								k.initGamepad();
+
+								setInterval(function(){
+									mod.keyStateCheck();
+									keys = k.getState(['left', 'right', 'up', 'down', '<', '>', 'select', 'space']);
+									let str = [];
+									for(st in keys){
+										if(keys[st]){
+											str.push(st);
+										}
+									}
+									elm.textContent = str.join(' ');
+
+								}, 16);
+							});
+//							let k = new KeyControll()
+						}
+						CKSETUPKEYS()
+					</script>
+				</article>
+			</section>
+		<section>
+
+		</div>
+	</body>
+</html>
