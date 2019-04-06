@@ -1033,8 +1033,8 @@ export function initContext(canvas, clear)
 	;
 	ctx = canvas.getContext("2d");
 	ctx.imageSmoothingEnabled = false;//アンチ無効
-	ctx.webkitImageSmoothingEnabled = false;
-	ctx.mozImageSmoothingEnabled = false;
+//	ctx.webkitImageSmoothingEnabled = false;
+//	ctx.mozImageSmoothingEnabled = false;
 	ctx.oImageSmoothingEnabled = false;
 	if(clear == null || clear){
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
