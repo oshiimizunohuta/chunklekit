@@ -370,6 +370,9 @@ class CanvasScroll{
 	   */
 	drawSprite(sprite, x, y)
 	{
+		if(sprite == null){
+			return null;
+		}
 		var info = sprite.makeSpriteInfo(x, y);
 		this.drawInfoStack.push(info);
 		if(this.maxSpritesStack < this.drawInfoStack.length){
@@ -772,6 +775,7 @@ class CanvasScroll{
 		var i, line;
 		this.rasterLines.vertical = [];
 		if(retention != null && retention){
+			// retention有効: すでに設定されているラスターを優先する
 			for(i = sy; i >= 0; i--){
 				if(this.rasterLines.horizon[i] != null){
 					line = this.rasterLines.horizon[i];
