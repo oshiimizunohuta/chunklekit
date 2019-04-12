@@ -284,10 +284,10 @@ export class Ease{
 	}
 	init(s, e, d){
 		this.count = 0;
-		this.start = s;
-		this.end = e;
+		this.start = s == null ? this.start : s;
+		this.end = e == null ? this.end : e;
 		this.range = e - s;
-		this.duration = d;
+		this.duration = d == null ? this.duration : d;
 	}
 	
 	linear(e_in, e_out){
