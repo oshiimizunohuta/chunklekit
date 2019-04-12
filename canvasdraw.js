@@ -1494,11 +1494,14 @@ export class SpriteQueryCanvas{
 			, R = imageResource
 			;
 		this.scroll = makeScroll(name, false);
+//		initContext(this.scroll.canvas);
 		appendImage(name, this.scroll.canvas, R.CHIPCELL_SIZE, R.CHIPCELL_SIZE);
 		this.tmpScroll = makeScroll(tname, false);
+//		initContext(this.tmpScroll.canvas);
 		appendImage(tname, this.tmpScroll.canvas, R.CHIPCELL_SIZE, R.CHIPCELL_SIZE);
 		//convertChunkで使います
 		this.convertScroll = makeScroll(tname, false);
+//		initContext(this.convertScroll.canvas);
 		appendImage(tname, this.convertScroll.canvas, R.CHIPCELL_SIZE, R.CHIPCELL_SIZE);
 
 		this.queries = {};
@@ -1585,11 +1588,15 @@ export class SpriteQueryCanvas{
 		return makeSpriteRect(SpriteQueryCanvas.imageName, rect);
 	}
 
-	static copySprite(sprite, indexkey){
+	static copySprite(sprite, indexkey, force){
 		var rect, name = this.convertSpriteName(sprite, indexkey == null ? '' : indexkey)
 		;
 		if(indexkey != null && (name in this.rects)){
-			return makeSpriteRect(SpriteQueryCanvas.imageName, this.rects[name]);
+			rect = this.rects[name];
+			if(force != null && force){
+				this.scroll.drawSpriteInfo(sprite.makeSpriteInfo(rect.x, rect.y));
+			}
+			return makeSpriteRect(SpriteQueryCanvas.imageName, rect);
 		}
 		//新しい領域を探す
 		rect = this.getBlankRect(sprite.getRect());
@@ -2380,7 +2387,7 @@ function flipSprite(sprite, h, v)
 	return sprite;
 }
 
-export function makeSpriteSwapColor(sprite, to, from, type)
+export function makeSpriteSwapColor(sprite, to, from, type, force)
 {
 	var sqc = SpriteQueryCanvas
 		, resSprites, key, q
@@ -2401,10 +2408,10 @@ export function makeSpriteSwapColor(sprite, to, from, type)
 	}
 //	sprite.name = resourceColorQuery();
 	q = swapColorQuery([to, from]);
-	if(sqc.exists(sprite, q)){
-		return sqc.copySprite(sprite, q);
+	if(force != null && !force && sqc.exists(sprite, q)){
+		return sqc.copySprite(sprite, q, force);
 	}
-	sprite = sqc.copySprite(sprite, q);
+	sprite = sqc.copySprite(sprite, q, force);
 
 	if(type == null || type == 'set'){
 		sprite.setSwapColor(to, from);
@@ -2750,7 +2757,9 @@ export class CanvasSprite{
 	
 	getBufferOriginal(){
 		if(this.bufferOriginal == null){
-			this.bufferOriginal = this.ctx.getImageData(this.x, this.y, this.w, this.h);
+//			this.bufferOriginal = this.ctx.getImageData(this.x, this.y, this.w, this.h);
+			this.bufferOriginal = createCanvas(this.w, this.h);
+			initContext(this.bufferOriginal).putImageData(this.ctx.getImageData(this.x, this.y, this.w, this.h), 0, 0);
 		}
 		return this.bufferOriginal;
 	}
@@ -2759,75 +2768,19 @@ export class CanvasSprite{
 //		this.bfsx = x;
 //		this.bfsy = y;
 		if(this.bufferOriginal != null){
-			this.ctx.putImageData(this.bufferOriginal, this.x, this.y);
+			this.ctx.drawImage(this.bufferOriginal, this.x, this.y);
+//			this.ctx.putImageData(this.bufferOriginal, this.x, this.y);
 		}
 	}
 	
-	//TODO 未使用？
-	shiftBufferRotate(x, y, append1, append2, append3){
-		var dat1, dat2, dat3, dat4
-			, sx = this.x
-			, sy = this.y
-			, w = this.w
-			, h = this.h
-			, slicew = w, sliceh = h
-			, norotate = false
-		;
-		dat1 = this.getBufferOriginal();
-		dat3 = null;
-		dat2 = null;
-		dat4 = null;
-		
-		if(append1 instanceof CanvasSprite){
-			dat2 = append1.getBufferOriginal();
-			dat4 = dat2;
-		}
-		if(append2 instanceof CanvasSprite){
-			dat3 = append2.getBufferOriginal();
-		}
-		if(append3 instanceof CanvasSprite){
-			dat4 = append3.getBufferOriginal();
-		}
-		
-		if(x != null && x != 0){
-			x = (((x % w) + w) % w) | 0;
-			slicew = w - x;
-		}else{
-			x = 0;
-		}
-		if(y != null && y != 0){
-			y = (((y % h) + h) % h) | 0;
-			sliceh = h - y;
-		}else{
-			y = 0;
-		}
-		if(x != null && x != 0){
-			if(dat2 != null){
-				this.ctx.putImageData(dat2, sx - slicew, sy + y, slicew, 0, x, sliceh);
-			}else{
-				this.ctx.fillStyle = makeRGBA(append1);
-				this.ctx.fillRect(sx - slicew + w, sy + y + h, x, sliceh);
-			}
-			this.ctx.putImageData(dat1, sx + x, sy + y, 0, 0, slicew, sliceh);
-		}
-		
-		if(y != null && y != 0){
-			if(dat4 != null){
-				this.ctx.putImageData(dat4, sx - slicew, sy - sliceh, slicew, sliceh, x, y);
-			}else{
-				this.ctx.fillStyle = makeRGBA(append1);
-				this.ctx.fillRect(sx - slicew + w, sy - sliceh + h, slicew, sliceh);
-			}
-			this.ctx.putImageData(dat3, sx + x, sy - sliceh, 0, sliceh, slicew, y);
-		}
-		return this;
-		
-	}
+
 	/**
 	 * @name shiftBuffer
 	 * @param {unsigned Number} x
 	 * @param {unsigned Number} y
-	 * @param {Sprite}{ColorArray} append1
+	 * @param {Sprite ColorArray} append1
+	 * @param {format append1} append2
+	 * @param {format append1} append3
 	 * @returns {this}
 	 * @description スプライト情報の上書き
 	 */
@@ -2837,6 +2790,7 @@ export class CanvasSprite{
 			, h = this.h
 			, col = COLOR_BLACK
 		;
+		this.getBufferOriginal();
 		dat1 = this.getBufferOriginal();
 		dat3 = col;
 		dat2 = col;
@@ -2844,6 +2798,7 @@ export class CanvasSprite{
 		
 		if(append1 instanceof CanvasSprite){
 			dat2 = append1.getBufferOriginal();
+//			dat2 = append1;
 			dat3 = dat2;
 			dat4 = dat1;
 		}else{
@@ -2854,10 +2809,12 @@ export class CanvasSprite{
 		}
 		if(append2 instanceof CanvasSprite){
 			dat3 = append2.getBufferOriginal();
+//			dat3 = append2;
 			dat4 = dat2;
 		}
 		if(append3 instanceof CanvasSprite){
 			dat4 = append3.getBufferOriginal();
+//			dat4 = append3;
 		}
 		//testclear
 //		this.ctx.fillStyle = makeRGBA(col);
@@ -2907,7 +2864,16 @@ export class CanvasSprite{
 		if(y >= h || y <= -h || x >= w || x <= -w){
 			return;
 		}
-		if(dat instanceof ImageData){
+		x |= 0;
+		y |= 0;
+		if(dat instanceof Node){
+//			this.ctx.drawImage(dat, dat.x, dat.y, slicewR, slicehB, sx + x, sy + y,  x > 0 ? 0 : slicewL, y > 0 ? 0 : slicehT, slicewR, slicehB);
+//			this.ctx.drawImage(dat, x, y,  x > 0 ? 0 : slicewL, y > 0 ? 0 : slicehT, sx + x, sy + y, slicewR, slicehB);
+//			this.ctx.drawImage(dat, x > 0 ? 0 : slicewL, y > 0 ? 0 : slicehT, slicewR, slicehB, x > 0 ? sx + x, sy + y, slicewR, slicehB);
+//			this.ctx.drawImage(dat, 0, 0, w, h, sx + x, sy + y, w, h);
+//			this.ctx.drawImage(dat, x > 0 ? 0 : slicewL, 0, w, h, x > 0 ? sx + x : sx, sy + y, w, h);
+			this.ctx.drawImage(dat, x > 0 ? 0 : slicewL, y > 0 ? 0 : slicehT, slicewR, slicehB, x > 0 ? sx + x : sx, y > 0 ? sy + y : sy, slicewR, slicehB);
+		}else if(dat instanceof ImageData){
 			this.ctx.putImageData(dat, sx + x, sy + y,  x > 0 ? 0 : slicewL, y > 0 ? 0 : slicehT, slicewR, slicehB);
 		}else{
 			x = x < 0 ? 0 : x;
