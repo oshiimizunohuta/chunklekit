@@ -7,7 +7,7 @@
  * @version 0.4.5
  */
 
-import * as props from './prop.js'; 
+import * as props from './prop.js';
 import {makeRect, CKAPIServer, initAPIServer, bubbleSort} from './util.js';
 //キャンバスことスクロール
 var canvasScrollBundle = {};
@@ -28,7 +28,7 @@ export function makeCanvasScroll(scrollName, insertID){
 /**
  * 描画リピート
  */
-var CANVASDRAWREPEATFUNC = function(){return;}; 
+var CANVASDRAWREPEATFUNC = function(){return;};
 function setCanvasDrawRepeat(func){
 	CANVASDRAWREPEATFUNC = func;
 }
@@ -78,11 +78,12 @@ class CanvasScroll{
 			, scrsize = getScrollSize()
 			, display
 			;
-		
+
 		this.canvas = document.getElementById(name);
 		if(this.canvas == null){
 			this.canvas = document.createElement('canvas');
 			this.canvas.setAttribute('id', name);
+			this.canvas.style.imageRendering = 'pixelated';
 			//makeScrollによるエレメントをhtmlに追加しない処理もある
 			if(insertID != null){
 				document.getElementById(insertID).appendChild(this.canvas);
@@ -114,7 +115,7 @@ class CanvasScroll{
 		this.canvas.hidden = display == 'none' ? false : true;
 		this.canvas.style.backgroundColor = "transparent";
 		this.mainFlag = mainFlag;
-		
+
 		this.ctx = initContext(this.canvas);
 		this.x = 0;
 		this.y = 0;
@@ -123,23 +124,23 @@ class CanvasScroll{
 		this.maxSpritesStack = props.SCROLL_MAX_SPRITES_STACK;
 		this.drawInfoStack = [];
 		this.drawPrimary = true; //draw reliably even overdraw
-		this.blinkContinues = 0; 
-		
+		this.blinkContinues = 0;
+
 		this.pointImage = this.ctx.createImageData(1, 1);
-		
+
 		this.rasterFunc = null;
 		this.rasterLines = {horizon: [], vertical: []};
 		this.rasterVolatile = true;
-		
+
 		this.mirrorMode = null;
 		this.mirrorWidth = width;
 		this.mirrorHeight = height;
-		
+
 		this.volatile = false;
 		this.defaultColor = null;
 		//描画された履歴
 		this.drawnInfoHistory = {};
-		
+
 	}
 
 	drawto(targetScroll, x, y, w, h)
@@ -171,7 +172,7 @@ class CanvasScroll{
 			, h = 0
 			, mirrorw = this.mirrorWidth, mirrorh = this.mirrorHeight
 			;
-			
+
 		if(raster.length > 0){
 			for(i = 0; i < sh; i++){
 				if(raster[i] != null){
@@ -218,7 +219,7 @@ class CanvasScroll{
 				}
 			}
 			targetScroll.ctx.drawImage(this.canvas, currentLine, 0, 0 | i - currentLine, 0 | sh, 0 | pos.x + fixpos.x, 0 | pos.y + fixpos.y, i - currentLine, 0 | dh);
-			
+
 		}else{
 			if(this.rasterFunc == null){
 				targetScroll.ctx.drawImage(this.canvas, 0 | sx, 0 | sy, 0 | sw, 0 | sh, 0 | dx, 0 | dy, 0 | dw, 0 | dh);
@@ -226,12 +227,12 @@ class CanvasScroll{
 				this.rasterFunc(targetScroll, {sx: 0 | sx, sy: 0 | sy, sw: 0 | sw, sh: 0 | sh, dx: 0 | dx, dy: 0 | dy, dw: 0 | dw, dh: 0 | dh});
 			}
 		}
-		
+
 		if(this.rasterVolatile){
 			this.resetRaster();
 		}
 	}
-	
+
 	//元のスクロール基準の走査
 	rasterfrom(targetScroll, dx, dy, dw, dh)
 	{
@@ -242,7 +243,7 @@ class CanvasScroll{
 		if(dy == null){dy = this.y;}
 		var sw = dw, sh = dh	, sx = 0, sy = 0
 			, i, raster, pos = {x: 0, y: 0}, fixpos = {x: dx, y: dy}, line = 0;
-		
+
 		if(this.rasterLines.horizon.length > 0){
 			raster = this.rasterLines.horizon;
 			for(i = 0; i < sh; i++){
@@ -273,7 +274,7 @@ class CanvasScroll{
 				}
 			}
 			targetScroll.ctx.drawImage(this.canvas, line, 0, 0 | i - line, 0 | sh, 0 | pos.x + fixpos.x, 0 | pos.y + fixpos.y, i - line, 0 | dh);
-			
+
 		}else{
 			if(this.rasterFunc == null){
 				targetScroll.ctx.drawImage(this.canvas, 0 | sx, 0 | sy, 0 | sw, 0 | sh, 0 | dx, 0 | dy, 0 | dw, 0 | dh);
@@ -281,13 +282,13 @@ class CanvasScroll{
 				this.rasterFunc(targetScroll, {sx: 0 | sx, sy: 0 | sy, sw: 0 | sw, sh: 0 | sh, dx: 0 | dx, dy: 0 | dy, dw: 0 | dw, dh: 0 | dh});
 			}
 		}
-		
+
 		if(this.rasterVolatile){
 			this.resetRaster();
 		}
 	}
-	
-	
+
+
 	/**
 	 * ニアレストネイバー
 	 * @param targetScroll
@@ -312,7 +313,7 @@ class CanvasScroll{
 		// y = (this.y * multi) | 0;
 
 		targetScroll.ctx.drawImage(this.canvas, 0, 0, w, h, to.x, to.y, to.w, to.h);
-		
+
 		//ミラーリング
 		if(this.x != 0){
 			targetScroll.ctx.drawImage(this.canvas, 0, 0, w, h, to.x - to.w, to.y, to.w, to.h);
@@ -357,7 +358,7 @@ class CanvasScroll{
 				this.drawSpriteLineInfo(drawInfo);
 			}
 		}
-		
+
 		this.blinkContinues = (blinkRate * cnt) + tinue - blinked;
 		return true;
 	}
@@ -395,7 +396,7 @@ class CanvasScroll{
 		h = sprite.h;
 		vflip = spriteInfo.vflip;
 		hflip = spriteInfo.hflip;
-			
+
 		;
 		if(sprite.swapImage !== null){
 			//色変更
@@ -415,7 +416,7 @@ class CanvasScroll{
 			this.ctx.scale(hf, vf);
 			x = (x * hf) - (hflip * w);
 			y = (y * vf) - (vflip * h);
-			
+
 			// sprite.flip();
 		}
 		//回転
@@ -436,20 +437,20 @@ class CanvasScroll{
 			this.ctx.translate(rox , roy);
 			this.ctx.rotate(r);
 		}
-		
+
 		if(sprite.swapImage != null){
 			//色変更描画
 			this.ctx.drawImage(image, 0, 0, 0 | w, 0 | h, 0 | x, 0 | y, 0 | w, 0 | h);
 		}else{
 			//通常描画
 			this.ctx.drawImage(image, 0 | sprite.x, 0 | sprite.y, 0 | w, 0 | h, 0 | x, 0 | y, 0 | w, 0 | h);
-			
+
 		}
 		//描画情報を記録
 		this.drawnInfoHistory[y] = this.drawnInfoHistory[y] != null ? this.drawnInfoHistory[y] : {};
 		this.drawnInfoHistory[y][x] = spriteInfo;
 //		this.drawnInfoHistory[y][x] = this.drawnInfoHistory[y][x] != null ? spriteInfo : {};
-		
+
 		//以下元通りにする
 		if(spriteInfo.rot > 0){
 			this.ctx.rotate(-r);
@@ -462,29 +463,29 @@ class CanvasScroll{
 		sprite = null;
 		image = null;
 	}
-	
+
 	//drawInfoを再描画
 	redrawInfo(){
 		var x, y
 			, dinfo = this.drawnInfoHistory
 		;
-		
+
 		for(y in dinfo){
 			for(x in dinfo[y]){
 				this.drawSpriteInfo(dinfo[y][x]);
 			}
 		}
 	}
-	
+
 	drawSpriteArray(spriteArray, x, y, cellsWidth)
 	{
 		var posX, posY, slen = spriteArray.length, i, sprite
 		;
 		if(cellsWidth == null){throw "noCellWidth!";}
-		
+
 		for(i = 0; i < slen; i++){
 			sprite = spriteArray[i];
-			posX = (x < 0) 
+			posX = (x < 0)
 			? props.DISPLAY_WIDTH + (sprite.w * (i % cellsWidth)) + x
 			: (sprite.w * (i % cellsWidth)) + x;
 			posY = (y < 0)
@@ -505,7 +506,7 @@ class CanvasScroll{
 			slen = spriteArray.length;
 			for(i = 0; i < slen; i++){
 				sprite = spriteArray[i];
-				// posX = (x < 0) 
+				// posX = (x < 0)
 				// ? DISPLAY_WIDTH + (sprite.w * i) + x
 				// : (sprite.w * i) + x;
 				// posY = (y < 0)
@@ -571,7 +572,7 @@ class CanvasScroll{
 		// if(isNaN(len)){
 			// return;
 		// }
-// 		
+//
 		if(lx == 0 || ly == 0){
 			lx = lx == 0 ? 1 : lx; ly = ly == 0 ? 1 : ly;
 			ctx.fillStyle = makeRGB(color);
@@ -580,12 +581,12 @@ class CanvasScroll{
 		}else{
 			// point = this.ctx.getImageData(0, 0, 1, 1);
 			point = this.pointImage;
-			
+
 			point.data[0] = color[0];
 			point.data[1] = color[1];
 			point.data[2] = color[2];
 			point.data[3] = color[3];
-			
+
 			if(len < 0){
 				for(i = 0; -i > len - 1; i++){
 					this.ctx.putImageData(point, (to.x + (i * dx)) | 0, (to.y + (i * dy)) | 0);
@@ -598,9 +599,9 @@ class CanvasScroll{
 				this.ctx.putImageData(point, from.x, from.y);
 			}
 		}
-		
+
 	}
-	
+
 	// function spriteLine(from, to, sprite)
 	spriteLine(from, to, color)
 	{
@@ -611,7 +612,7 @@ class CanvasScroll{
 			this.drawInfoStack.shift();
 		}
 	}
-	
+
 	/**
 	* 消す
 	*/
@@ -628,7 +629,7 @@ class CanvasScroll{
 		}
 		this.drawInfoStack.push({color: color == null ? null : color, fillrect: rect == null ? null : rect, order: order == null ? 0 : order});
 	}
-	
+
 	drawFillRectInfo(rectInfo)
 	{
 		var color = rectInfo.color, rect = rectInfo.fillrect;
@@ -637,7 +638,7 @@ class CanvasScroll{
 		}
 		this.contextClear(rect.x, rect.y, rect.w, rect.h, color);
 	}
-	
+
 	contextClear(x, y, w, h, color){
 		if(color != null){
 			this.ctx.fillStyle = makeRGB(color);
@@ -645,15 +646,15 @@ class CanvasScroll{
 		}else{
 			this.ctx.clearRect(x, y, w, h);
 		}
-		
+
 	}
-	
+
 	debugRect(rect, color)
 	{
 		color = COLOR_WHITE;
 		this.clear(color, rect);
 	}
-	
+
 	clearDrawInfoStack()
 	{
 		this.drawInfoStack = [];
@@ -739,7 +740,7 @@ class CanvasScroll{
 		}
 		return true;
 	}
-	
+
 	disableVolatile(){
 		this.volatile = true;
 	}
@@ -747,7 +748,7 @@ class CanvasScroll{
 		this.defaultColor = color;
 		this.volatile = true;
 	}
-	
+
 	isVolatile(){
 		return this.volatile;
 	}
@@ -821,7 +822,7 @@ class CanvasScroll{
 		this.canvas.style.left = x + "px";
 		this.canvas.style.top = y + "px";
 	}
-	
+
 	//※内容は削除される
 	resizeCanvas(w, h){
 		var c = this.canvas
@@ -830,7 +831,7 @@ class CanvasScroll{
 		c.height = h;
 		c.style.width = w;
 		c.style.height = h;
-		
+		this.ctx.imageSmoothingEnabled = false;
 	}
 
 	getSize() {
@@ -844,7 +845,7 @@ class CanvasScroll{
 	getRect() {
 		return makeRect(this.x, this.y, this.canvas.width, this.canvas.height);
 	}
-	
+
 	static scaleRate(scale){
 		if(scale != null){
 			CanvasScroll.SCALSE_RATE = scale;
@@ -852,19 +853,19 @@ class CanvasScroll{
 			return CanvasScroll.SCALSE_RATE;
 		}
 	}
-	
+
 	getCenter(target){
 		return (this.getSize().w - target) / 2;
 	}
-	
+
 	getMiddle(target){
 		return (this.getSize().h - target) / 2;
 	}
-	
+
 	static displaySize(){
-		
+
 	}
-	
+
 	screenShot()
 	{
 		//図形の保存
@@ -889,14 +890,14 @@ class CanvasScroll{
 			element_a.setAttribute("href", "javascript:window.open('" + img.src +"'); ");
 			del_a.setAttribute("onclick", "SSImgRemove(this)");
 			del_a.innerHTML = '<a href="javascript:void(0);">X</a>';
-			
+
 			element_a.appendChild(element_img);
 			pair.appendChild(del_a);
 			pair.appendChild(element_a);
-			
+
 			document.body.appendChild(pair);
-		}; 
-		
+		};
+
 		return img;
 	}
 
@@ -938,8 +939,8 @@ function swapColorImageData(ctx, swaps, rect){
 		index3 += 4;
 		index4 += 4;
 	}
-	
-	ctx.putImageData(tmp, rect.x, rect.y);	
+
+	ctx.putImageData(tmp, rect.x, rect.y);
 	return tmp;
 
 }
@@ -979,7 +980,7 @@ export function getScrolls()
 {
 	var scr = canvasScrollBundle == null ? layerScroll : canvasScrollBundle;
 	return scr;
-	
+
 }
 
 export function drawCanvasStacks(max)
@@ -1021,10 +1022,11 @@ export function createCanvas(w, h)
 	var c = document.createElement('canvas');
 	if(w != null){
 		c.width = w;
-	} 
+	}
 	if(h != null){
 		c.height = h;
 	}
+	c.style.imageRendering = 'pixelated';
 	return c;
 }
 export function initContext(canvas, clear)
@@ -1049,10 +1051,10 @@ function contextInit(canvas)
 }
 
 //function resizeImage(){
-//	
+//
 //}
 //function trimImage(){
-//	
+//
 //}
 
 ////////
@@ -1075,10 +1077,10 @@ imageResource.init = function(){
 	this.stack= [];
 	this.ctx = {};
 	this.loadRefreshTime = Date.now();
-	
+
 //	this.multi = window.VIEWMULTI == null ? 1 : window.VIEWMULTI;
 	this.multi = 1;
-};	
+};
 imageResource.init();
 imageResource.onload = [];
 
@@ -1094,7 +1096,7 @@ imageResource.create = function(name, sepWidth, sepHeight, callbackEnable)
 	var img = new Image()
 	;
 	img.src = this.dirpath + name + this.extention;
-	
+
 	if(callbackEnable == null){
 		callbackEnable = true;
 	}
@@ -1113,12 +1115,12 @@ imageResource.loaded = function (img){
 	var canvas, ctx, workSpace, i, data
 		, r = imageResource
 	;
-	r.loadcount++;	
-	
+	r.loadcount++;
+
 	img = img.src == null ? this : img;
 	//make canvas & context
 	r.appendImage(img.name, img, null, null);
-	
+
 	//make workspace
 	r.workSpace[img.name] = r.makeWorkSpace(img, r.separateWidth[img.name], r.separateHeight[img.name]);
 	img = null
@@ -1160,7 +1162,7 @@ imageResource.appendImage = function(name, img, sepWidth, sepHeight)
 		cv = img;
 		ctx = initContext(cv, false);
 	}
-	
+
 	this.data[name] = cv;
 	this.ctx[name] = ctx;
 };
@@ -1237,7 +1239,7 @@ imageResource.makeSpriteArray = function(name, indexes)
 		, cellsY = 0 | (img.height / this.separateHeight[name])
 		, spriteArray = [], i, x, y, spr
 	;
-		
+
 	for(i = 0; i < indexes.length; i++){
 		x = (indexes[i] % cellsX) * this.separateWidth[name];
 		y = (0 | (indexes[i] / cellsX)) * this.separateHeight[name];
@@ -1339,7 +1341,7 @@ loadImages = function(imageInfo, func)
 {
 	var R = imageResource, i, info;
 	imageInfo = imageInfo.length != null ? imageInfo : [imageInfo];
-	
+
 	for(i = 0; i < imageInfo.length; i++){
 		info = typeof imageInfo[i] != 'string' ? imageInfo[i] : [imageInfo[i], R.CHIPCELL_SIZE, R.CHIPCELL_SIZE];
 		R.push(info[0], info[1], info[2]);
@@ -1378,7 +1380,7 @@ loadImages = function(imageInfo, func)
 			return;
 		}
 		info = imageInfo.shift();
-		
+
 		info = typeof info != 'string' ? info : [info, R.CHIPCELL_SIZE, R.CHIPCELL_SIZE];
 //		info = typeof info == 'string' ? [info, R.CHIPCELL_SIZE, R.CHIPCELL_SIZE] : info;
 		info[2] = info[2] == null ? info[1] : info[2];
@@ -1390,10 +1392,10 @@ loadImages = function(imageInfo, func)
 		t.name = info[0];
 		t.sepWidth = info[1] == null ? null : info[1];
 		t.sepHeight = info[2] == null ? null : info[2];
-			
+
 	}
 	;
-	
+
 	//str > [str]
 	//[str, str, str]
 	//[str, x, y] > [[str, x, y]]
@@ -1588,16 +1590,36 @@ export class SpriteQueryCanvas{
 		return makeSpriteRect(SpriteQueryCanvas.imageName, rect);
 	}
 
+	static refferSprite(sprite, indexkey){
+		var rect, name = this.convertSpriteName(sprite, indexkey == null ? '' : indexkey)
+		;
+		if(indexkey != null && (name in this.rects)){
+			rect = this.rects[name];
+			// if(force != null && force){
+			// 	this.scroll.drawSpriteInfo(sprite.makeSpriteInfo(rect.x, rect.y));
+			// }
+			return makeSpriteRect(SpriteQueryCanvas.imageName, rect);
+		}else{
+			return null;
+		}
+	}
 	static copySprite(sprite, indexkey, force){
 		var rect, name = this.convertSpriteName(sprite, indexkey == null ? '' : indexkey)
 		;
+		// if(indexkey != null && (name in this.rects)){
+		// 	rect = this.rects[name];
+		// 	if(force != null && force){
+		// 		this.scroll.drawSpriteInfo(sprite.makeSpriteInfo(rect.x, rect.y));
+		// 	}
+		// 	return makeSpriteRect(SpriteQueryCanvas.imageName, rect);
+		// }
 		if(indexkey != null && (name in this.rects)){
 			rect = this.rects[name];
 			if(force != null && force){
 				this.scroll.drawSpriteInfo(sprite.makeSpriteInfo(rect.x, rect.y));
 			}
-			return makeSpriteRect(SpriteQueryCanvas.imageName, rect);
 		}
+
 		//新しい領域を探す
 		rect = this.getBlankRect(sprite.getRect());
 		//領域に描画
@@ -1612,7 +1634,7 @@ export class SpriteQueryCanvas{
 	}
 
 	static exists(sprite, indexkey){
-		var name = this.convertSpriteName(sprite, indexkey == null ? '' : indexkey)	
+		var name = this.convertSpriteName(sprite, indexkey == null ? '' : indexkey)
 		;
 		if(name in this.rects){
 			return this.rects[name];
@@ -1639,7 +1661,7 @@ function getSQCSprite(name){
 
 /**
  * 短縮系関数
- * 
+ *
  * sprect:sprite rect or 2dArray
  * makeRect(x,y,w,h)
  * [a1,a2,a3,a4]
@@ -1654,7 +1676,7 @@ function makeSpriteChunk(name, sprect)
 		}else{
 			c = imageResource.makeSpriteChunkFromRect(name, sprect);
 		}
-		
+
 		//TODO makeSpriteQueryではconvertしたくない
 		return c;
 //		return convertChunk(c, '');
@@ -1671,7 +1693,7 @@ function makeSpriteImage(name)
 		, ch = d.height / img.separateWidth[name] | 0
 		;
 	return convertChunk(makeSpriteChunk(name, makeRect(0, 0, cw, ch)), SPQ_ALL);
-		
+
 };
 
 /**
@@ -1710,7 +1732,7 @@ function copyCanvasSpriteChunk(spriteChunk)
 function makeSpriteArrayInCanvas(canvas, w, h, indexes)
 {
 	var img = canvas
-			, cellsX, cellsY 
+			, cellsX, cellsY
 			, spriteArray = [], i, x, y, len = 0
 		;
 		h = h == null ? img.height : h;
@@ -1736,7 +1758,7 @@ function makeSpriteArrayInCanvas(canvas, w, h, indexes)
 }
 
 /**
- * spriteChunkを結合して一つのspriteにする 
+ * spriteChunkを結合して一つのspriteにする
  */
 var CONVERT_COUNT = 0;
 function convertChunk(spriteChunk, query){
@@ -1753,7 +1775,7 @@ function convertChunk(spriteChunk, query){
 	h = clen;
 	w = slen;
 	isReplaceQuery = query.indexOf(SPQ_REP) >= 0;
-	
+
 //	sname = 'sprc-' + CONVERT_COUNT + '['+ sprite.name + ',' + w + ':' + h + ',' + sprite.x + ':' + sprite.y+ ']';
 	sname = 'sprc' + '['+ sprite.name + ',' + w + ':' + h + ',' + sprite.x + ':' + sprite.y+ ']';
 //	console.log(query);
@@ -1777,7 +1799,7 @@ function convertChunk(spriteChunk, query){
 	scroll = SpriteQueryCanvas.convertScroll;
 	scroll.resizeCanvas(x, y);
 	scroll.name = sname;
-	
+
 	//スプライト貼付け
 	y = 0;
 	for(j = 0; j < clen; j++){
@@ -1797,7 +1819,7 @@ function convertChunk(spriteChunk, query){
 
 	CONVERT_COUNT++;
 	maked = sqCanvas.makeSpriteFromScroll(scroll);
-	
+
 	//id collect
 	for(j = 0; j < clen; j++){
 		ids[j] = [];
@@ -1809,7 +1831,7 @@ function convertChunk(spriteChunk, query){
 				continue;
 			}
 			ids[j][i] = sprite.id;
-			
+
 		}
 	}
 	//query|$ のときchunkIdsを参照
@@ -1839,7 +1861,7 @@ function convertChunk(spriteChunk, query){
  * sprite.chunkMapから低レベルクエリを出力する
  * HMULTI VMULTI PATは使わない
  * @param {SpriteChunk} spriteChunk
- * @return {String} (x,y,dir)blQuery (x,y,dir)blQuery (x,y,dir)blQuery 
+ * @return {String} (x,y,dir)blQuery (x,y,dir)blQuery (x,y,dir)blQuery
  */
 function outputLowChunkQuery(spriteChunk)
 {
@@ -1871,29 +1893,29 @@ function outputLowChunkQuery(spriteChunk)
 					j +=rect.h;
 					continue;
 				}
-				
+
 				match = squery.split(SPQ_CONNECT);
-				
+
 				q = match[0];
-				
+
 				//Rectの抽出
 				rect = queryToRect(q);
 				if(!rect){
 					continue;
 				}
-				
+
 				//繰り返し
 				mch = squery.match(SPQREG_HMULTI);
 				multi_w = mch == null ? 1 : mch[1] | 0;
-				
+
 				mcv = squery.match(SPQREG_VMULTI);
 				multi_h = mcv == null ? 1 : mcv[1] | 0;
-				
+
 				q = squery.replace(SPQREG_HMULTI, '').replace(SPQREG_VMULTI, '');
 				rect = queryToRect(q);
 				dir = dstrToDirection(squery);
 				match = q.split(SPQ_CONNECT);
-				
+
 				repeatMulti(match[0], rect, i, j, directionToDstr(dir), multi_w, multi_h);
 			}
 		}
@@ -1901,15 +1923,15 @@ function outputLowChunkQuery(spriteChunk)
 	}
 	;
 	recursive(spriteChunk.chunkMap, 0, 0);
-	
+
 	return lquery.join(' ');
 }
 
 /**
  * @param {String} blockQuery
  * @param {Rect} baseRect
- * @return {Rect} rect 
- * 
+ * @return {Rect} rect
+ *
  * [from]x-n:y:m*w^h [to]{Rect}
  */
 function queryToRect(blockQuery, baseRect){
@@ -1918,7 +1940,7 @@ function queryToRect(blockQuery, baseRect){
 		, regh = blockQuery.match(SPQREG_HMULTI)
 		, regv = blockQuery.match(SPQREG_VMULTI)
 		, dir = dstrToDirection(blockQuery)
-		, make 
+		, make
 		, singleRect = function(q){
 			q |= 0;
 			if(q < 0){
@@ -1928,7 +1950,7 @@ function queryToRect(blockQuery, baseRect){
 			}else{
 				rect = makeRect(0, 0, hmul, vmul);
 			}
-			
+
 			return rect;
 		}
 	;
@@ -1937,14 +1959,14 @@ function queryToRect(blockQuery, baseRect){
 	if(blockQuery.indexOf(' ') >= 0){
 		return false;
 	}
-	
+
 	if(regh != null){
 		hmul = regh[1] | 0;
 	}
 	if(regv != null){
 		vmul = regv[1] | 0;
 	}
-	
+
 	make = blockQuery
 			.replace(SPQREG_HMULTI, '')
 			.replace(SPQREG_VMULTI, '')
@@ -1973,7 +1995,7 @@ function queryToRect(blockQuery, baseRect){
 	}else{
 		rect = singleRect(blockQuery);
 	}
-	
+
 	return rect;
 }
 
@@ -1990,7 +2012,7 @@ function directionSortSprites(sprites, dir)
 		, rsorted = [], sorted = [], len, dstr = directionToDstr(dir)
 	;
 	len = dir.rot == 1 || dir.rot == 3 ? w : h;
-	
+
 	for(j = 0; j < len; j++){
 		rsorted[j] = [];
 		sorted[j] = [];
@@ -2021,7 +2043,7 @@ function directionSortSprites(sprites, dir)
 			}
 		}
 	}
-	
+
 	h = rsorted.length;
 	w = rsorted[0].length;
 	if(dir.flip_h > 0){
@@ -2037,7 +2059,7 @@ function directionSortSprites(sprites, dir)
 			}
 		}
 	}
-	
+
 	if(dir.flip_v > 0){
 		for(j = 0; j < h; j++){
 			for(i = 0; i < w; i++){
@@ -2056,7 +2078,7 @@ function directionSortSprites(sprites, dir)
 				// rsorted[j][i].chunkQuery += dstr;
 		// }
 	// }
-// 	
+//
 	return rsorted;
 }
 
@@ -2065,7 +2087,7 @@ function dstrToDirection(dstr)
 	var dir = {rot: 0, flip_v: 0, flip_h: 0}
 		, rotexp = /\S*\|?r(\d)\S*/
 		;
-		
+
 	dir.rot = (dstr.indexOf('r') >= 0 ? dstr.replace(rotexp, "$1") | 0 : 0);
 	dir.flip_h = dstr.match(SPQREG_HFLIP) != null ? 1 : 0;
 	dir.flip_v = dstr.match(SPQREG_VFLIP) != null ? 1 : 0;
@@ -2113,7 +2135,7 @@ var SPQREG_MAKE = new RegExp(''
 	+ '|(^[0-9$]+$)'
 	+ '|(^[0-9@]+$)'
 	);
-	
+
 var SPQREG_FLIP = /\|[fhv|]{2,}/;
 var SPQREG_VFLIP = /\|f[hv]?v/;
 var SPQREG_HFLIP = /\|f[hv]?h/;
@@ -2131,7 +2153,7 @@ var SPQSUBREG_PAT = /^\((.*)\)$/;
 var SPQ_RCOUNT = 0;
 
 /**
- * クエリからスプライト(結合)を生成 
+ * クエリからスプライト(結合)を生成
  * @name makeSpriteQuery
  * @param {string} name
  * @param {string} spq
@@ -2168,14 +2190,14 @@ export function makeSpriteQuery(name, spq, nstpat)
 	if(image != false){
 //		return makeSprite(name + '[' + spq + ']', 0);
 	}
-	
+
 	SPQ_RCOUNT = SPQ_RCOUNT < 0 ? 0 : SPQ_RCOUNT;
 	SPQ_RCOUNT++;
 	if(	SPQ_RCOUNT > 200){
 		SPQ_RCOUNT--;
 		return;
 	}
-	
+
 	if(spq == SPQ_ALL){
 		SPQ_RCOUNT = 0;
 		return makeSpriteImage(name);
@@ -2255,14 +2277,14 @@ export function makeSpriteQuery(name, spq, nstpat)
 					SPQ_MESSAGE.push('type:id');
 					// console.log(mt[1], mk);
 				}
-				
+
 				//direction
 				mt = s[j].match(SPQREG_FLIP);
 				if(mt != null){
 					// console.log("flip", mt);
 					mk = flipSprite(mk, mt[0].indexOf('h') >= 0, mt[0].indexOf('v') >= 0);
 				}
-				
+
 				mt = s[j].match(SPQREG_ROT);
 				if(mt != null){
 					// console.log("rot", mt);
@@ -2273,15 +2295,15 @@ export function makeSpriteQuery(name, spq, nstpat)
 				if(dir.rot > 0 || dir.flip_v > 0 || dir.flip_h > 0){
 					mk = directionSortSprites(mk, dir);
 				}
-				// 
+				//
 // console.log(mt);
 				//repeat
 				mt = s[j].match(SPQREG_HMULTI);
 				rw = mt == null ? 1 : mt[1] | 0;
-				
+
 				mt = s[j].match(SPQREG_VMULTI);
 				rh = mt == null ? 1 : mt[1] | 0;
-				
+
 				SPQ_MESSAGE.push('Repeat:' + rw + ':' + rh);
 				mk = repeatSprite(mk, rw, rh);
 
@@ -2301,7 +2323,7 @@ export function makeSpriteQuery(name, spq, nstpat)
 					SPQ_MESSAGE.push('RectFill:' + rect.toString());
 					rectFillSub(chunkMap, s[j].replace(SPQ_FORCE, ''), rect);
 				}
-				
+
 				SPQ_MESSAGE.push('Concat:' + (ofy + i));
 				sprite = concatSprite(sprite, mk, ofy + i);
 				mt = s[j].match(SPQ_FORCE);
@@ -2311,7 +2333,7 @@ export function makeSpriteQuery(name, spq, nstpat)
 					sprite.push([]);
 					// console.log(sprite , mt, ofy, i);
 				}
-				
+
 			}
 		}
 	}catch(e){
@@ -2340,7 +2362,7 @@ function repeatSprite(sprite, w, h)
 	for(d = 0; d < w; d++){
 		row = concatSprite(row, sprite, 0);
 	}
-	
+
 	for(d = 0; d < h; d++){
 		mk = concatSprite(mk, row, mk.length);
 	}
@@ -2390,9 +2412,9 @@ function flipSprite(sprite, h, v)
 export function makeSpriteSwapColor(sprite, to, from, type, force)
 {
 	var sqc = SpriteQueryCanvas
-		, resSprites, key, q
+		, resSprites, key, q, ref
 		;
-	
+
 	if(sprite instanceof Array){
 		resSprites = [];
 		sprite.forEach(function(s, i){
@@ -2408,8 +2430,16 @@ export function makeSpriteSwapColor(sprite, to, from, type, force)
 	}
 //	sprite.name = resourceColorQuery();
 	q = swapColorQuery([to, from]);
-	if(force != null && !force && sqc.exists(sprite, q)){
-		return sqc.copySprite(sprite, q, force);
+	// if(force != null && !force && sqc.exists(sprite, q)){
+	// 	return sqc.copySprite(sprite, q, force);
+	// }
+
+	ref = sqc.refferSprite(sprite, q, force);
+	if(ref != null){
+		if(force != null && !force && sqc.exists(sprite, q)){
+			return sqc.copySprite(sprite, q, force);
+		}
+		return ref;
 	}
 	sprite = sqc.copySprite(sprite, q, force);
 
@@ -2426,7 +2456,7 @@ export function makeSpriteSwapColor(sprite, to, from, type, force)
 }
 //
 //function makeSwapColor(toColors, fromColors){
-//	
+//
 //}
 
 
@@ -2439,7 +2469,7 @@ function swapColorSpriteRecursive(sprite, type, to, from)
 			});
 			return sprite;
 		}
-		
+
 		if(type == null || type == 'set'){
 			sprite.setSwapColor(to, from);
 		}else if(type == 'push'){
@@ -2552,7 +2582,7 @@ export class CanvasSprite{
 		this.workSpace = imageResource.workSpace[name];
 		this.initCommon(name, x, y, w, h);
 	}
-	
+
 	initInCanvas(canvas, x, y, w, h)
 	{
 		var name = canvas.name != null ? canvas.name :  'incanvas_' + Object.keys(imageResource.data).length;
@@ -2564,7 +2594,7 @@ export class CanvasSprite{
 		this.workSpace = {canvas: this.image, ctx: this.ctx, data: this.image};
 		this.initCommon(name, x, y, w, h);
 	}
-	
+
 //	initInImage(image, x, y, w, h, dx, dy, dw, dh, func)
 //	{
 //		var name = image.name != null ? image.name : image.src;
@@ -2574,7 +2604,7 @@ export class CanvasSprite{
 //		this.workSpace = {canvas: createCanvas(image.width, image.height), ctx: this.ctx, data: this.image};
 //		this.initCommon(name, x, y, w, h);
 //	}
-	
+
 	// TODO 使用しなくなるかも
 	copySprite(sprite)
 	{
@@ -2590,7 +2620,7 @@ export class CanvasSprite{
 		this.vFlipFlag =  sprite.vFlipFlag;
 		this.rotFlag = sprite.rotFlag;
 	}
-	
+
 	initCommon(canvas, x, y, w, h)
 	{
 		this.x = x; this.y = y;
@@ -2615,7 +2645,7 @@ export class CanvasSprite{
 		this.primary = true; //draw reliably even overdraw
 		this.order = props.SPRITE_ORDER_DEFAULT; // display order [first << late]
 	}
-	
+
 	drawScroll(scroll, x, y)
 	{
 		scroll.drawSprite(this, 0 | x, 0 | y);
@@ -2627,7 +2657,7 @@ export class CanvasSprite{
 //		rects.init(x, y, this.w, this.h);
 		return makeRect(x, y, this.w, this.h);
 	}
-	
+
 	makeSpriteInfo(x, y)
 	{
 		return {sprite: this, x: x, y: y, vflip: this.vFlipFlag, hflip: this.hFlipFlag, rot: this.rotFlag, order: this.order};
@@ -2646,14 +2676,14 @@ export class CanvasSprite{
 		this.vFlipFlag = toggle == null ? !this.vFlipFlag : toggle;
 		return this;
 	}
-	
+
 	hflip(toggle)
 	{
 		this.hFlipFlag = toggle == null ? !this.hFlipFlag : toggle;
-		
+
 		return this;
 	}
-	
+
 	flip()
 	{
 		var h = (-sprite.hFlipFlag + !sprite.hFlipFlag) | 0, v = (-sprite.hFlipFlag + !sprite.hFlipFlag) | 0;
@@ -2661,7 +2691,7 @@ export class CanvasSprite{
 		this.ctx.scale(-1, 1);
 		this.ctx.drawImage(this.image, this.x, 0);
 	}
-	
+
 	//回転非対応
 	rot(trbl)
 	{
@@ -2674,7 +2704,7 @@ export class CanvasSprite{
 			this.h = this.w;
 			this.w = ph;
 		}
-		
+
 		return this;
 	}
 
@@ -2695,13 +2725,13 @@ export class CanvasSprite{
 		if(swaps == null){
 			swaps = [];
 		}
-		
+
 //		if(getSprite != false){
 //			return getSprite;
 //		}
-		
+
 		return swapColorImageData(this.ctx, swaps, this.getRect());
-		
+
 	}
 	/**
 	 * 色を交換
@@ -2712,7 +2742,7 @@ export class CanvasSprite{
 	swapColor(to, from)
 	{
 		if(this.swaps == null){this.swaps = [];}
-		
+
 		this.swaps.push([from, to]);
 		return this;
 	}
@@ -2742,7 +2772,7 @@ export class CanvasSprite{
 		this.swaps.push([from, to]);
 		return this;
 	}
-	
+
 	isSwapColor(to, from)
 	{
 		var i, fromto = from.join(',') + ':' + to.join(',');
@@ -2754,25 +2784,27 @@ export class CanvasSprite{
 		}
 		return false;
 	}
-	
+
 	getBufferOriginal(){
 		if(this.bufferOriginal == null){
 //			this.bufferOriginal = this.ctx.getImageData(this.x, this.y, this.w, this.h);
 			this.bufferOriginal = createCanvas(this.w, this.h);
+			this.bufferOriginal.style.imageRendering = 'pixelated';
 			initContext(this.bufferOriginal).putImageData(this.ctx.getImageData(this.x, this.y, this.w, this.h), 0, 0);
 		}
 		return this.bufferOriginal;
 	}
-	
+
 	resetShiftBuffer(){
 //		this.bfsx = x;
 //		this.bfsy = y;
 		if(this.bufferOriginal != null){
+			this.ctx.clearRect(this.x, this.y, this.w, this.h);
 			this.ctx.drawImage(this.bufferOriginal, this.x, this.y);
 //			this.ctx.putImageData(this.bufferOriginal, this.x, this.y);
 		}
 	}
-	
+
 
 	/**
 	 * @name shiftBuffer
@@ -2795,7 +2827,7 @@ export class CanvasSprite{
 		dat3 = col;
 		dat2 = col;
 		dat4 = col;
-		
+
 		if(append1 instanceof CanvasSprite){
 			dat2 = append1.getBufferOriginal();
 //			dat2 = append1;
@@ -2821,6 +2853,7 @@ export class CanvasSprite{
 //		this.ctx.fillRect(sx, sy, 96, 32);
 		x = Math.round(x);
 		y = Math.round(y);
+		this.ctx.clearRect(this.x, this.y, this.w, this.h);
 		this.shiftBufferSub(x, y, dat1);
 		this.shiftBufferSub(x + this.w, y, dat2);
 		this.shiftBufferSub(x, y + this.h, dat3);
@@ -2867,11 +2900,6 @@ export class CanvasSprite{
 		x |= 0;
 		y |= 0;
 		if(dat instanceof Node){
-//			this.ctx.drawImage(dat, dat.x, dat.y, slicewR, slicehB, sx + x, sy + y,  x > 0 ? 0 : slicewL, y > 0 ? 0 : slicehT, slicewR, slicehB);
-//			this.ctx.drawImage(dat, x, y,  x > 0 ? 0 : slicewL, y > 0 ? 0 : slicehT, sx + x, sy + y, slicewR, slicehB);
-//			this.ctx.drawImage(dat, x > 0 ? 0 : slicewL, y > 0 ? 0 : slicehT, slicewR, slicehB, x > 0 ? sx + x, sy + y, slicewR, slicehB);
-//			this.ctx.drawImage(dat, 0, 0, w, h, sx + x, sy + y, w, h);
-//			this.ctx.drawImage(dat, x > 0 ? 0 : slicewL, 0, w, h, x > 0 ? sx + x : sx, sy + y, w, h);
 			this.ctx.drawImage(dat, x > 0 ? 0 : slicewL, y > 0 ? 0 : slicehT, slicewR, slicehB, x > 0 ? sx + x : sx, y > 0 ? sy + y : sy, slicewR, slicehB);
 		}else if(dat instanceof ImageData){
 			this.ctx.putImageData(dat, sx + x, sy + y,  x > 0 ? 0 : slicewL, y > 0 ? 0 : slicehT, slicewR, slicehB);
@@ -2883,7 +2911,7 @@ export class CanvasSprite{
 		}
 
 	}
-	
+
 	show(){
 		this.x = this.x < 0 ? - this.x - this.w : this.x;
 	}
@@ -2909,7 +2937,7 @@ export class canvasPalette{
 //		this.brightLevel = level == null ? 0 : level;
 		this.name = name == null ? colors.map(function(a){return '[' + a.join(',') + ']';}).join(':') : name;
 	}
-	
+
 	color(id){
 		return this.colors[id] == null ? COLOR_BLACK : this.colors[id];
 	}
@@ -2918,7 +2946,7 @@ export const
 makeCanvasPalette = function(color, name){
 	var a = new canvasPalette();
 	a.init(color, name);
-	
+
 	return a;
 }
 
@@ -2931,7 +2959,7 @@ makeCanvasPalette = function(color, name){
 	if(size == null){
 		size = R.CHIPCELL_SIZE;
 	}
-	
+
 	if(side != null && side == "bottom"){
 		return C.DISPLAY_HEIGHT - (cell * size);
 	}else if(side != null && side == "right"){
@@ -2958,14 +2986,14 @@ makeCanvasPalette = function(color, name){
 }
 
 /**
- * セルサイズで割り切れる値 
+ * セルサイズで割り切れる値
  */
 , parseCell = function(px, size)
 {
 	size = size == null ? imageResource.CHIPCELL_SIZE : size;
 	px |= 0;
 	return px - (px % size);
-	
+
 }
 
 , getScrollNum = function()
@@ -3069,7 +3097,7 @@ export class dividePattern{
 		var d = ((this.count / this.division) | 0) % this.pattern;
 		return d;
 	}
-	
+
 	next()
 	{
 		this.count = (this.count + 1) % (this.max);
@@ -3108,13 +3136,13 @@ export function quadrateCurve(t, pos)
 		//
 		for(k = j; k < tlen; k++){
 			term[j][k] = (d != 0) ? term[j][k] / d : 0 ;//0を割るところはスキップされている
-			
+
 			//term[j][k] = (d != 0) ? term[j][k] / d : 1 ;//0を割るところはスキップされている
-			
+
 			//0, 0.1, 0, 0.01
 			//
 		}
-		
+
 		for(l = 0; l < plen; l++){
 			if(l == j){continue;}//注目式スキップ
 			sub = term[l][j];
