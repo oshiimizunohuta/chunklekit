@@ -2791,6 +2791,7 @@ export class CanvasSprite{
 			this.bufferOriginal = createCanvas(this.w, this.h);
 			this.bufferOriginal.style.imageRendering = 'pixelated';
 			initContext(this.bufferOriginal).putImageData(this.ctx.getImageData(this.x, this.y, this.w, this.h), 0, 0);
+			this.ctx.fillStyle = makeRGBA(COLOR_TRANSPARENT);
 		}
 		return this.bufferOriginal;
 	}
@@ -2799,7 +2800,8 @@ export class CanvasSprite{
 //		this.bfsx = x;
 //		this.bfsy = y;
 		if(this.bufferOriginal != null){
-			this.ctx.clearRect(this.x, this.y, this.w, this.h);
+			// this.ctx.fillStyle = makeRGBA(COLOR_TRANSPARENT);
+			this.ctx.fillRect(this.x, this.y, this.w, this.h);
 			this.ctx.drawImage(this.bufferOriginal, this.x, this.y);
 //			this.ctx.putImageData(this.bufferOriginal, this.x, this.y);
 		}
@@ -2853,7 +2855,9 @@ export class CanvasSprite{
 //		this.ctx.fillRect(sx, sy, 96, 32);
 		x = Math.round(x);
 		y = Math.round(y);
-		this.ctx.clearRect(this.x, this.y, this.w, this.h);
+		// this.ctx.fillStyle = makeRGBA(COLOR_TRANSPARENT);
+		this.ctx.fillRect(this.x, this.y, this.w, this.h);
+//		this.ctx.clearRect(this.x, this.y, this.w, this.h);
 		this.shiftBufferSub(x, y, dat1);
 		this.shiftBufferSub(x + this.w, y, dat2);
 		this.shiftBufferSub(x, y + this.h, dat3);
