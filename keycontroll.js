@@ -590,7 +590,7 @@ class KeyControll{
 		}
 		
 		if(this.applyKeysConf != null){
-			this.applyKeys(this.appleyKeysConf);
+			this.applyKeys(this.applyKeysConf);
 			return;
 		}
 		
