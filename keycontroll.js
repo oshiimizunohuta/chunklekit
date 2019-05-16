@@ -2,7 +2,7 @@
  * @name Key Controll & Mouse Controll & Gamepad Controll
  * @since 2013-11-19 07:43:37
  * @author bitchunk
- * @version 0.4.0
+ * @version 0.4.1
  */
 //TODO jslint
 export let ALLCONTROLLS = {}
@@ -16,7 +16,7 @@ function resetAllControlls(){
 	ALLCONTROLLS = {};
 	ALLCONTROLLSKEYS = [];
 }
-	
+
 window.addEventListener('keydown', function(e){
 	let enabled = true, i, c, indexes = ALLCONTROLLSKEYS, len = indexes.length;
 	for(i = 0; i < len; i++){
@@ -93,6 +93,8 @@ function gamepadConnect(e, connect){
 		}
 	}else if(connect == null || connect){
 		CKGAMEPADS[e.gamepad.index] = e.gamepad;
+		ALLCONTROLLS[e.gamepad.index].initGamepad()
+		
 		console.log(e.gamepad);
 	}else{
 		delete CKGAMEPADS[e.gamepad.index];
@@ -239,7 +241,7 @@ function keyStateCheck()
 	let i, j, c, indexes = ALLCONTROLLSKEYS, len = indexes.length, codes, clen, cindex, state;
 	KEYSTATE_CHECKFUNC();
 	state = gamepadState();
-
+	
 	for(i = 0; i < len; i++){
 		c = ALLCONTROLLS[indexes[i]];
 		codes = c.name2code;
@@ -249,10 +251,7 @@ function keyStateCheck()
 			c.untrig(codes[i]);
 		}
 	}
-	
 	applyGamepadKeys(state);
-//	keyUntrig();
-//	keyHold();
 }
 
 export function setKeySetCheck(func){
@@ -272,6 +271,8 @@ class KeyControll{
 		this.statuses = {};//状態名をキーにした状態
 		this.code2name = {};//codeに対応する操作名
 		this.name2code = {};//操作名に対応するcode
+		
+		this.applyKeysConf = null; //ゲームパッド設定データ
 		
 		this.resetControlls();
 		
@@ -552,6 +553,8 @@ class KeyControll{
 			, i, index
 			, indexes = []
 		;
+		this.applyKeysConf = keys;
+		
 		if(typeof keys == 'string'){
 			keycodes = keys.trim().replace(/\n/, ' ').split(' ');
 		}else{
@@ -585,6 +588,12 @@ class KeyControll{
 				return false;
 			}
 		}
+		
+		if(this.applyKeysConf != null){
+			this.applyKeys(this.appleyKeysConf);
+			return;
+		}
+		
 		let index = gamepad.index
 			, conv = convertGamePadKey
 		;
@@ -854,7 +863,7 @@ class PointingControll{
 		}
 		for(i = 0; i < items.length; i++){
 			if(items[i].name == name){
-				continue;
+				 ;
 			}
 			rep.push(items[i]);
 		}
