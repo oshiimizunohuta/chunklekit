@@ -1014,11 +1014,15 @@ class PointingControll{
 	}
 };
 
+var intervalId = null;
 export function CKSETUPKEYS(){
 	let k = new KeyControll();
 	k.initCommonKey();
 	k.initGamepad();
-	setInterval(function(){
+	if(intervalId != null){
+		clearInterval(intervalId);
+	}
+	intervalId = setInterval(function(){
 		keyStateCheck();
 	}, 16);
 	
