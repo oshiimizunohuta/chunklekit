@@ -94,7 +94,7 @@ function gamepadConnect(e, connect){
 	}else if(connect == null || connect){
 		CKGAMEPADS[e.gamepad.index] = e.gamepad;
 		ALLCONTROLLS[e.gamepad.index].initGamepad()
-		
+
 		console.log(e.gamepad);
 	}else{
 		delete CKGAMEPADS[e.gamepad.index];
@@ -120,7 +120,7 @@ function gamepadState(){
 		}
 		id = pad.index;
 		id = id % KeyControll.MAXPLAYERS;// 最大プレイヤー数で除算
-		
+
 		buttons = pad.buttons;
 		blen = buttons.length;
 		for(j = 0; j < blen; j++){
@@ -154,7 +154,7 @@ function gamepadState(){
 				st = convertGamePadKey(id, dir[j]);
 				state[st] |= v;
 			}
-			
+
 		}
 	}
 //	CKGAMEPADSKEYSTATE = state;
@@ -216,7 +216,7 @@ window.addEventListener('blur', function(){
 
 
 /**
- * clickをロックする 
+ * clickをロックする
  */
 function clickLock(func)
 {
@@ -241,11 +241,11 @@ function keyStateCheck()
 	let i, j, c, indexes = ALLCONTROLLSKEYS, len = indexes.length, codes, clen, cindex, state;
 	KEYSTATE_CHECKFUNC();
 	state = gamepadState();
-	
+
 	for(i = 0; i < len; i++){
 		c = ALLCONTROLLS[indexes[i]];
 		codes = c.name2code;
-		
+
 		for(i in codes){
 			c.holdon(codes[i]);
 			c.untrig(codes[i]);
@@ -271,15 +271,15 @@ class KeyControll{
 		this.statuses = {};//状態名をキーにした状態
 		this.code2name = {};//codeに対応する操作名
 		this.name2code = {};//操作名に対応するcode
-		
+
 		this.applyKeysConf = null; //ゲームパッド設定データ
-		
+
 		this.resetControlls();
-		
+
 		this.idname = idname == null ? Object.keys(ALLCONTROLLS).length : idname;
 		this.action; //カスタム関数
 		ALLCONTROLLS[this.idname] = ALLCONTROLLS[this.idname] == null ? this : ALLCONTROLLS[this.idname];
-		
+
 		ALLCONTROLLSKEYS = Object.keys(ALLCONTROLLS);
 		try{
 			this.holdTime = KEYCONTROLL_HOLDTIME;
@@ -287,15 +287,15 @@ class KeyControll{
 			this.holdTime = 20;
 			console.warn(e);
 			console.log('key controll set hold on time: 20');
-		}		
+		}
 	}
-	
+
 	resetControlls(){
 		this.controlls = {};//操作名に対する状態
 		this.statuses = {};//状態名をキーにした状態
 		this.code2name = {};//codeに対応する操作名
 		this.name2code = {};//操作名に対応するcode
-		
+
 		this.statuses.state = {};
 		this.statuses.trig = {};
 		this.statuses.off = {};
@@ -330,7 +330,7 @@ class KeyControll{
 		this.controlls[name].hold = false;
 		this.controlls[name].time = 0;
 		this.controlls[name].func = null;
-		
+
 		this.statuses.state[name] = this.controlls[name].state;
 		this.statuses.trig[name] = this.controlls[name].trig;
 		this.statuses.off[name] = this.controlls[name].off;
@@ -338,11 +338,11 @@ class KeyControll{
 		this.statuses.time[name] = this.controlls[name].time;
 		this.statuses.func[name] = this.controlls[name].func;
 	}
-	
+
 	unsetKey(name)
 	{
 		let code;
-		
+
 		for(code in this.code2name){
 			if(this.code2name[code + ""] == name){
 				delete this.code2name[code + ""];
@@ -351,7 +351,7 @@ class KeyControll{
 		delete this.name2code[name];
 		delete this.controlls[name];
 	}
-	
+
 	setKeydown(name, func){
 		let controll = this.controlls[name]
 		;
@@ -374,7 +374,7 @@ class KeyControll{
 			this.controlls[controll].trig = true;
 			this.controlls[controll].state = true;
 			this.controlls[controll].off = false;
-			
+
 			if(this.controlls[controll].func != null){
 				this.controlls[controll].func(event);
 			};
@@ -399,7 +399,7 @@ class KeyControll{
 //			this.controlls[controll].func();
 		};
 	}
-	
+
 	/**
 	 * キーのホールドを確認
 	 * @param code
@@ -415,7 +415,7 @@ class KeyControll{
 				// dulog("hold" + name);
 			}
 		}else{
-			
+
 			this.controlls[controll].hold = false;
 			this.controlls[controll].time = 0;
 		}
@@ -440,7 +440,7 @@ class KeyControll{
 			this.untrig(idname);
 		}
 	}
-	
+
 	allState()
 	{
 		let name, states = {};
@@ -531,7 +531,7 @@ class KeyControll{
 			return this.controlls[name].hold;
 		}
 	}
-	
+
 	getHoldTime(name)
 	{
 		let i;
@@ -546,7 +546,7 @@ class KeyControll{
 			return this.controlls[name].time;
 		}
 	}
-	
+
 	applyKeys(keys, padButtons, gamepadIndex){
 		let keycodes = []
 			, name, button, code
@@ -554,7 +554,7 @@ class KeyControll{
 			, indexes = []
 		;
 		this.applyKeysConf = keys;
-		
+
 		if(typeof keys == 'string'){
 			keycodes = keys.trim().replace(/\n/, ' ').split(' ');
 		}else{
@@ -578,7 +578,7 @@ class KeyControll{
 			this.setKey(name, convertGamePadKey(index, button));
 		}
 	}
-	
+
 	initGamepad(gamepad){
 		//USB Gamepad (Vendor: 04b4 Product: 010a)
 		if(gamepad == null){
@@ -588,12 +588,12 @@ class KeyControll{
 				return false;
 			}
 		}
-		
+
 		if(this.applyKeysConf != null){
 			this.applyKeys(this.applyKeysConf);
 			return;
 		}
-		
+
 		let index = gamepad.index
 			, conv = convertGamePadKey
 		;
@@ -661,7 +661,7 @@ class KeyControll{
 		this.setKey('select', 9);
 		this.setKey('space', 32);
 		this.setKey('debug', 16);
-		
+
 	}
 }
 KeyControll.GAMEPAD_DELIMITER = '@';
@@ -686,10 +686,10 @@ class PointingControll{
 			middle: {x: -1, y: -1},
 			right: {x: -1, y: -1}
 		};
-		
+
 		this.flickableItems = [];
 		this.tappableItems = [];
-		
+
 		this.button = 'common';
 		this.state = {
 			common: false,
@@ -703,7 +703,7 @@ class PointingControll{
 			middle: false,
 			right: false,
 		};
-		
+
 		this.screenScroll = screenScroll;
 		this.baseScroll = baseScroll == null ? screenScroll : baseScroll;
 		this.sizeRate = {
@@ -715,7 +715,7 @@ class PointingControll{
 		this.initTappables();
 		this.initMenuables();
 	}
-	
+
 	resizeRate(screenScroll){
 		if(screenScroll == null){
 			return this.sizeRate;
@@ -726,27 +726,27 @@ class PointingControll{
 		};
 		return this.sizeRate;
 	}
-	
+
 	initTappables()
 	{
 		let self = this
 			, tsfunc = function(e){
 				let pos = self.getClientPos(e);
-				
+
 				switch(e.which){
 					case 1: self.button = 'left'; break;
 					case 2: self.button = 'middle'; break;
 					case 3: self.button = 'right'; break;
 					default: self.button = 'common';
 				}
-				self.state[self.button] = true; 
-				
+				self.state[self.button] = true;
+
 				self.tapStartEvent(pos.x, pos.y, e);
 				if(self.button != 'common'){
 					self.button = 'common';
 					self.tapStartEvent(pos.x, pos.y, e);
 				}
-				
+
 //				self.button = null;
 				e.preventDefault();
 				return false;
@@ -760,7 +760,7 @@ class PointingControll{
 					case 3: self.button = 'right'; break;
 					default: self.button = 'common';
 				}
-				self.state[self.button] = false; 
+				self.state[self.button] = false;
 				self.tapEndEvent(pos.x, pos.y, e);
 				if(self.button != 'common'){
 					self.button = 'common';
@@ -778,7 +778,7 @@ class PointingControll{
 		scr.canvas.addEventListener('touchstart', tsfunc, false);
 		scr.canvas.addEventListener('touchend', tefunc, false);
 	}
-	
+
 	initMenuables()
 	{
 		let self = this
@@ -788,7 +788,7 @@ class PointingControll{
 			e.preventDefault();
 		}, false);
 	}
-	
+
 	initFlickables()
 	{
 		let self = this
@@ -812,35 +812,35 @@ class PointingControll{
 			}
 			, scr = this.screenScroll
 			;
-		
+
 		scr.canvas.addEventListener('mousemove', mvfunc, false);
 		scr.canvas.addEventListener('touchmove', mvfunc, false);
 	}
-	
+
 	getState(button)
 	{
 		button = button == null ? 'common' : button;
 		return this.state[button];
 	}
-	
+
 	getTrig(button)
 	{
 		button = button == null ? 'common' : button;
 		return this.trig[button];
 	}
-	
+
 	getMovePos(button)
 	{
 		button = button == null ? 'common' : button;
 		return this.tapMovePos[button];
 	}
-	
+
 	getStartPos(button)
 	{
 		button = button == null ? 'common' : button;
 		return this.tapStartPos[button];
 	}
-	
+
 	getClientPos(e)
 	{
 		let me = e.changedTouches != null ? e.changedTouches[0] : e
@@ -854,7 +854,7 @@ class PointingControll{
 		y = view.mirrorV ? (y + h) % h: y | 0;
 		return {x: x, y: y};
 	}
-	
+
 	clearEventItem(items, name)
 	{
 		let rep = [], i;
@@ -871,7 +871,7 @@ class PointingControll{
 		items = rep;
 		return items;
 	}
-	
+
 	makeTapEvent(rect, func, cancel, name, button){
 		return {
 			rect: rect
@@ -898,12 +898,12 @@ class PointingControll{
 		this.tappableItems.push(item);
 		return this.tappableItems.length;
 	}
-	
+
 	clearTappableItem(name){
 		this.tappableItems = this.clearEventItem(this.tappableItems, name);
 		return this.tappableItems.length;
 	}
-	
+
 	appendFlickableItem(rect, func, cancel, name, button)
 	{
 		button = button == null ? 'left' : button;
@@ -912,31 +912,31 @@ class PointingControll{
 		this.flickableItems.push(item);
 		return this.flickableItems.length;
 	}
-	
+
 	clearFlickableItem(name){
 		this.flickableItems = this.clearEventItem(this.flickableItems, name);
 		return this.flickableItems.length;
 	}
-	
+
 	setStartPos(x, y, button)
 	{
 		this.tapStartPos[button].x = x;
 		this.tapStartPos[button].y = y;
 	}
-	
+
 	setMovePos(x, y, button)
 	{
 		this.tapMovePos[button].x = x;
 		this.tapMovePos[button].y = y;
 	}
-	
+
 	tapStartEvent(x, y, e)
 	{
 		let i, item, pos, items, b = this.button
 		;
 		this.setStartPos(x, y, b);
 		this.setMovePos(x, y, b);
-		
+
 		pos = this.tapStartPos[b];
 		items = this.tappableItems;
 		for(i = 0; i < items.length; i++){
@@ -950,9 +950,9 @@ class PointingControll{
 				}
 			}
 		}
-		
+
 	}
-	
+
 	tapEndEvent(x, y, e)
 	{
 		let i, item
@@ -973,12 +973,12 @@ class PointingControll{
 			if(item.cancel != null && item.cancel(item, x, y) === false){
 				break;
 			}
-			
+
 		}
 		this.setStartPos(-1, -1, b);
 		this.setMovePos(x, y, b);
 	}
-	
+
 	tapMoveEvent(x, y, e)
 	{
 		let i, item, isContain
@@ -1015,18 +1015,20 @@ class PointingControll{
 };
 
 var intervalId = null;
-export function CKSETUPKEYS(){
+export function CKSETUPKEYS(disableIntgerval){
 	let k = new KeyControll();
 	k.initCommonKey();
 	k.initGamepad();
 	if(intervalId != null){
 		clearInterval(intervalId);
 	}
-	intervalId = setInterval(function(){
-		keyStateCheck();
-	}, 16);
-	
-	return k
+	if(disableIntgerval){
+		intervalId = setInterval(function(){
+	//		keyStateCheck();
+		}, 16);
+	}
+	return k;
 }
+
 
 export {KeyControll, PointingControll, clickLock, debugLock, resetAllControlls, keyStateCheck, getGamepadPrevKeyState, convertGamePadKey};
